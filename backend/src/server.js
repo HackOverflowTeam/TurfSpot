@@ -49,7 +49,7 @@ app.use('/api', limiter);
 
 // CORS
 app.use(cors({
-  origin: "*",
+  origin: ["http://localhost:5500", "http://127.0.0.1:5500", "https://turfspot-1.onrender.com"],
   credentials: true
 }));
 
