@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - TurfSpot</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="nav-brand" style="text-decoration: none; color: var(--primary-color);">
+                <i class="fas fa-futbol"></i>
+                <span>TurfSpot Admin</span>
+            </a>
+            <div class="nav-actions">
+                <div class="user-menu" id="userMenu">
+                    <img src="https://ui-avatars.com/api/?name=Admin" alt="Admin" class="user-avatar" id="userAvatar">
+                    <div class="dropdown-menu">
+                        <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <section class="dashboard">
+        <div class="container">
+            <h1>Admin Dashboard</h1>
+
+            <!-- Stats Overview -->
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-users"></i></div>
+                    <div class="stat-info">
+                        <h3 id="totalUsers">0</h3>
+                        <p>Total Users</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-user-tie"></i></div>
+                    <div class="stat-info">
+                        <h3 id="totalOwners">0</h3>
+                        <p>Owners</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-building"></i></div>
+                    <div class="stat-info">
+                        <h3 id="totalTurfs">0</h3>
+                        <p>Total Turfs</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                    <div class="stat-info">
+                        <h3 id="pendingTurfs">0</h3>
+                        <p>Pending Approvals</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
+                    <div class="stat-info">
+                        <h3 id="totalBookings">0</h3>
+                        <p>Total Bookings</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-rupee-sign"></i></div>
+                    <div class="stat-info">
+                        <h3 id="totalRevenue">₹0</h3>
+                        <p>Total Revenue</p>
+                    </div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                    <div class="stat-icon" style="background: rgba(255,255,255,0.2);"><i class="fas fa-chart-line"></i></div>
+                    <div class="stat-info" style="color: white;">
+                        <h3 id="platformRevenue" style="color: white;">₹0</h3>
+                        <p style="color: rgba(255,255,255,0.9);">Platform Earnings (10%)</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-hand-holding-usd"></i></div>
+                    <div class="stat-info">
+                        <h3 id="ownerEarnings">₹0</h3>
+                        <p>Owner Earnings (90%)</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="pending">Pending Turfs</button>
+                <button class="tab-btn" data-tab="payouts">Pending Payouts</button>
+                <button class="tab-btn" data-tab="history">Payout History</button>
+                <button class="tab-btn" data-tab="turfs">All Turfs</button>
+                <button class="tab-btn" data-tab="users">Users</button>
+                <button class="tab-btn" data-tab="bookings">Bookings</button>
+            </div>
+
+            <!-- Pending Turfs Tab -->
+            <div class="tab-content active" id="pendingTab">
+                <div id="pendingLoader" class="loader">
+                    <i class="fas fa-spinner fa-spin"></i> Loading pending turfs...
+                </div>
+                <div id="pendingTurfsList"></div>
+            </div>
+
+            <!-- Pending Payouts Tab -->
+            <div class="tab-content" id="payoutsTab">
+                <div id="payoutsLoader" class="loader" style="display: none;">
+                    <i class="fas fa-spinner fa-spin"></i> Loading payouts...
+                </div>
+                <div id="payoutsSummary" style="margin-bottom: 2rem;"></div>
+                <div id="payoutsList"></div>
+            </div>
+
+            <!-- Payout History Tab -->
+            <div class="tab-content" id="historyTab">
+                <div id="historyLoader" class="loader" style="display: none;">
+                    <i class="fas fa-spinner fa-spin"></i> Loading payout history...
+                </div>
+                <div id="historySummary" style="margin-bottom: 2rem;"></div>
+                <div id="historyList"></div>
+            </div>
+
+            <!-- All Turfs Tab -->
+            <div class="tab-content" id="turfsTab">
+                <div id="turfsLoader" class="loader" style="display: none;">
+                    <i class="fas fa-spinner fa-spin"></i> Loading turfs...
+                </div>
+                <div id="turfsList"></div>
+            </div>
+
+            <!-- Users Tab -->
+            <div class="tab-content" id="usersTab">
+                <div class="filters-bar">
+                    <select id="roleFilter">
+                        <option value="">All Roles</option>
+                        <option value="user">Users</option>
+                        <option value="owner">Owners</option>
+                    </select>
+                </div>
+                <div id="usersLoader" class="loader" style="display: none;">
+                    <i class="fas fa-spinner fa-spin"></i> Loading users...
+                </div>
+                <div id="usersList"></div>
+            </div>
+
+            <!-- Bookings Tab -->
+            <div class="tab-content" id="bookingsTab">
+                <div class="filters-bar">
+                    <select id="bookingStatusFilter">
+                        <option value="">All Status</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="pending">Pending</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div id="bookingsLoader" class="loader" style="display: none;">
+                    <i class="fas fa-spinner fa-spin"></i> Loading bookings...
+                </div>
+                <div id="bookingsList"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Turf Details Modal -->
+    <div class="modal modal-large" id="turfDetailsModal">
+        <div class="modal-content">
+            <span class="close" id="closeTurfDetailsModal">&times;</span>
+            <div id="turfDetailsContent"></div>
+        </div>
+    </div>
+
+    <!-- Reject Turf Modal -->
+    <div class="modal" id="rejectModal">
+        <div class="modal-content">
+            <span class="close" id="closeRejectModal">&times;</span>
+            <h2>Reject Turf</h2>
+            <form id="rejectForm">
+                <div class="form-group">
+                    <label>Reason for rejection*</label>
+                    <textarea id="rejectReason" rows="4" required></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-outline" id="cancelRejectBtn">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Reject Turf</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Suspend Turf Modal -->
+    <div class="modal" id="suspendModal">
+        <div class="modal-content">
+            <span class="close" id="closeSuspendModal">&times;</span>
+            <h2>Suspend Turf</h2>
+            <form id="suspendForm">
+                <div class="form-group">
+                    <label>Reason for suspension*</label>
+                    <textarea id="suspendReason" rows="4" required></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-outline" id="cancelSuspendBtn">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Suspend Turf</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Process Payout Modal -->
+    <div class="modal" id="payoutModal">
+        <div class="modal-content">
+            <span class="close" id="closePayoutModal">&times;</span>
+            <h2>Mark Booking as Paid</h2>
+            <form id="payoutForm">
+                <div id="payoutOwnerInfo" style="background: var(--light-bg); padding: 1rem; border-radius: 0.5rem; margin-bottom: 1.5rem;"></div>
+                
+                <h4>Payment Details</h4>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Payment Method*</label>
+                        <select id="paymentMethod" required>
+                            <option value="bank_transfer">Bank Transfer</option>
+                            <option value="upi">UPI</option>
+                            <option value="cheque">Cheque</option>
+                            <option value="cash">Cash</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Transaction ID / Reference*</label>
+                        <input type="text" id="transactionId" required placeholder="Enter transaction ID or reference number">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Notes (Optional)</label>
+                    <textarea id="payoutNotes" rows="3" placeholder="Add any notes about this payout"></textarea>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-outline" id="cancelPayoutBtn">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-check"></i> Confirm Payment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2025 TurfSpot. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script type="module" src="js/api.js"></script>
+    <script type="module" src="js/auth.js"></script>
+    <script type="module" src="js/admin-dashboard.js"></script>
+</body>
+</html>

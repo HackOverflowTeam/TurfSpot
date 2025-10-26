@@ -1,0 +1,273 @@
+{
+  "info": {
+    "name": "TurfSpot API",
+    "description": "TurfSpot - Sports Turf Booking Platform API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register (Email)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\",\n  \"name\": \"John Doe\",\n  \"phone\": \"9876543210\",\n  \"role\": \"user\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login (Email)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "me"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Turfs",
+      "item": [
+        {
+          "name": "Get All Turfs",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/turfs?city=Mumbai&sport=cricket",
+              "host": ["{{base_url}}"],
+              "path": ["api", "turfs"],
+              "query": [
+                {
+                  "key": "city",
+                  "value": "Mumbai"
+                },
+                {
+                  "key": "sport",
+                  "value": "cricket"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Turf",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Cricket Arena\",\n  \"description\": \"Premium cricket turf with all facilities\",\n  \"address\": {\n    \"street\": \"123 Main Street\",\n    \"city\": \"Mumbai\",\n    \"state\": \"Maharashtra\",\n    \"pincode\": \"400001\"\n  },\n  \"contactInfo\": {\n    \"phone\": \"9876543210\",\n    \"email\": \"cricket@arena.com\"\n  },\n  \"sportsSupported\": [\"cricket\"],\n  \"pricing\": {\n    \"hourlyRate\": 1500\n  },\n  \"amenities\": [\"parking\", \"floodlights\", \"washroom\"],\n  \"operatingHours\": {\n    \"monday\": { \"open\": \"06:00\", \"close\": \"22:00\", \"isOpen\": true }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/turfs",
+              "host": ["{{base_url}}"],
+              "path": ["api", "turfs"]
+            }
+          }
+        },
+        {
+          "name": "Get Available Slots",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/turfs/:turfId/available-slots?date=2024-10-27",
+              "host": ["{{base_url}}"],
+              "path": ["api", "turfs", ":turfId", "available-slots"],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "2024-10-27"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "turfId",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bookings",
+      "item": [
+        {
+          "name": "Create Booking",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"turfId\": \"turf_id_here\",\n  \"bookingDate\": \"2024-10-27\",\n  \"timeSlot\": {\n    \"startTime\": \"18:00\",\n    \"endTime\": \"19:00\"\n  },\n  \"sport\": \"cricket\",\n  \"playerDetails\": {\n    \"name\": \"John Doe\",\n    \"phone\": \"9876543210\",\n    \"numberOfPlayers\": 10\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/bookings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "bookings"]
+            }
+          }
+        },
+        {
+          "name": "Get My Bookings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/bookings/my-bookings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "bookings", "my-bookings"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Get Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/dashboard",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "dashboard"]
+            }
+          }
+        },
+        {
+          "name": "Get Pending Turfs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/turfs/pending",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "turfs", "pending"]
+            }
+          }
+        },
+        {
+          "name": "Approve Turf",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/admin/turfs/:turfId/approve",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "turfs", ":turfId", "approve"],
+              "variable": [
+                {
+                  "key": "turfId",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "admin_token",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

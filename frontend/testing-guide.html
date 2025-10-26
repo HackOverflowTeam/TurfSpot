@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TurfSpot - Testing Guide</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container" style="padding: 3rem 0;">
+        <h1>🧪 TurfSpot Testing Guide</h1>
+        
+        <div style="background: #f0fdf4; padding: 2rem; border-radius: 1rem; margin: 2rem 0;">
+            <h2>✅ Setup Checklist</h2>
+            <ol style="line-height: 2;">
+                <li><strong>Backend Running:</strong> Make sure backend is running on port 4000
+                    <pre style="background: #fff; padding: 1rem; border-radius: 0.5rem; margin-top: 0.5rem;">cd backend && npm start</pre>
+                </li>
+                <li><strong>Frontend Server:</strong> Serve frontend on port 3000
+                    <pre style="background: #fff; padding: 1rem; border-radius: 0.5rem; margin-top: 0.5rem;">cd frontend && python3 -m http.server 3000</pre>
+                </li>
+                <li><strong>Open Browser:</strong> Go to <a href="http://localhost:3000" target="_blank">http://localhost:3000</a></li>
+            </ol>
+        </div>
+
+        <div style="background: #eff6ff; padding: 2rem; border-radius: 1rem; margin: 2rem 0;">
+            <h2>🔑 Test Credentials</h2>
+            
+            <div style="margin: 1rem 0;">
+                <h3>Admin Account</h3>
+                <pre style="background: #fff; padding: 1rem; border-radius: 0.5rem;">Email: admin@turfspot.com
+Password: admin123456
+Dashboard: <a href="admin-dashboard.html">admin-dashboard.html</a></pre>
+            </div>
+
+            <div style="margin: 1rem 0;">
+                <h3>Owner Account</h3>
+                <pre style="background: #fff; padding: 1rem; border-radius: 0.5rem;">Email: owner1@example.com
+Password: password123
+Dashboard: <a href="owner-dashboard.html">owner-dashboard.html</a></pre>
+            </div>
+
+            <div style="margin: 1rem 0;">
+                <h3>User Account</h3>
+                <pre style="background: #fff; padding: 1rem; border-radius: 0.5rem;">Email: user1@example.com
+Password: password123
+Bookings: <a href="my-bookings.html">my-bookings.html</a></pre>
+            </div>
+        </div>
+
+        <div style="background: #fef3c7; padding: 2rem; border-radius: 1rem; margin: 2rem 0;">
+            <h2>🐛 Troubleshooting</h2>
+            
+            <h3>If you're being logged out automatically:</h3>
+            <ol style="line-height: 2;">
+                <li>Open browser console (F12)</li>
+                <li>Check if there are any errors</li>
+                <li>Clear localStorage: Run this in console:
+                    <pre style="background: #fff; padding: 1rem; border-radius: 0.5rem; margin-top: 0.5rem;">localStorage.clear()</pre>
+                </li>
+                <li>Login again from <a href="index.html">index.html</a></li>
+                <li>Check your token:
+                    <pre style="background: #fff; padding: 1rem; border-radius: 0.5rem; margin-top: 0.5rem;">console.log(localStorage.getItem('token'))</pre>
+                </li>
+            </ol>
+
+            <h3>If backend is not responding:</h3>
+            <ol style="line-height: 2;">
+                <li>Check if it's running: Look for "Server running on port 4000" message</li>
+                <li>Test the health endpoint:
+                    <pre style="background: #fff; padding: 1rem; border-radius: 0.5rem; margin-top: 0.5rem;">curl http://localhost:4000/api/health</pre>
+                </li>
+                <li>Check for port conflicts:
+                    <pre style="background: #fff; padding: 1rem; border-radius: 0.5rem; margin-top: 0.5rem;">lsof -i :4000</pre>
+                </li>
+            </ol>
+        </div>
+
+        <div style="background: #f3e8ff; padding: 2rem; border-radius: 1rem; margin: 2rem 0;">
+            <h2>🧪 Testing Flow</h2>
+            
+            <h3>Test as Admin:</h3>
+            <ol style="line-height: 2;">
+                <li>Go to <a href="index.html">index.html</a></li>
+                <li>Click "Login" button</li>
+                <li>Enter admin credentials</li>
+                <li>After login, go to <a href="admin-dashboard.html">Admin Dashboard</a></li>
+                <li>You should see dashboard stats and pending turfs</li>
+            </ol>
+
+            <h3>Test as Owner:</h3>
+            <ol style="line-height: 2;">
+                <li>Logout if logged in</li>
+                <li>Login with owner credentials</li>
+                <li>Go to <a href="owner-dashboard.html">Owner Dashboard</a></li>
+                <li>You can add/manage turfs</li>
+            </ol>
+
+            <h3>Test as User:</h3>
+            <ol style="line-height: 2;">
+                <li>Logout if logged in</li>
+                <li>Login with user credentials</li>
+                <li>Browse <a href="turfs.html">Turfs</a></li>
+                <li>Select a turf and book</li>
+                <li>View <a href="my-bookings.html">My Bookings</a></li>
+            </ol>
+        </div>
+
+        <div style="text-align: center; margin: 3rem 0;">
+            <a href="index.html" class="btn btn-primary" style="display: inline-flex;">
+                <i class="fas fa-home"></i> Go to Homepage
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Quick debug helper
+        window.debugAuth = function() {
+            console.log('Token:', localStorage.getItem('token'));
+            console.log('Auth initialized:', window.authManager ? 'Yes' : 'No');
+        };
+
+        console.log('💡 Tip: Run debugAuth() in console to check authentication status');
+    </script>
+</body>
+</html>

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Turf Details - TurfSpot</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="nav-brand" style="text-decoration: none; color: var(--primary-color);">
+                <i class="fas fa-futbol"></i>
+                <span>TurfSpot</span>
+            </a>
+            <div class="nav-menu" id="navMenu">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="turfs.html" class="nav-link">Browse Turfs</a>
+                <a href="my-bookings.html" class="nav-link" id="myBookingsLink" style="display: none;">My Bookings</a>
+            </div>
+            <div class="nav-actions">
+                <button class="btn btn-outline" id="loginBtn">Login</button>
+                <div class="user-menu" id="userMenu" style="display: none;">
+                    <img src="https://ui-avatars.com/api/?name=User" alt="User" class="user-avatar" id="userAvatar">
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Turf Details -->
+    <section class="turf-details">
+        <div class="container">
+            <div id="turfLoader" class="loader">
+                <i class="fas fa-spinner fa-spin"></i> Loading turf details...
+            </div>
+            
+            <div id="turfContent" style="display: none;">
+                <!-- Image Gallery -->
+                <div class="turf-gallery">
+                    <div class="main-image">
+                        <img id="mainImage" src="" alt="Turf">
+                    </div>
+                    <div class="thumbnail-images" id="thumbnails">
+                    </div>
+                </div>
+
+                <!-- Turf Info -->
+                <div class="turf-info-layout">
+                    <div class="turf-main-info">
+                        <h1 id="turfName"></h1>
+                        <div class="turf-meta">
+                            <span class="rating">
+                                <i class="fas fa-star"></i>
+                                <span id="turfRating">0</span>
+                                <span id="turfReviews">(0 reviews)</span>
+                            </span>
+                            <span class="location">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span id="turfLocation"></span>
+                            </span>
+                        </div>
+
+                        <div class="turf-description">
+                            <h3>About</h3>
+                            <p id="turfDescription"></p>
+                        </div>
+
+                        <div class="turf-sports">
+                            <h3>Sports Available</h3>
+                            <div class="sports-tags" id="sportsTags"></div>
+                        </div>
+
+                        <div class="turf-amenities">
+                            <h3>Amenities</h3>
+                            <div class="amenities-list" id="amenitiesList"></div>
+                        </div>
+
+                        <div class="turf-hours">
+                            <h3>Operating Hours</h3>
+                            <div id="operatingHours"></div>
+                        </div>
+
+                        <div class="turf-location">
+                            <h3><i class="fas fa-map-marker-alt"></i> Location</h3>
+                            <div id="turfMap" style="width: 100%; height: 300px; border-radius: 0.5rem; margin-top: 1rem;"></div>
+                        </div>
+
+                        <div class="turf-contact">
+                            <h3>Contact Information</h3>
+                            <div id="contactInfo"></div>
+                        </div>
+                    </div>
+
+                    <!-- Booking Card -->
+                    <div class="booking-card">
+                        <div class="pricing-info">
+                            <div class="price">
+                                <span class="price-label">Starting from</span>
+                                <span class="price-amount">₹<span id="hourlyRate">0</span>/hour</span>
+                            </div>
+                            <div class="weekend-price">
+                                Weekend: ₹<span id="weekendRate">0</span>/hour
+                            </div>
+                        </div>
+
+                        <form id="bookingForm">
+                            <div class="form-group">
+                                <label>Select Sport</label>
+                                <select id="bookingSport" required>
+                                    <option value="">Choose sport</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Booking Date</label>
+                                <input type="date" id="bookingDate" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Available Slots</label>
+                                <div id="slotsContainer">
+                                    <p class="text-muted">Select a date to view available slots</p>
+                                </div>
+                            </div>
+
+                            <div class="form-group" id="playerDetailsGroup" style="display: none;">
+                                <label>Number of Players</label>
+                                <input type="number" id="numberOfPlayers" min="1" max="50">
+                            </div>
+
+                            <div class="form-group" id="notesGroup" style="display: none;">
+                                <label>Additional Notes (Optional)</label>
+                                <textarea id="bookingNotes" rows="3"></textarea>
+                            </div>
+
+                            <div class="booking-summary" id="bookingSummary" style="display: none;">
+                                <h4>Booking Summary</h4>
+                                <div class="summary-row">
+                                    <span>Selected Slot:</span>
+                                    <span id="selectedSlotText">-</span>
+                                </div>
+                                <div class="summary-row">
+                                    <span>Base Price:</span>
+                                    <span id="basePrice">₹0</span>
+                                </div>
+                                <div class="summary-row total">
+                                    <span>Total Amount:</span>
+                                    <span id="totalAmount">₹0</span>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-block" id="bookNowBtn">
+                                <i class="fas fa-calendar-check"></i> Book Now
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2025 TurfSpot. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBRlfL0E9kadx7PYmejv1XN5BTK-yEIUAc&loading=async" async defer></script>
+    <script type="module" src="js/api.js"></script>
+    <script type="module" src="js/auth.js"></script>
+    <script type="module" src="js/turf-details.js"></script>
+</body>
+</html>

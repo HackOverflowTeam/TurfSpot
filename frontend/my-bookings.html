@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Bookings - TurfSpot</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="nav-brand" style="text-decoration: none; color: var(--primary-color);">
+                <i class="fas fa-futbol"></i>
+                <span>TurfSpot</span>
+            </a>
+            <div class="nav-menu" id="navMenu">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="turfs.html" class="nav-link">Browse Turfs</a>
+                <a href="my-bookings.html" class="nav-link active">My Bookings</a>
+            </div>
+            <div class="nav-actions">
+                <div class="user-menu" id="userMenu">
+                    <img src="https://ui-avatars.com/api/?name=User" alt="User" class="user-avatar" id="userAvatar">
+                    <div class="dropdown-menu" id="dropdownMenu">
+                        <a href="profile.html"><i class="fas fa-user"></i> Profile</a>
+                        <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <section class="page-header">
+        <div class="container">
+            <h1>My Bookings</h1>
+            <p>Manage your turf bookings</p>
+        </div>
+    </section>
+
+    <section class="bookings-section">
+        <div class="container">
+            <div class="bookings-filters">
+                <button class="filter-btn active" data-status="all">All</button>
+                <button class="filter-btn" data-status="confirmed">Confirmed</button>
+                <button class="filter-btn" data-status="pending">Pending</button>
+                <button class="filter-btn" data-status="completed">Completed</button>
+                <button class="filter-btn" data-status="cancelled">Cancelled</button>
+            </div>
+
+            <div id="bookingsLoader" class="loader">
+                <i class="fas fa-spinner fa-spin"></i> Loading bookings...
+            </div>
+
+            <div id="bookingsContainer" style="display: none;">
+                <!-- Bookings will be loaded here -->
+            </div>
+
+            <div id="noBookings" style="display: none;" class="empty-state">
+                <i class="fas fa-calendar-times"></i>
+                <h3>No Bookings Found</h3>
+                <p>You haven't made any bookings yet.</p>
+                <a href="turfs.html" class="btn btn-primary">Browse Turfs</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Cancel Booking Modal -->
+    <div class="modal" id="cancelModal">
+        <div class="modal-content">
+            <span class="close" id="closeCancelModal">&times;</span>
+            <h2>Cancel Booking</h2>
+            <p>Are you sure you want to cancel this booking?</p>
+            <form id="cancelForm">
+                <div class="form-group">
+                    <label>Reason for cancellation</label>
+                    <textarea id="cancelReason" rows="3" required></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-outline" id="closeCancelBtn">No, Keep It</button>
+                    <button type="submit" class="btn btn-danger">Yes, Cancel Booking</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2025 TurfSpot. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script type="module" src="js/api.js"></script>
+    <script type="module" src="js/auth.js"></script>
+    <script type="module" src="js/my-bookings.js"></script>
+</body>
+</html>

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browse Turfs - TurfSpot</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="nav-brand" style="text-decoration: none; color: var(--primary-color);">
+                <i class="fas fa-futbol"></i>
+                <span>TurfSpot</span>
+            </a>
+            <div class="nav-menu" id="navMenu">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="turfs.html" class="nav-link active">Browse Turfs</a>
+                <a href="my-bookings.html" class="nav-link" id="myBookingsLink" style="display: none;">My Bookings</a>
+                <a href="owner-dashboard.html" class="nav-link" id="ownerDashLink" style="display: none;">My Dashboard</a>
+                <a href="admin-dashboard.html" class="nav-link" id="adminDashLink" style="display: none;">Admin</a>
+            </div>
+            <div class="nav-actions">
+                <button class="btn btn-outline" id="loginBtn">Login</button>
+                <button class="btn btn-primary" id="registerBtn">Register</button>
+                <div class="user-menu" id="userMenu" style="display: none;">
+                    <img src="https://ui-avatars.com/api/?name=User" alt="User" class="user-avatar" id="userAvatar">
+                    <div class="dropdown-menu" id="dropdownMenu">
+                        <a href="profile.html"><i class="fas fa-user"></i> Profile</a>
+                        <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <section class="page-header">
+        <div class="container">
+            <h1>Browse Turfs</h1>
+            <p>Find the perfect turf for your game</p>
+        </div>
+    </section>
+
+    <!-- Filters and Listing -->
+    <section class="turfs-listing">
+        <div class="container">
+            <div class="listing-layout">
+                <!-- Filters Sidebar -->
+                <aside class="filters-sidebar">
+                    <div class="filters-header">
+                        <h3>Filters</h3>
+                        <button class="btn-text" id="clearFilters">Clear All</button>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>City</label>
+                        <input type="text" id="filterCity" placeholder="Enter city">
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Sport</label>
+                        <select id="filterSport">
+                            <option value="">All Sports</option>
+                            <option value="cricket">Cricket</option>
+                            <option value="football">Football</option>
+                            <option value="badminton">Badminton</option>
+                            <option value="tennis">Tennis</option>
+                            <option value="basketball">Basketball</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Price Range (₹/hour)</label>
+                        <div class="price-inputs">
+                            <input type="number" id="filterMinPrice" placeholder="Min">
+                            <span>-</span>
+                            <input type="number" id="filterMaxPrice" placeholder="Max">
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Amenities</label>
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" value="parking"> Parking</label>
+                            <label><input type="checkbox" value="floodlights"> Floodlights</label>
+                            <label><input type="checkbox" value="washroom"> Washroom</label>
+                            <label><input type="checkbox" value="changing_room"> Changing Room</label>
+                            <label><input type="checkbox" value="drinking_water"> Drinking Water</label>
+                            <label><input type="checkbox" value="first_aid"> First Aid</label>
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>
+                            <input type="checkbox" id="filterNearby"> Near Me
+                        </label>
+                    </div>
+
+                    <button class="btn btn-primary btn-block" id="applyFilters">Apply Filters</button>
+                </aside>
+
+                <!-- Turfs Grid -->
+                <div class="turfs-content">
+                    <div class="turfs-header">
+                        <div class="results-info">
+                            <span id="resultsCount">Loading...</span>
+                        </div>
+                        <div class="sort-options">
+                            <label>Sort by:</label>
+                            <select id="sortBy">
+                                <option value="createdAt">Newest First</option>
+                                <option value="rating.average">Highest Rated</option>
+                                <option value="pricing.hourlyRate">Price: Low to High</option>
+                                <option value="-pricing.hourlyRate">Price: High to Low</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="turfs-grid" id="turfsGrid">
+                        <div class="loader">
+                            <i class="fas fa-spinner fa-spin"></i> Loading turfs...
+                        </div>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="pagination" id="pagination" style="display: none;">
+                        <button class="btn btn-outline" id="prevPage">
+                            <i class="fas fa-chevron-left"></i> Previous
+                        </button>
+                        <span id="pageInfo">Page 1 of 1</span>
+                        <button class="btn btn-outline" id="nextPage">
+                            Next <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3><i class="fas fa-futbol"></i> TurfSpot</h3>
+                    <p>Your one-stop solution for booking sports turfs across India.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="turfs.html">Browse Turfs</a></li>
+                        <li><a href="about.html">About Us</a></li>
+                        <li><a href="contact.html">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 TurfSpot. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script type="module" src="js/api.js"></script>
+    <script type="module" src="js/auth.js"></script>
+    <script type="module" src="js/turfs.js"></script>
+</body>
+</html>
