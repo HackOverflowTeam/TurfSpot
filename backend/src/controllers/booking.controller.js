@@ -4,7 +4,19 @@ const razorpay = require('../config/razorpay');
 const crypto = require('crypto');
 
 // Calculate pricing
-const calculatePricing = (basePrice) => {
+const calculatePricing = (basePrice, paymentMethod = 'commission') => {
+  if (paymentMethod === 'tier') {
+    // For tier-based: owner gets full amount, no platform commission
+    return {
+      basePrice,
+      platformFee: 0,
+      ownerEarnings: basePrice,
+      taxes: 0,
+      totalAmount: basePrice
+    };
+  }
+  
+  // For commission-based: platform takes commission
   const platformCommission = 10; // 10% commission for platform
   const platformFee = (basePrice * platformCommission) / 100;
   const ownerEarnings = basePrice - platformFee;
@@ -93,9 +105,49 @@ exports.createBooking = async (req, res) => {
     const isWeekend = [0, 6].includes(bookingDateObj.getDay());
     const basePricePerSlot = isWeekend ? turf.pricing.weekendRate : turf.pricing.hourlyRate;
     const totalBasePrice = basePricePerSlot * slotsToBook.length;
-    const pricing = calculatePricing(totalBasePrice);
+    const pricing = calculatePricing(totalBasePrice, turf.paymentMethod);
 
-    // Create Razorpay order
+    // For tier-based turfs, create booking without Razorpay
+    if (turf.paymentMethod === 'tier') {
+      const booking = await Booking.create({
+        turf: turfId,
+        user: req.user._id,
+        bookingDate: bookingDateObj,
+        timeSlots: slotsToBook,
+        timeSlot: {
+          startTime: slotsToBook[0].startTime,
+          endTime: slotsToBook[slotsToBook.length - 1].endTime
+        },
+        sport,
+        pricing,
+        payment: {
+          status: 'pending' // Will be marked completed after owner verification
+        },
+        tierPayment: {
+          verificationStatus: 'pending'
+        },
+        playerDetails,
+        notes,
+        status: 'pending'
+      });
+
+      await booking.populate([
+        { path: 'turf', select: 'name address images pricing upiQrCode' },
+        { path: 'user', select: 'name email phone' }
+      ]);
+
+      return res.status(201).json({
+        success: true,
+        message: 'Booking created. Please upload payment screenshot.',
+        data: {
+          booking,
+          paymentMethod: 'tier',
+          upiQrCode: turf.upiQrCode
+        }
+      });
+    }
+
+    // For commission-based: Create Razorpay order
     const razorpayOrder = await razorpay.orders.create({
       amount: Math.round(pricing.totalAmount * 100), // Amount in paise
       currency: 'INR',
@@ -140,6 +192,7 @@ exports.createBooking = async (req, res) => {
       message: 'Booking created. Please complete payment.',
       data: {
         booking,
+        paymentMethod: 'commission',
         razorpayOrder: {
           orderId: razorpayOrder.id,
           amount: razorpayOrder.amount,
@@ -455,6 +508,163 @@ exports.getOwnerBookings = async (req, res) => {
       total,
       page: parseInt(page),
       pages: Math.ceil(total / limit),
+      data: bookings
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// @desc    Upload payment screenshot for tier-based booking
+// @route   POST /api/bookings/:bookingId/tier-payment
+// @access  Private (User)
+exports.uploadTierPaymentScreenshot = async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+    const { screenshotUrl } = req.body;
+
+    const booking = await Booking.findById(bookingId).populate('turf');
+    
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: 'Booking not found'
+      });
+    }
+
+    // Verify user owns this booking
+    if (booking.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized'
+      });
+    }
+
+    // Verify this is a tier-based turf
+    if (booking.turf.paymentMethod !== 'tier') {
+      return res.status(400).json({
+        success: false,
+        message: 'This booking does not require payment screenshot'
+      });
+    }
+
+    // Update booking with screenshot
+    booking.tierPayment = {
+      screenshot: {
+        url: screenshotUrl
+      },
+      uploadedAt: new Date(),
+      verificationStatus: 'pending'
+    };
+
+    await booking.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Payment screenshot uploaded. Waiting for owner verification.',
+      data: booking
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// @desc    Verify tier payment by owner
+// @route   PUT /api/bookings/:bookingId/verify-tier-payment
+// @access  Private (Owner)
+exports.verifyTierPayment = async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+    const { approved, reason } = req.body;
+
+    const booking = await Booking.findById(bookingId).populate('turf');
+    
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: 'Booking not found'
+      });
+    }
+
+    // Verify owner owns this turf
+    if (booking.turf.owner.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized'
+      });
+    }
+
+    // Verify this is a tier-based turf
+    if (booking.turf.paymentMethod !== 'tier') {
+      return res.status(400).json({
+        success: false,
+        message: 'This booking is not tier-based'
+      });
+    }
+
+    if (approved) {
+      booking.tierPayment.verificationStatus = 'approved';
+      booking.tierPayment.verifiedBy = req.user._id;
+      booking.tierPayment.verifiedAt = new Date();
+      booking.payment.status = 'completed';
+      booking.payment.paidAt = new Date();
+      booking.status = 'confirmed';
+    } else {
+      booking.tierPayment.verificationStatus = 'rejected';
+      booking.tierPayment.rejectionReason = reason;
+      booking.status = 'cancelled';
+      booking.cancellation = {
+        cancelledBy: req.user._id,
+        cancelledAt: new Date(),
+        reason: 'Payment verification failed: ' + reason
+      };
+    }
+
+    await booking.save();
+
+    res.status(200).json({
+      success: true,
+      message: approved ? 'Booking confirmed successfully' : 'Booking rejected',
+      data: booking
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// @desc    Get pending tier payment verifications for owner
+// @route   GET /api/bookings/owner/pending-verifications
+// @access  Private (Owner)
+exports.getPendingTierVerifications = async (req, res) => {
+  try {
+    // Get owner's tier-based turfs
+    const ownerTurfs = await Turf.find({ 
+      owner: req.user._id,
+      paymentMethod: 'tier'
+    }).select('_id');
+    
+    const turfIds = ownerTurfs.map(t => t._id);
+
+    const bookings = await Booking.find({
+      turf: { $in: turfIds },
+      'tierPayment.verificationStatus': 'pending'
+    })
+      .populate('turf', 'name address')
+      .populate('user', 'name email phone')
+      .sort({ 'tierPayment.uploadedAt': 1 });
+
+    res.status(200).json({
+      success: true,
+      count: bookings.length,
       data: bookings
     });
   } catch (error) {

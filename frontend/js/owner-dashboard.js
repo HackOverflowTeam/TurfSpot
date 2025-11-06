@@ -8,6 +8,64 @@ let map = null;
 let marker = null;
 let selectedLocation = null;
 
+// Helper function to convert file to base64 with image optimization
+async function fileToBase64(file, maxWidth = 1200, maxHeight = 1200) {
+    return new Promise((resolve, reject) => {
+        // Check file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            reject(new Error('File size must be less than 5MB'));
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        
+        reader.onload = (e) => {
+            const img = new Image();
+            img.src = e.target.result;
+            
+            img.onload = () => {
+                // Create canvas to resize image
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+
+                // Calculate new dimensions
+                if (width > height) {
+                    if (width > maxWidth) {
+                        height *= maxWidth / width;
+                        width = maxWidth;
+                    }
+                } else {
+                    if (height > maxHeight) {
+                        width *= maxHeight / height;
+                        height = maxHeight;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // Convert to base64 with compression
+                const base64 = canvas.toDataURL('image/jpeg', 0.8);
+                resolve(base64);
+            };
+
+            img.onerror = () => reject(new Error('Failed to load image'));
+        };
+        
+        reader.onerror = () => reject(new Error('Failed to read file'));
+    });
+}
+
+// Helper function for QR code conversion (smaller size)
+async function qrCodeToBase64(file) {
+    return fileToBase64(file, 600, 600);
+}
+
 // Initialize Google Map
 function initMap() {
     // Default location (India center)
@@ -448,6 +506,29 @@ async function handleTurfSubmit(e) {
     const amenityCheckboxes = document.querySelectorAll('.checkbox-group input[type="checkbox"]:checked:not([name="sports"])');
     const selectedAmenities = Array.from(amenityCheckboxes).map(cb => cb.value);
 
+    // Get payment method
+    const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+    const upiQrCodeUrl = document.getElementById('upiQrCodeUrl').value;
+    const upiQrCodeFile = document.getElementById('upiQrCodeFile').files[0];
+
+    // Validate UPI QR for tier-based
+    if (paymentMethod === 'tier' && !upiQrCodeUrl && !upiQrCodeFile) {
+        showToast('Please provide UPI QR code (file or URL) for tier-based payment', 'error');
+        return;
+    }
+
+    // Convert UPI QR file to base64 if uploaded
+    let upiQrBase64 = null;
+    if (upiQrCodeFile) {
+        try {
+            showToast('Processing UPI QR code...', 'info');
+            upiQrBase64 = await qrCodeToBase64(upiQrCodeFile);
+        } catch (error) {
+            showToast('Failed to process UPI QR code: ' + error.message, 'error');
+            return;
+        }
+    }
+
     const turfData = {
         name: document.getElementById('turfName').value,
         description: document.getElementById('turfDescription').value,
@@ -471,6 +552,7 @@ async function handleTurfSubmit(e) {
             weekendRate: parseInt(document.getElementById('weekendRate').value)
         },
         amenities: selectedAmenities,
+        paymentMethod: paymentMethod,
         operatingHours: {
             monday: { open: '06:00', close: '22:00', isOpen: true },
             tuesday: { open: '06:00', close: '22:00', isOpen: true },
@@ -482,8 +564,29 @@ async function handleTurfSubmit(e) {
         }
     };
 
+    // Add UPI QR code if tier-based
+    if (paymentMethod === 'tier') {
+        if (upiQrBase64) {
+            turfData.upiQrCodeUrl = upiQrBase64; // Use base64 data
+        } else if (upiQrCodeUrl) {
+            turfData.upiQrCodeUrl = upiQrCodeUrl; // Use URL
+        }
+    }
+
+    // Handle turf image upload
     const imageUrl = document.getElementById('turfImageUrl').value;
-    if (imageUrl) {
+    const imageFile = document.getElementById('turfImageFile').files[0];
+    
+    if (imageFile) {
+        try {
+            showToast('Processing turf image...', 'info');
+            const imageBase64 = await fileToBase64(imageFile);
+            turfData.images = [{ url: imageBase64, isPrimary: true }];
+        } catch (error) {
+            showToast('Failed to process image: ' + error.message, 'error');
+            return;
+        }
+    } else if (imageUrl) {
         turfData.images = [{ url: imageUrl, isPrimary: true }];
     }
 
@@ -515,6 +618,239 @@ function closeTurfModal() {
     document.getElementById('selectedCoordinates').textContent = 'Click on map to select location';
 }
 
+// Load subscription status
+async function loadSubscription() {
+    try {
+        const response = await api.getMySubscription();
+        const subscriptionInfo = document.getElementById('subscriptionInfo');
+        
+        if (!response.data || !response.data.subscription) {
+            subscriptionInfo.innerHTML = `
+                <div style="text-align: center; padding: 3rem;">
+                    <i class="fas fa-crown fa-3x" style="color: var(--primary); margin-bottom: 1rem;"></i>
+                    <h3>No Active Subscription</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+                        Subscribe to a tier plan to list your turfs without paying commission on bookings
+                    </p>
+                    <a href="subscription.html" class="btn btn-primary">
+                        <i class="fas fa-rocket"></i> View Plans
+                    </a>
+                </div>
+            `;
+            return;
+        }
+        
+        const { subscription, currentTurfCount, canAddMoreTurfs } = response.data;
+        const statusClass = subscription.status === 'active' ? 'success' : 
+                           subscription.status === 'pending' ? 'warning' : 'danger';
+        const statusColor = subscription.status === 'active' ? '#10b981' : 
+                           subscription.status === 'pending' ? '#f59e0b' : '#ef4444';
+        
+        subscriptionInfo.innerHTML = `
+            <div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1.5rem;">
+                    <div>
+                        <h3 style="margin-bottom: 0.5rem;">
+                            ${subscription.plan.charAt(0).toUpperCase() + subscription.plan.slice(1)} Plan
+                        </h3>
+                        <span style="display: inline-block; padding: 0.25rem 0.75rem; background: ${statusColor}; color: white; border-radius: 20px; font-size: 0.85rem; font-weight: bold;">
+                            ${subscription.status.toUpperCase()}
+                        </span>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary);">
+                            ${formatCurrency(subscription.price)}
+                        </div>
+                        <div style="color: var(--text-secondary); font-size: 0.9rem;">
+                            per ${subscription.billingCycle}
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+                    <div style="padding: 1rem; background: var(--light-bg, #f3f4f6); border-radius: 8px;">
+                        <div style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.25rem;">Turfs Listed</div>
+                        <div style="font-size: 1.25rem; font-weight: bold;">${currentTurfCount} / ${subscription.maxTurfs === -1 ? '∞' : subscription.maxTurfs}</div>
+                    </div>
+                    ${subscription.startDate ? `
+                    <div style="padding: 1rem; background: var(--light-bg, #f3f4f6); border-radius: 8px;">
+                        <div style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.25rem;">Started</div>
+                        <div style="font-size: 1rem; font-weight: bold;">${new Date(subscription.startDate).toLocaleDateString()}</div>
+                    </div>
+                    ` : ''}
+                    ${subscription.endDate ? `
+                    <div style="padding: 1rem; background: var(--light-bg, #f3f4f6); border-radius: 8px;">
+                        <div style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.25rem;">Expires</div>
+                        <div style="font-size: 1rem; font-weight: bold;">${new Date(subscription.endDate).toLocaleDateString()}</div>
+                    </div>
+                    ` : ''}
+                </div>
+                
+                <div style="padding: 1rem; background: #ecfdf5; border-left: 4px solid #10b981; border-radius: 4px;">
+                    <i class="fas fa-check-circle" style="color: #10b981;"></i>
+                    <strong>No Commission:</strong> Users pay directly to you via UPI. Zero platform fees!
+                </div>
+                
+                ${!canAddMoreTurfs ? `
+                <div style="margin-top: 1rem; padding: 1rem; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px;">
+                    <i class="fas fa-exclamation-triangle" style="color: #f59e0b;"></i>
+                    You've reached the maximum turfs for your plan. Upgrade to add more!
+                </div>
+                ` : ''}
+                
+                ${subscription.status === 'pending' ? `
+                <div style="margin-top: 1rem; padding: 1rem; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px;">
+                    <i class="fas fa-clock" style="color: #f59e0b;"></i>
+                    Your subscription is awaiting admin verification
+                </div>
+                ` : ''}
+            </div>
+        `;
+    } catch (error) {
+        console.error('Error loading subscription:', error);
+    }
+}
+
+// Load pending verifications
+async function loadPendingVerifications() {
+    const loader = document.getElementById('verificationsLoader');
+    const list = document.getElementById('verificationsList');
+    const badge = document.getElementById('pendingCount');
+    
+    try {
+        loader.style.display = 'block';
+        const response = await api.getPendingTierVerifications();
+        loader.style.display = 'none';
+        
+        if (!response.data || response.data.length === 0) {
+            list.innerHTML = `
+                <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                    <i class="fas fa-check-circle fa-3x" style="margin-bottom: 1rem; opacity: 0.3;"></i>
+                    <p>No pending payment verifications</p>
+                </div>
+            `;
+            badge.style.display = 'none';
+            return;
+        }
+        
+        badge.textContent = response.data.length;
+        badge.style.display = 'inline-block';
+        
+        list.innerHTML = response.data.map(booking => `
+            <div class="verification-card" style="background: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                    <div>
+                        <h4 style="margin-bottom: 0.5rem;">${booking.turf.name}</h4>
+                        <p style="color: var(--text-secondary); margin-bottom: 0.25rem;">
+                            <i class="fas fa-user"></i> ${booking.user.name}
+                        </p>
+                        <p style="color: var(--text-secondary); margin-bottom: 0.25rem;">
+                            <i class="fas fa-phone"></i> ${booking.user.phone}
+                        </p>
+                        <p style="color: var(--text-secondary);">
+                            <i class="fas fa-calendar"></i> ${new Date(booking.bookingDate).toLocaleDateString()} | 
+                            <i class="fas fa-clock"></i> ${formatTimeSlot(booking.timeSlots[0].startTime, booking.timeSlots[booking.timeSlots.length - 1].endTime)}
+                        </p>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary);">
+                            ${formatCurrency(booking.pricing.totalAmount)}
+                        </div>
+                        <small style="color: var(--text-secondary);">Total Amount</small>
+                    </div>
+                </div>
+                
+                ${booking.tierPayment && booking.tierPayment.screenshot ? `
+                    <div style="margin: 1rem 0;">
+                        <strong style="display: block; margin-bottom: 0.5rem;">Payment Screenshot:</strong>
+                        <img src="${booking.tierPayment.screenshot.url}" 
+                             alt="Payment Screenshot" 
+                             style="max-width: 100%; max-height: 300px; border-radius: 8px; cursor: pointer;"
+                             onclick="window.open('${booking.tierPayment.screenshot.url}', '_blank')">
+                        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.5rem;">
+                            <i class="fas fa-clock"></i> Uploaded ${new Date(booking.tierPayment.uploadedAt).toLocaleString()}
+                        </p>
+                    </div>
+                ` : ''}
+                
+                <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                    <button class="btn btn-primary" onclick="verifyPayment('${booking._id}', true)" style="flex: 1;">
+                        <i class="fas fa-check"></i> Approve
+                    </button>
+                    <button class="btn btn-outline" onclick="verifyPayment('${booking._id}', false)" style="flex: 1; color: #ef4444; border-color: #ef4444;">
+                        <i class="fas fa-times"></i> Reject
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    } catch (error) {
+        loader.style.display = 'none';
+        showToast('Failed to load pending verifications', 'error');
+        console.error('Error loading verifications:', error);
+    }
+}
+
+// Verify tier payment
+window.verifyPayment = async function(bookingId, approved) {
+    let reason = '';
+    
+    if (!approved) {
+        reason = prompt('Please provide a reason for rejection:');
+        if (!reason) return;
+    }
+    
+    if (!confirm(`Are you sure you want to ${approved ? 'approve' : 'reject'} this payment?`)) {
+        return;
+    }
+    
+    try {
+        await api.verifyTierPayment(bookingId, approved, reason);
+        showToast(approved ? 'Payment approved successfully' : 'Payment rejected', approved ? 'success' : 'info');
+        loadPendingVerifications();
+        loadOwnerBookings(); // Refresh bookings list
+    } catch (error) {
+        showToast(error.message || 'Failed to verify payment', 'error');
+    }
+};
+
+// Check subscription status for tier-based payment
+async function checkSubscriptionForTier() {
+    try {
+        const response = await api.getMySubscription();
+        const tierMethod = document.getElementById('tierMethod');
+        const warning = document.getElementById('subscriptionWarning');
+        const warningText = document.getElementById('subscriptionWarningText');
+        
+        if (!response.data || !response.data.subscription) {
+            tierMethod.disabled = true;
+            warning.style.display = 'block';
+            warningText.innerHTML = '<strong>No subscription found.</strong> <a href="subscription.html" style="color: var(--primary); text-decoration: underline;">Subscribe now</a> to use tier-based payment.';
+            return false;
+        }
+        
+        const { subscription, canAddMoreTurfs } = response.data;
+        
+        if (subscription.status !== 'active') {
+            tierMethod.disabled = true;
+            warning.style.display = 'block';
+            warningText.innerHTML = `<strong>Subscription ${subscription.status}.</strong> Please wait for admin approval or <a href="subscription.html" style="color: var(--primary); text-decoration: underline;">check status</a>.`;
+            return false;
+        }
+        
+        if (!canAddMoreTurfs) {
+            tierMethod.disabled = true;
+            warning.style.display = 'block';
+            warningText.innerHTML = `<strong>Turf limit reached.</strong> <a href="subscription.html" style="color: var(--primary); text-decoration: underline;">Upgrade your plan</a> to add more turfs.`;
+            return false;
+        }
+        
+        return true;
+    } catch (error) {
+        console.error('Error checking subscription:', error);
+        return false;
+    }
+}
+
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
     // Wait for auth to initialize
@@ -540,12 +876,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 loadOwnerBookings();
             } else if (tabName === 'analytics') {
                 loadAnalytics();
+            } else if (tabName === 'verifications') {
+                loadPendingVerifications();
+            } else if (tabName === 'subscription') {
+                loadSubscription();
             }
         });
     });
 
     // Add turf button
-    document.getElementById('addTurfBtn').addEventListener('click', () => {
+    document.getElementById('addTurfBtn').addEventListener('click', async () => {
         selectedTurfId = null;
         selectedLocation = null;
         document.getElementById('turfModalTitle').textContent = 'Add New Turf';
@@ -553,10 +893,88 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('selectedCoordinates').textContent = 'Click on map to select location';
         document.getElementById('turfModal').classList.add('active');
         
+        // Check subscription status
+        await checkSubscriptionForTier();
+        
         // Initialize map after modal is visible
         setTimeout(() => {
             initMap();
         }, 100);
+    });
+
+    // Payment method change listeners
+    document.querySelectorAll('input[name="paymentMethod"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            const upiSection = document.getElementById('upiQrSection');
+            const warning = document.getElementById('subscriptionWarning');
+            
+            if (e.target.value === 'tier') {
+                upiSection.style.display = 'block';
+                checkSubscriptionForTier();
+            } else {
+                upiSection.style.display = 'none';
+                warning.style.display = 'none';
+            }
+        });
+    });
+
+    // Image file preview
+    document.getElementById('turfImageFile').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            if (file.size > 5 * 1024 * 1024) {
+                showToast('Image must be less than 5MB', 'error');
+                this.value = '';
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('previewImg').src = e.target.result;
+                document.getElementById('imagePreview').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+            
+            // Clear URL input if file is selected
+            document.getElementById('turfImageUrl').value = '';
+        }
+    });
+
+    // UPI QR file preview
+    document.getElementById('upiQrCodeFile').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            if (file.size > 5 * 1024 * 1024) {
+                showToast('QR code image must be less than 5MB', 'error');
+                this.value = '';
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('previewQr').src = e.target.result;
+                document.getElementById('qrPreview').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+            
+            // Clear URL input if file is selected
+            document.getElementById('upiQrCodeUrl').value = '';
+        }
+    });
+
+    // Clear file preview when URL is entered
+    document.getElementById('turfImageUrl').addEventListener('input', function() {
+        if (this.value) {
+            document.getElementById('turfImageFile').value = '';
+            document.getElementById('imagePreview').style.display = 'none';
+        }
+    });
+
+    document.getElementById('upiQrCodeUrl').addEventListener('input', function() {
+        if (this.value) {
+            document.getElementById('upiQrCodeFile').value = '';
+            document.getElementById('qrPreview').style.display = 'none';
+        }
     });
 
     // Turf form

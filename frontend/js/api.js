@@ -1,4 +1,5 @@
 // API Configuration
+// Use localhost for development, production URL for deployment
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://localhost:4000/api'
     : 'https://turfspot.onrender.com/api';
@@ -100,6 +101,19 @@ class APIService {
         return this.request('/auth/change-password', {
             method: 'PUT',
             body: JSON.stringify(passwordData)
+        });
+    }
+
+    async sendOTP() {
+        return this.request('/auth/send-otp', {
+            method: 'POST'
+        });
+    }
+
+    async verifyOTP(otpData) {
+        return this.request('/auth/verify-otp', {
+            method: 'POST',
+            body: JSON.stringify(otpData)
         });
     }
 
@@ -254,6 +268,66 @@ class APIService {
     async getBookingCalendar(queryParams = {}) {
         const query = new URLSearchParams(queryParams).toString();
         return this.request(`/analytics/owner/calendar${query ? '?' + query : ''}`);
+    }
+
+    // SUBSCRIPTION ENDPOINTS
+    async getSubscriptionPlans() {
+        return this.request('/subscriptions/plans', { auth: false });
+    }
+
+    async createSubscription(subscriptionData) {
+        return this.request('/subscriptions', {
+            method: 'POST',
+            body: JSON.stringify(subscriptionData)
+        });
+    }
+
+    async uploadSubscriptionPaymentProof(subscriptionId, paymentProofUrl) {
+        return this.request(`/subscriptions/${subscriptionId}/payment-proof`, {
+            method: 'POST',
+            body: JSON.stringify({ paymentProofUrl })
+        });
+    }
+
+    async getMySubscription() {
+        return this.request('/subscriptions/my-subscription');
+    }
+
+    async cancelSubscription(subscriptionId, reason) {
+        return this.request(`/subscriptions/${subscriptionId}/cancel`, {
+            method: 'PUT',
+            body: JSON.stringify({ reason })
+        });
+    }
+
+    async getAllSubscriptions() {
+        return this.request('/subscriptions/admin/all');
+    }
+
+    async verifySubscriptionPayment(subscriptionId, approved, reason = '') {
+        return this.request(`/subscriptions/admin/${subscriptionId}/verify`, {
+            method: 'PUT',
+            body: JSON.stringify({ approved, reason })
+        });
+    }
+
+    // TIER PAYMENT ENDPOINTS
+    async uploadTierPaymentScreenshot(bookingId, screenshotUrl) {
+        return this.request(`/bookings/${bookingId}/tier-payment`, {
+            method: 'POST',
+            body: JSON.stringify({ screenshotUrl })
+        });
+    }
+
+    async verifyTierPayment(bookingId, approved, reason = '') {
+        return this.request(`/bookings/${bookingId}/verify-tier-payment`, {
+            method: 'PUT',
+            body: JSON.stringify({ approved, reason })
+        });
+    }
+
+    async getPendingTierVerifications() {
+        return this.request('/bookings/owner/pending-verifications');
     }
 }
 

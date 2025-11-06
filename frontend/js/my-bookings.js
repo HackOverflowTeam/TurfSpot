@@ -97,6 +97,18 @@ function createBookingCard(booking) {
                         ${booking.payment.status.toUpperCase()}
                     </p>
                 </div>
+                ${booking.tierPayment && booking.tierPayment.verificationStatus ? `
+                <div>
+                    <strong>Verification:</strong>
+                    <p class="${
+                        booking.tierPayment.verificationStatus === 'approved' ? 'text-success' : 
+                        booking.tierPayment.verificationStatus === 'rejected' ? 'text-danger' : 
+                        'text-warning'
+                    }">
+                        ${booking.tierPayment.verificationStatus.toUpperCase()}
+                    </p>
+                </div>
+                ` : ''}
                 <div>
                     <strong>Booked on:</strong>
                     <p>${formatDateTime(booking.createdAt)}</p>
@@ -106,6 +118,34 @@ function createBookingCard(booking) {
                 <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
                     <strong>Players:</strong> ${booking.playerDetails.numberOfPlayers}
                     ${booking.notes ? `<br><strong>Notes:</strong> ${booking.notes}` : ''}
+                </div>
+            ` : ''}
+            ${booking.tierPayment && booking.tierPayment.verificationStatus === 'pending' ? `
+                <div style="margin-top: 1rem; padding: 1rem; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px;">
+                    <i class="fas fa-clock" style="color: #f59e0b;"></i>
+                    <strong>Waiting for owner to verify your payment</strong>
+                    ${booking.tierPayment.screenshot ? `
+                        <div style="margin-top: 0.5rem;">
+                            <small>Screenshot uploaded on ${new Date(booking.tierPayment.uploadedAt).toLocaleString()}</small>
+                        </div>
+                    ` : ''}
+                </div>
+            ` : ''}
+            ${booking.tierPayment && booking.tierPayment.verificationStatus === 'rejected' ? `
+                <div style="margin-top: 1rem; padding: 1rem; background: #fee2e2; border-left: 4px solid #ef4444; border-radius: 4px;">
+                    <i class="fas fa-times-circle" style="color: #ef4444;"></i>
+                    <strong>Payment verification failed</strong>
+                    ${booking.tierPayment.rejectionReason ? `
+                        <div style="margin-top: 0.5rem;">
+                            <small>Reason: ${booking.tierPayment.rejectionReason}</small>
+                        </div>
+                    ` : ''}
+                </div>
+            ` : ''}
+            ${booking.tierPayment && booking.tierPayment.verificationStatus === 'approved' ? `
+                <div style="margin-top: 1rem; padding: 1rem; background: #d1fae5; border-left: 4px solid #10b981; border-radius: 4px;">
+                    <i class="fas fa-check-circle" style="color: #10b981;"></i>
+                    <strong>Payment verified and booking confirmed!</strong>
                 </div>
             ` : ''}
             ${canCancel ? `

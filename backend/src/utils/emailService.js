@@ -1,4 +1,10 @@
 const nodemailer = require('nodemailer');
+const crypto = require('crypto');
+
+// PRODUCTION SECURITY: Hash OTP before storing
+const hashOTP = (otp) => {
+  return crypto.createHash('sha256').update(otp.toString()).digest('hex');
+};
 
 // Create transporter
 const transporter = nodemailer.createTransport({
@@ -29,6 +35,126 @@ const sendEmail = async (options) => {
     console.error('Email error:', error);
     throw error;
   }
+};
+
+// Generate 6-digit OTP
+const generateOTP = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
+// Send OTP for email verification
+const sendOTPEmail = async (email, name, otp) => {
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; }
+        .otp-box { background: white; border: 2px dashed #10b981; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0; }
+        .otp-code { font-size: 32px; font-weight: bold; color: #10b981; letter-spacing: 8px; }
+        .footer { text-align: center; margin-top: 20px; color: #6b7280; font-size: 12px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>🏟️ TurfSpot Email Verification</h1>
+        </div>
+        <div class="content">
+          <p>Hi ${name || 'there'},</p>
+          <p>Thank you for registering with TurfSpot! Please use the following OTP to verify your email address:</p>
+          <div class="otp-box">
+            <div class="otp-code">${otp}</div>
+            <p style="margin-top: 10px; color: #6b7280;">This OTP is valid for 10 minutes</p>
+          </div>
+          <p>If you didn't request this verification, please ignore this email.</p>
+          <p>Best regards,<br><strong>TurfSpot Team</strong></p>
+        </div>
+        <div class="footer">
+          <p>This is an automated email. Please do not reply.</p>
+          <p>&copy; ${new Date().getFullYear()} TurfSpot. All rights reserved.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  await sendEmail({
+    to: email,
+    subject: 'Verify Your Email - TurfSpot',
+    html,
+    text: `Your TurfSpot verification OTP is: ${otp}. This OTP is valid for 10 minutes.`
+  });
+};
+
+// Send welcome email after successful verification
+const sendWelcomeEmail = async (email, name, role) => {
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; }
+        .feature-box { background: white; border-left: 4px solid #10b981; padding: 15px; margin: 10px 0; border-radius: 4px; }
+        .cta-button { display: inline-block; background: #10b981; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 20px; color: #6b7280; font-size: 12px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>🎉 Welcome to TurfSpot!</h1>
+        </div>
+        <div class="content">
+          <p>Hi ${name},</p>
+          <p>Congratulations! Your email has been verified successfully. Welcome to India's premier turf booking platform!</p>
+          ${role === 'owner' ? `
+          <div class="feature-box">
+            <h3>🏟️ As a Turf Owner, you can:</h3>
+            <ul>
+              <li>List and manage your turfs</li>
+              <li>Track bookings and revenue</li>
+              <li>Choose flexible payment plans</li>
+              <li>Access detailed analytics</li>
+            </ul>
+          </div>
+          ` : `
+          <div class="feature-box">
+            <h3>⚽ As a Player, you can:</h3>
+            <ul>
+              <li>Discover turfs near you</li>
+              <li>Book slots instantly</li>
+              <li>Secure online payments</li>
+              <li>Track your bookings</li>
+            </ul>
+          </div>
+          `}
+          <p style="text-align: center;">
+            <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}" class="cta-button">Get Started</a>
+          </p>
+          <p>If you have any questions, feel free to reach out to our support team.</p>
+          <p>Best regards,<br><strong>TurfSpot Team</strong></p>
+        </div>
+        <div class="footer">
+          <p>&copy; ${new Date().getFullYear()} TurfSpot. All rights reserved.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  await sendEmail({
+    to: email,
+    subject: 'Welcome to TurfSpot! 🏟️',
+    html,
+    text: `Welcome to TurfSpot! Your email has been verified successfully. Start ${role === 'owner' ? 'listing your turfs' : 'booking your favorite turfs'} now!`
+  });
 };
 
 // Booking confirmation email
@@ -124,6 +250,10 @@ const sendTurfRejection = async (turf, owner, reason) => {
 
 module.exports = {
   sendEmail,
+  generateOTP,
+  hashOTP,
+  sendOTPEmail,
+  sendWelcomeEmail,
   sendBookingConfirmation,
   sendBookingCancellation,
   sendTurfApproval,

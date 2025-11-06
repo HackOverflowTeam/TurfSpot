@@ -6,7 +6,9 @@ const {
   googleAuth,
   getMe,
   updateProfile,
-  changePassword
+  changePassword,
+  sendOTP,
+  verifyOTP
 } = require('../controllers/auth.controller');
 const { protect } = require('../middleware/auth.middleware');
 const validate = require('../middleware/validation.middleware');
@@ -41,6 +43,10 @@ const changePasswordValidation = [
   body('newPassword').isLength({ min: 6 }).withMessage('New password must be at least 6 characters')
 ];
 
+const verifyOTPValidation = [
+  body('otp').notEmpty().trim().isLength({ min: 6, max: 6 }).withMessage('Valid 6-digit OTP is required')
+];
+
 // Routes
 router.post('/register', registerValidation, validate, register);
 router.post('/login', loginValidation, validate, login);
@@ -48,5 +54,9 @@ router.post('/google', googleAuthValidation, validate, googleAuth);
 router.get('/me', protect, getMe);
 router.put('/profile', protect, updateProfileValidation, validate, updateProfile);
 router.put('/change-password', protect, changePasswordValidation, validate, changePassword);
+
+// Email verification routes
+router.post('/send-otp', protect, sendOTP);
+router.post('/verify-otp', protect, verifyOTPValidation, validate, verifyOTP);
 
 module.exports = router;

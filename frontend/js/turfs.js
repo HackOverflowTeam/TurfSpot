@@ -51,8 +51,8 @@ async function loadTurfs() {
 // Create turf card
 function createTurfCard(turf) {
     const primaryImage = turf.images && turf.images.length > 0 
-        ? turf.images.find(img => img.isPrimary)?.url || turf.images[0].url
-        : 'https://via.placeholder.com/400x300?text=Turf+Image';
+        ? (turf.images.find(img => img.isPrimary)?.url || turf.images[0].url)
+        : 'https://placehold.co/400x300/10b981/white?text=Turf+Image';
 
     const rating = turf.rating?.average || 0;
     const ratingCount = turf.rating?.count || 0;
@@ -60,7 +60,7 @@ function createTurfCard(turf) {
     return `
         <div class="turf-card" onclick="window.location.href='turf-details.html?id=${turf._id}'">
             <img src="${primaryImage}" alt="${turf.name}" class="turf-card-image"
-                 onerror="this.src='https://via.placeholder.com/400x300?text=Turf+Image'">
+                 onerror="this.src='https://placehold.co/400x300/10b981/white?text=Turf+Image'">
             <div class="turf-card-content">
                 <div class="turf-card-header">
                     <div>

@@ -78,6 +78,25 @@ const bookingSchema = new mongoose.Schema({
     refundId: String,
     refundedAt: Date
   },
+  // For tier-based turfs: user uploads payment screenshot
+  tierPayment: {
+    screenshot: {
+      url: String,
+      publicId: String
+    },
+    uploadedAt: Date,
+    verificationStatus: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'pending'
+    },
+    verifiedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    verifiedAt: Date,
+    rejectionReason: String
+  },
   status: {
     type: String,
     enum: ['pending', 'confirmed', 'cancelled', 'completed', 'no_show'],

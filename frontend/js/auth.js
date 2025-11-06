@@ -55,11 +55,43 @@ class AuthManager {
             const response = await api.register(userData);
             api.setToken(response.data.token);
             this.user = response.data.user;
-            this.updateUI();
-            showToast('Registration successful!', 'success');
-            return true;
+            
+            // Check if email verification is required
+            if (response.data.requiresEmailVerification) {
+                showToast('Registration successful! Please verify your email.', 'success');
+                // Show OTP modal instead of redirecting
+                return { success: true, requiresVerification: true, email: userData.email };
+            } else {
+                this.updateUI();
+                showToast('Registration successful!', 'success');
+                return { success: true, requiresVerification: false };
+            }
         } catch (error) {
             showToast(error.message || 'Registration failed', 'error');
+            return { success: false };
+        }
+    }
+
+    async sendOTP() {
+        try {
+            await api.sendOTP();
+            showToast('OTP sent to your email!', 'success');
+            return true;
+        } catch (error) {
+            showToast(error.message || 'Failed to send OTP', 'error');
+            return false;
+        }
+    }
+
+    async verifyOTP(otp) {
+        try {
+            const response = await api.verifyOTP({ otp });
+            this.user = response.data.user;
+            this.updateUI();
+            showToast('Email verified successfully!', 'success');
+            return true;
+        } catch (error) {
+            showToast(error.message || 'Invalid or expired OTP', 'error');
             return false;
         }
     }
@@ -223,9 +255,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 role: document.getElementById('registerRole').value
             };
 
-            const success = await authManager.register(userData);
-            if (success) {
+            const result = await authManager.register(userData);
+            if (result.success) {
                 closeRegisterModal();
+                
+                if (result.requiresVerification) {
+                    // Show OTP modal
+                    openOtpModal(result.email);
+                } else {
+                    // Redirect based on role
+                    if (authManager.hasRole('owner')) {
+                        window.location.href = 'owner-dashboard.html';
+                    } else {
+                        window.location.href = 'turfs.html';
+                    }
+                }
+            }
+        });
+    }
+
+    // OTP form
+    const otpForm = document.getElementById('otpForm');
+    if (otpForm) {
+        otpForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const otp = document.getElementById('otpInput').value;
+
+            const success = await authManager.verifyOTP(otp);
+            if (success) {
+                closeOtpModal();
                 // Redirect based on role
                 if (authManager.hasRole('owner')) {
                     window.location.href = 'owner-dashboard.html';
@@ -236,11 +294,22 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Resend OTP button
+    const resendOtpBtn = document.getElementById('resendOtpBtn');
+    if (resendOtpBtn) {
+        resendOtpBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            await authManager.sendOTP();
+        });
+    }
+
     // Modal controls
     const loginModal = document.getElementById('loginModal');
     const registerModal = document.getElementById('registerModal');
+    const otpModal = document.getElementById('otpModal');
     const closeLoginModal = document.getElementById('closeLoginModal');
     const closeRegisterModal = document.getElementById('closeRegisterModal');
+    const closeOtpModal = document.getElementById('closeOtpModal');
     const switchToRegister = document.getElementById('switchToRegister');
     const switchToLogin = document.getElementById('switchToLogin');
 
@@ -253,6 +322,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (closeRegisterModal) {
         closeRegisterModal.addEventListener('click', () => {
             registerModal.classList.remove('active');
+        });
+    }
+
+    if (closeOtpModal) {
+        closeOtpModal.addEventListener('click', () => {
+            otpModal.classList.remove('active');
         });
     }
 
@@ -279,6 +354,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (e.target === registerModal) {
             registerModal.classList.remove('active');
+        }
+        if (e.target === otpModal) {
+            otpModal.classList.remove('active');
         }
     });
 });
@@ -309,5 +387,28 @@ export function closeRegisterModal() {
     const registerModal = document.getElementById('registerModal');
     if (registerModal) {
         registerModal.classList.remove('active');
+    }
+}
+
+export function openOtpModal(email) {
+    const otpModal = document.getElementById('otpModal');
+    const otpEmailDisplay = document.getElementById('otpEmail');
+    const otpInput = document.getElementById('otpInput');
+    
+    if (otpModal) {
+        if (otpEmailDisplay && email) {
+            otpEmailDisplay.textContent = email;
+        }
+        if (otpInput) {
+            otpInput.value = '';
+        }
+        otpModal.classList.add('active');
+    }
+}
+
+export function closeOtpModal() {
+    const otpModal = document.getElementById('otpModal');
+    if (otpModal) {
+        otpModal.classList.remove('active');
     }
 }

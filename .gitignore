@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# IDE
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Build outputs
+dist/
+build/
+
+# Backup files
+*.backup
+*.old
+backup_*/
+
+# Documentation files (keep only essential ones)
+*_SUMMARY.md
+*_COMPLETE.md
+*_REPORT.txt
+*_FIXES*.md
+*_UPDATE*.md
+verify_update.sh
+verify-integration.sh
+start-dual-payment.sh
+
+# Old/deprecated files
+frontend/css/styles_old.css
+frontend/css/styles_new_base.css
+frontend/css/styles.css.backup
+frontend/js/*-old.js
+frontend/js/script.js
+frontend/turf-details.html.old
+frontend/turf-details.css.old

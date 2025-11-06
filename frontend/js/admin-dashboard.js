@@ -31,6 +31,8 @@ async function loadDashboardStats() {
         document.getElementById('platformRevenue').textContent = formatCurrency(stats.platformEarnings || 0);
         document.getElementById('totalRevenue').textContent = formatCurrency(stats.totalRevenue || 0);
         document.getElementById('ownerEarnings').textContent = formatCurrency(stats.ownerEarnings || 0);
+        document.getElementById('activeSubscriptions').textContent = stats.activeSubscriptions || 0;
+        document.getElementById('pendingSubscriptions').textContent = stats.pendingSubscriptions || 0;
     } catch (error) {
         console.error('Error loading stats:', error);
         showToast('Failed to load dashboard stats', 'error');
@@ -70,15 +72,15 @@ async function loadPendingTurfs() {
 // Create pending turf card
 function createPendingTurfCard(turf) {
     const primaryImage = turf.images && turf.images.length > 0 
-        ? turf.images.find(img => img.isPrimary)?.url || turf.images[0].url
-        : 'https://via.placeholder.com/100x80?text=Turf';
+        ? (turf.images.find(img => img.isPrimary)?.url || turf.images[0].url)
+        : 'https://placehold.co/100x80/10b981/white?text=Turf';
 
     return `
         <div class="booking-card-item">
             <div style="display: flex; gap: 1.5rem;">
                 <img src="${primaryImage}" alt="${turf.name}" 
                      style="width: 150px; height: 120px; object-fit: cover; border-radius: 0.5rem;"
-                     onerror="this.src='https://via.placeholder.com/150x120?text=Turf'">
+                     onerror="this.src='https://placehold.co/150x120/10b981/white?text=Turf'">
                 <div style="flex: 1;">
                     <div class="booking-header">
                         <div>
@@ -804,6 +806,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 loadPendingPayouts();
             } else if (tabName === 'history') {
                 loadPayoutHistory();
+            } else if (tabName === 'subscriptions') {
+                loadSubscriptions();
             }
         });
     });
@@ -825,4 +829,179 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Filters
     document.getElementById('roleFilter').addEventListener('change', loadUsers);
     document.getElementById('bookingStatusFilter').addEventListener('change', loadAllBookings);
+    document.getElementById('subscriptionStatusFilter').addEventListener('change', loadSubscriptions);
 });
+
+// Load subscriptions
+async function loadSubscriptions() {
+    const loader = document.getElementById('subscriptionsLoader');
+    const subscriptionsList = document.getElementById('subscriptionsList');
+    const subscriptionsSummary = document.getElementById('subscriptionsSummary');
+    const statusFilter = document.getElementById('subscriptionStatusFilter').value;
+
+    if (loader) loader.style.display = 'block';
+
+    try {
+        const response = await api.getAllSubscriptions();
+
+        if (loader) loader.style.display = 'none';
+
+        if (response.data && response.data.length > 0) {
+            let subscriptions = response.data;
+
+            // Filter by status
+            if (statusFilter) {
+                subscriptions = subscriptions.filter(sub => sub.status === statusFilter);
+            }
+
+            // Summary stats
+            const pending = subscriptions.filter(s => s.status === 'pending').length;
+            const active = subscriptions.filter(s => s.status === 'active').length;
+            const expired = subscriptions.filter(s => s.status === 'expired').length;
+
+            subscriptionsSummary.innerHTML = `
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 1.5rem; border-radius: 12px; color: white;">
+                        <h3 style="font-size: 2rem; margin: 0;">${pending}</h3>
+                        <p style="margin: 0.5rem 0 0 0; opacity: 0.9;">Pending Approval</p>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 1.5rem; border-radius: 12px; color: white;">
+                        <h3 style="font-size: 2rem; margin: 0;">${active}</h3>
+                        <p style="margin: 0.5rem 0 0 0; opacity: 0.9;">Active Subscriptions</p>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%); padding: 1.5rem; border-radius: 12px; color: white;">
+                        <h3 style="font-size: 2rem; margin: 0;">${expired}</h3>
+                        <p style="margin: 0.5rem 0 0 0; opacity: 0.9;">Expired</p>
+                    </div>
+                </div>
+            `;
+
+            subscriptionsList.innerHTML = subscriptions.map(sub => createSubscriptionCard(sub)).join('');
+        } else {
+            subscriptionsList.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-crown"></i>
+                    <h3>No Subscriptions</h3>
+                    <p>No subscription requests found</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error loading subscriptions:', error);
+        if (loader) loader.style.display = 'none';
+        showToast('Failed to load subscriptions', 'error');
+    }
+}
+
+// Create subscription card
+function createSubscriptionCard(subscription) {
+    const statusColors = {
+        pending: 'background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);',
+        active: 'background: linear-gradient(135deg, #10b981 0%, #059669 100%);',
+        expired: 'background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);'
+    };
+
+    const planIcons = {
+        basic: 'fa-star',
+        pro: 'fa-crown',
+        enterprise: 'fa-gem'
+    };
+
+    return `
+        <div class="booking-card-item" style="position: relative;">
+            <div style="position: absolute; top: 1rem; right: 1rem;">
+                <span class="status-badge" style="${statusColors[subscription.status]} color: white; padding: 0.5rem 1rem; border-radius: 20px; font-weight: 700; text-transform: uppercase; font-size: 0.85rem;">
+                    ${subscription.status}
+                </span>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 2rem; align-items: start;">
+                <div>
+                    <div style="text-align: center; padding: 1rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 12px; color: white;">
+                        <i class="fas ${planIcons[subscription.plan]} fa-3x" style="margin-bottom: 0.5rem;"></i>
+                        <h3 style="margin: 0.5rem 0; font-size: 1.5rem; text-transform: capitalize;">${subscription.plan}</h3>
+                        <p style="margin: 0; font-size: 0.9rem; opacity: 0.9;">${subscription.billingCycle}</p>
+                        <h2 style="margin: 0.5rem 0 0 0; font-size: 2rem;">${formatCurrency(subscription.price)}</h2>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 style="color: #1f2937; margin-bottom: 1rem;">
+                        <i class="fas fa-user-tie"></i> ${subscription.ownerId?.name || 'Unknown Owner'}
+                    </h3>
+                    <div style="display: grid; gap: 0.75rem; font-size: 0.95rem; color: #4b5563;">
+                        <div><i class="fas fa-envelope" style="width: 20px; color: #10b981;"></i> ${subscription.ownerId?.email || 'N/A'}</div>
+                        <div><i class="fas fa-phone" style="width: 20px; color: #10b981;"></i> ${subscription.ownerId?.phone || 'N/A'}</div>
+                        <div><i class="fas fa-building" style="width: 20px; color: #10b981;"></i> Max Turfs: <strong>${subscription.maxTurfs === -1 ? 'Unlimited' : subscription.maxTurfs}</strong></div>
+                        <div><i class="fas fa-calendar" style="width: 20px; color: #10b981;"></i> Created: ${formatDateTime(subscription.createdAt)}</div>
+                        ${subscription.startDate ? `<div><i class="fas fa-play-circle" style="width: 20px; color: #10b981;"></i> Started: ${formatDateTime(subscription.startDate)}</div>` : ''}
+                        ${subscription.endDate ? `<div><i class="fas fa-stop-circle" style="width: 20px; color: #10b981;"></i> Expires: ${formatDateTime(subscription.endDate)}</div>` : ''}
+                    </div>
+                </div>
+
+                <div>
+                    ${subscription.paymentProof ? `
+                        <div style="margin-bottom: 1rem;">
+                            <p style="font-weight: 600; margin-bottom: 0.5rem; color: #1f2937;">
+                                <i class="fas fa-receipt"></i> Payment Proof:
+                            </p>
+                            <img src="${subscription.paymentProof.url}" 
+                                 alt="Payment Proof" 
+                                 style="width: 100%; max-height: 200px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid #e5e7eb;"
+                                 onclick="window.open('${subscription.paymentProof.url}', '_blank')">
+                            <p style="font-size: 0.85rem; color: #6b7280; margin-top: 0.5rem;">
+                                Uploaded: ${formatDateTime(subscription.paymentProof.uploadedAt)}
+                            </p>
+                        </div>
+                    ` : '<p style="color: #9ca3af;"><i class="fas fa-exclamation-circle"></i> No payment proof uploaded</p>'}
+
+                    ${subscription.status === 'pending' && subscription.paymentProof ? `
+                        <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                            <button onclick="approveSubscription('${subscription._id}')" 
+                                    class="btn btn-primary" 
+                                    style="flex: 1; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 0.75rem; border-radius: 8px; cursor: pointer; font-weight: 700;">
+                                <i class="fas fa-check"></i> Approve
+                            </button>
+                            <button onclick="rejectSubscription('${subscription._id}')" 
+                                    class="btn btn-danger" 
+                                    style="flex: 1; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; padding: 0.75rem; border-radius: 8px; cursor: pointer; font-weight: 700;">
+                                <i class="fas fa-times"></i> Reject
+                            </button>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Approve subscription
+window.approveSubscription = async function(subscriptionId) {
+    if (!confirm('Are you sure you want to approve this subscription?')) return;
+
+    try {
+        await api.verifySubscriptionPayment(subscriptionId, true);
+        showToast('Subscription approved successfully!', 'success');
+        loadSubscriptions();
+        loadDashboardStats();
+    } catch (error) {
+        console.error('Error approving subscription:', error);
+        showToast(error.message || 'Failed to approve subscription', 'error');
+    }
+};
+
+// Reject subscription
+window.rejectSubscription = async function(subscriptionId) {
+    const reason = prompt('Enter rejection reason:');
+    if (!reason) return;
+
+    try {
+        await api.verifySubscriptionPayment(subscriptionId, false, reason);
+        showToast('Subscription rejected', 'info');
+        loadSubscriptions();
+        loadDashboardStats();
+    } catch (error) {
+        console.error('Error rejecting subscription:', error);
+        showToast(error.message || 'Failed to reject subscription', 'error');
+    }
+};

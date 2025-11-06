@@ -245,6 +245,8 @@ exports.updateUserStatus = async (req, res) => {
 // @access  Private (Admin only)
 exports.getDashboardStats = async (req, res) => {
   try {
+    const Subscription = require('../models/subscription.model');
+    
     const [
       totalUsers,
       totalOwners,
@@ -253,7 +255,9 @@ exports.getDashboardStats = async (req, res) => {
       pendingTurfs,
       totalBookings,
       completedBookings,
-      revenueData
+      revenueData,
+      activeSubscriptions,
+      pendingSubscriptions
     ] = await Promise.all([
       User.countDocuments({ role: 'user' }),
       User.countDocuments({ role: 'owner' }),
@@ -279,7 +283,9 @@ exports.getDashboardStats = async (req, res) => {
             }
           } 
         }
-      ])
+      ]),
+      Subscription.countDocuments({ status: 'active' }),
+      Subscription.countDocuments({ status: 'pending' })
     ]);
 
     // Get recent bookings
@@ -341,7 +347,9 @@ exports.getDashboardStats = async (req, res) => {
           completedBookings,
           totalRevenue: revenue.totalRevenue,
           platformEarnings: revenue.platformEarnings,
-          ownerEarnings: revenue.ownerEarnings
+          ownerEarnings: revenue.ownerEarnings,
+          activeSubscriptions,
+          pendingSubscriptions
         },
         recentBookings,
         monthlyRevenue

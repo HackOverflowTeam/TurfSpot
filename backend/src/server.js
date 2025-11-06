@@ -22,6 +22,7 @@ const bookingRoutes = require('./routes/booking.routes');
 const paymentRoutes = require('./routes/payment.routes');
 const adminRoutes = require('./routes/admin.routes');
 const analyticsRoutes = require('./routes/analytics.routes');
+const subscriptionRoutes = require('./routes/subscription.routes');
 
 // Import error handler
 const errorHandler = require('./middleware/error.middleware');
@@ -49,7 +50,8 @@ app.use('/api', limiter);
 
 // CORS
 app.use(cors({
-  origin: ["http://localhost:5500", "http://127.0.0.1:5500", "https://turfspot-1.onrender.com"],
+  // origin: [, "https://turfspot-1.onrender.com"],
+  origin: '*',
   credentials: true
 }));
 
@@ -73,6 +75,7 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/subscriptions', subscriptionRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

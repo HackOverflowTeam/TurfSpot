@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discover Turfs - TurfSpot</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="discover.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fas fa-futbol"></i>
+                <span>TurfSpot</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html" class="nav-link">Home</a></li>
+                <li><a href="discover.html" class="nav-link active">Discover</a></li>
+            </ul>
+            <div class="nav-buttons">
+                <button class="btn-secondary" onclick="showLoginModal()">Login</button>
+                <button class="btn-primary" onclick="showSignupModal()">Sign Up</button>
+            </div>
+            <div class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Discover Page Content -->
+    <div class="discover-page">
+        <div class="discover-container">
+            <!-- Filters Sidebar -->
+            <aside class="filters-sidebar">
+                <div class="filters-header">
+                    <h2>Filters</h2>
+                    <button class="clear-filters" onclick="clearAllFilters()">Clear All</button>
+                </div>
+
+                <div class="filter-section">
+                    <label class="filter-label">Search Turf</label>
+                    <input type="text" class="filter-input" id="turfNameFilter" placeholder="Enter turf name">
+                </div>
+
+                <div class="filter-section">
+                    <label class="filter-label">City</label>
+                    <input type="text" class="filter-input" id="cityFilter" placeholder="Enter city">
+                </div>
+
+                <div class="filter-section">
+                    <label class="filter-label">Sport</label>
+                    <select class="filter-select" id="sportFilter">
+                        <option value="">All Sports</option>
+                        <option value="football">Football</option>
+                        <option value="cricket">Cricket</option>
+                        <option value="basketball">Basketball</option>
+                        <option value="tennis">Tennis</option>
+                        <option value="badminton">Badminton</option>
+                        <option value="hockey">Hockey</option>
+                    </select>
+                </div>
+
+                <div class="filter-section">
+                    <label class="filter-label">Price Range (₹/hour)</label>
+                    <div class="price-inputs">
+                        <input type="number" class="filter-input" id="minPrice" placeholder="Min">
+                        <span class="price-separator">-</span>
+                        <input type="number" class="filter-input" id="maxPrice" placeholder="Max">
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <label class="filter-label">Amenities</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" value="parking">
+                            <span>Parking</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" value="floodlights">
+                            <span>Floodlights</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" value="washroom">
+                            <span>Washroom</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" value="changing-room">
+                            <span>Changing Room</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" value="drinking-water">
+                            <span>Drinking Water</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" value="first-aid">
+                            <span>First Aid</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <label class="checkbox-label near-me">
+                        <input type="checkbox" id="nearMe">
+                        <span><i class="fas fa-location-arrow"></i> Near Me</span>
+                    </label>
+                </div>
+
+                <button class="apply-filters-btn" onclick="applyFilters()">Apply Filters</button>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="discover-main">
+                <div class="discover-header">
+                    <div class="results-info">
+                        <h1>Showing <span id="resultCount">8</span> turfs</h1>
+                    </div>
+                    <div class="sort-section">
+                        <label>Sort by:</label>
+                        <select class="sort-select" id="sortBy">
+                            <option value="newest">Newest First</option>
+                            <option value="price-low">Price: Low to High</option>
+                            <option value="price-high">Price: High to Low</option>
+                            <option value="rating">Highest Rated</option>
+                            <option value="popular">Most Popular</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Turfs Grid -->
+                <div class="turfs-grid-discover" id="turfsGrid">
+                    <!-- Turf Card 1 -->
+                    <div class="turf-card-discover" data-sport="football">
+                        <div class="turf-image-discover">
+                            <img src="https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=400&h=250&fit=crop" alt="Green Field Turf">
+                            <div class="turf-badge-discover">Football</div>
+                        </div>
+                        <div class="turf-content-discover">
+                            <h3 class="turf-name-discover">Green Field Sports Complex</h3>
+                            <div class="turf-location-discover">
+                                <i class="fas fa-map-marker-alt"></i>
+                                Downtown, City Center
+                            </div>
+                            <div class="turf-rating-discover">
+                                <i class="fas fa-star"></i>
+                                <span>4.8</span>
+                                <span class="reviews">(120 reviews)</span>
+                            </div>
+                            <div class="turf-amenities-discover">
+                                <span class="amenity-tag">Parking</span>
+                                <span class="amenity-tag">Floodlights</span>
+                                <span class="amenity-tag">Washroom</span>
+                            </div>
+                            <div class="turf-footer-discover">
+                                <div class="turf-price-discover">
+                                    <span class="price-label">Starting from</span>
+                                    <span class="price">₹500/hour</span>
+                                </div>
+                                <button class="view-details-btn">View Details</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Turf Card 2 -->
+                    <div class="turf-card-discover" data-sport="cricket">
+                        <div class="turf-image-discover">
+                            <img src="https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=400&h=250&fit=crop" alt="Cricket Ground">
+                            <div class="turf-badge-discover">Cricket</div>
+                        </div>
+                        <div class="turf-content-discover">
+                            <h3 class="turf-name-discover">Elite Cricket Academy</h3>
+                            <div class="turf-location-discover">
+                                <i class="fas fa-map-marker-alt"></i>
+                                Suburb Park
+                            </div>
+                            <div class="turf-rating-discover">
+                                <i class="fas fa-star"></i>
+                                <span>4.9</span>
+                                <span class="reviews">(95 reviews)</span>
+                            </div>
+                            <div class="turf-amenities-discover">
+                                <span class="amenity-tag">Changing Room</span>
+                                <span class="amenity-tag">First Aid</span>
+                                <span class="amenity-tag">Drinking Water</span>
+                            </div>
+                            <div class="turf-footer-discover">
+                                <div class="turf-price-discover">
+                                    <span class="price-label">Starting from</span>
+                                    <span class="price">₹800/hour</span>
+                                </div>
+                                <button class="view-details-btn">View Details</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Turf Card 3 -->
+                    <div class="turf-card-discover" data-sport="basketball">
+                        <div class="turf-image-discover">
+                            <img src="https://images.unsplash.com/photo-1504450758481-7338eba7524a?w=400&h=250&fit=crop" alt="Basketball Court">
+                            <div class="turf-badge-discover">Basketball</div>
+                        </div>
+                        <div class="turf-content-discover">
+                            <h3 class="turf-name-discover">Urban Hoops Arena</h3>
+                            <div class="turf-location-discover">
+                                <i class="fas fa-map-marker-alt"></i>
+                                Industrial Area
+                            </div>
+                            <div class="turf-rating-discover">
+                                <i class="fas fa-star"></i>
+                                <span>4.7</span>
+                                <span class="reviews">(88 reviews)</span>
+                            </div>
+                            <div class="turf-amenities-discover">
+                                <span class="amenity-tag">Floodlights</span>
+                                <span class="amenity-tag">Parking</span>
+                                <span class="amenity-tag">Washroom</span>
+                            </div>
+                            <div class="turf-footer-discover">
+                                <div class="turf-price-discover">
+                                    <span class="price-label">Starting from</span>
+                                    <span class="price">₹600/hour</span>
+                                </div>
+                                <button class="view-details-btn">View Details</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Turf Card 4 -->
+                    <div class="turf-card-discover" data-sport="tennis">
+                        <div class="turf-image-discover">
+                            <img src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=250&fit=crop" alt="Tennis Court">
+                            <div class="turf-badge-discover">Tennis</div>
+                        </div>
+                        <div class="turf-content-discover">
+                            <h3 class="turf-name-discover">Premier Tennis Club</h3>
+                            <div class="turf-location-discover">
+                                <i class="fas fa-map-marker-alt"></i>
+                                Riverside
+                            </div>
+                            <div class="turf-rating-discover">
+                                <i class="fas fa-star"></i>
+                                <span>4.6</span>
+                                <span class="reviews">(72 reviews)</span>
+                            </div>
+                            <div class="turf-amenities-discover">
+                                <span class="amenity-tag">Changing Room</span>
+                                <span class="amenity-tag">Drinking Water</span>
+                                <span class="amenity-tag">First Aid</span>
+                            </div>
+                            <div class="turf-footer-discover">
+                                <div class="turf-price-discover">
+                                    <span class="price-label">Starting from</span>
+                                    <span class="price">₹700/hour</span>
+                                </div>
+                                <button class="view-details-btn">View Details</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Turf Card 5 -->
+                    <div class="turf-card-discover" data-sport="football">
+                        <div class="turf-image-discover">
+                            <img src="https://images.unsplash.com/photo-1459865264687-595d652de67e?w=400&h=250&fit=crop" alt="Football Arena">
+                            <div class="turf-badge-discover">Football</div>
+                        </div>
+                        <div class="turf-content-discover">
+                            <h3 class="turf-name-discover">Victory Football Arena</h3>
+                            <div class="turf-location-discover">
+                                <i class="fas fa-map-marker-alt"></i>
+                                North District
+                            </div>
+                            <div class="turf-rating-discover">
+                                <i class="fas fa-star"></i>
+                                <span>4.5</span>
+                                <span class="reviews">(65 reviews)</span>
+                            </div>
+                            <div class="turf-amenities-discover">
+                                <span class="amenity-tag">Parking</span>
+                                <span class="amenity-tag">Floodlights</span>
+                                <span class="amenity-tag">First Aid</span>
+                            </div>
+                            <div class="turf-footer-discover">
+                                <div class="turf-price-discover">
+                                    <span class="price-label">Starting from</span>
+                                    <span class="price">₹550/hour</span>
+                                </div>
+                                <button class="view-details-btn">View Details</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Turf Card 6 -->
+                    <div class="turf-card-discover" data-sport="badminton">
+                        <div class="turf-image-discover">
+                            <img src="https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=400&h=250&fit=crop" alt="Badminton Court">
+                            <div class="turf-badge-discover">Badminton</div>
+                        </div>
+                        <div class="turf-content-discover">
+                            <h3 class="turf-name-discover">Ace Badminton Center</h3>
+                            <div class="turf-location-discover">
+                                <i class="fas fa-map-marker-alt"></i>
+                                East Zone
+                            </div>
+                            <div class="turf-rating-discover">
+                                <i class="fas fa-star"></i>
+                                <span>4.8</span>
+                                <span class="reviews">(110 reviews)</span>
+                            </div>
+                            <div class="turf-amenities-discover">
+                                <span class="amenity-tag">Washroom</span>
+                                <span class="amenity-tag">Drinking Water</span>
+                                <span class="amenity-tag">Parking</span>
+                            </div>
+                            <div class="turf-footer-discover">
+                                <div class="turf-price-discover">
+                                    <span class="price-label">Starting from</span>
+                                    <span class="price">₹400/hour</span>
+                                </div>
+                                <button class="view-details-btn">View Details</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Turf Card 7 -->
+                    <div class="turf-card-discover" data-sport="cricket">
+                        <div class="turf-image-discover">
+                            <img src="https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=400&h=250&fit=crop" alt="Cricket Stadium">
+                            <div class="turf-badge-discover">Cricket</div>
+                        </div>
+                        <div class="turf-content-discover">
+                            <h3 class="turf-name-discover">Champions Cricket Ground</h3>
+                            <div class="turf-location-discover">
+                                <i class="fas fa-map-marker-alt"></i>
+                                West End
+                            </div>
+                            <div class="turf-rating-discover">
+                                <i class="fas fa-star"></i>
+                                <span>4.9</span>
+                                <span class="reviews">(140 reviews)</span>
+                            </div>
+                            <div class="turf-amenities-discover">
+                                <span class="amenity-tag">Floodlights</span>
+                                <span class="amenity-tag">Changing Room</span>
+                                <span class="amenity-tag">Parking</span>
+                            </div>
+                            <div class="turf-footer-discover">
+                                <div class="turf-price-discover">
+                                    <span class="price-label">Starting from</span>
+                                    <span class="price">₹900/hour</span>
+                                </div>
+                                <button class="view-details-btn">View Details</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Turf Card 8 -->
+                    <div class="turf-card-discover" data-sport="hockey">
+                        <div class="turf-image-discover">
+                            <img src="https://images.unsplash.com/photo-1515703407324-5f753afd8be8?w=400&h=250&fit=crop" alt="Hockey Field">
+                            <div class="turf-badge-discover">Hockey</div>
+                        </div>
+                        <div class="turf-content-discover">
+                            <h3 class="turf-name-discover">Pro Hockey Stadium</h3>
+                            <div class="turf-location-discover">
+                                <i class="fas fa-map-marker-alt"></i>
+                                South District
+                            </div>
+                            <div class="turf-rating-discover">
+                                <i class="fas fa-star"></i>
+                                <span>4.7</span>
+                                <span class="reviews">(78 reviews)</span>
+                            </div>
+                            <div class="turf-amenities-discover">
+                                <span class="amenity-tag">First Aid</span>
+                                <span class="amenity-tag">Washroom</span>
+                                <span class="amenity-tag">Drinking Water</span>
+                            </div>
+                            <div class="turf-footer-discover">
+                                <div class="turf-price-discover">
+                                    <span class="price-label">Starting from</span>
+                                    <span class="price">₹750/hour</span>
+                                </div>
+                                <button class="view-details-btn">View Details</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <i class="fas fa-futbol"></i>
+                        <span>TurfSpot</span>
+                    </div>
+                    <p>Connecting players with premium sports turfs. Book your perfect game today!</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="discover.html">Discover</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Support</h4>
+                    <ul>
+                        <li><a href="#">Help Center</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Refund Policy</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact Info</h4>
+                    <div class="contact-info">
+                        <p><i class="fas fa-envelope"></i> support@turfspot.com</p>
+                        <p><i class="fas fa-phone"></i> +1 (555) 123-4567</p>
+                        <p><i class="fas fa-map-marker-alt"></i> 123 Sports Street, City</p>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 TurfSpot. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Login to TurfSpot</h2>
+                <span class="close" onclick="closeModal('loginModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form class="auth-form" id="loginForm" onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="loginEmail" placeholder="Enter your email" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="loginPassword" placeholder="Enter your password" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Login As</label>
+                        <select id="loginUserType" class="form-select" required>
+                            <option value="user">User</option>
+                            <option value="owner">Turf Owner</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-primary btn-full">Login</button>
+                </form>
+                <div class="auth-divider">
+                    <span>or</span>
+                </div>
+                <button class="btn-google">
+                    <i class="fab fa-google"></i>
+                    Continue with Google
+                </button>
+                <p class="auth-switch">
+                    Don't have an account? <a href="#" onclick="showSignupModal()">Sign up</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Signup Modal -->
+    <div id="signupModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Join TurfSpot</h2>
+                <span class="close" onclick="closeModal('signupModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form class="auth-form" id="signupForm" onsubmit="handleSignup(event)">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="signupName" placeholder="Enter your full name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="signupEmail" placeholder="Enter your email" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone</label>
+                        <input type="tel" id="signupPhone" placeholder="Enter your phone number" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="signupPassword" placeholder="Create a password" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Sign Up As</label>
+                        <select id="signupUserType" class="form-select" required>
+                            <option value="user">User</option>
+                            <option value="owner">Turf Owner</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-primary btn-full">Create Account</button>
+                </form>
+                <div class="auth-divider">
+                    <span>or</span>
+                </div>
+                <button class="btn-google">
+                    <i class="fab fa-google"></i>
+                    Continue with Google
+                </button>
+                <p class="auth-switch">
+                    Already have an account? <a href="#" onclick="showLoginModal()">Login</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Email Verification Modal -->
+    <div class="modal" id="otpModal">
+        <div class="modal-content" style="max-width: 450px;">
+            <span class="close" id="closeOtpModal">&times;</span>
+            <div style="text-align: center; margin-bottom: 1.5rem;">
+                <div style="font-size: 3rem; color: var(--primary-color);">
+                    <i class="fas fa-envelope-open-text"></i>
+                </div>
+                <h2 style="margin-top: 1rem;">Verify Your Email</h2>
+                <p style="color: #6b7280; margin-top: 0.5rem;">
+                    We've sent a 6-digit OTP to <strong id="otpEmail"></strong>
+                </p>
+            </div>
+            <form id="otpForm">
+                <div class="form-group">
+                    <label>Enter OTP</label>
+                    <input 
+                        type="text" 
+                        id="otpInput" 
+                        placeholder="000000" 
+                        maxlength="6" 
+                        pattern="[0-9]{6}"
+                        style="text-align: center; font-size: 1.5rem; letter-spacing: 0.5rem;"
+                        required
+                    >
+                    <small style="color: #6b7280; display: block; margin-top: 0.5rem;">
+                        <i class="fas fa-clock"></i> OTP is valid for 10 minutes
+                    </small>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">
+                    <i class="fas fa-check-circle"></i> Verify Email
+                </button>
+                <div style="text-align: center; margin-top: 1rem;">
+                    <p style="color: #6b7280;">
+                        Didn't receive the code? 
+                        <a href="#" id="resendOtpBtn" style="color: var(--primary-color); font-weight: 600;">
+                            Resend OTP
+                        </a>
+                    </p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/script.js"></script>
+    <script src="js/discover.js"></script>
+</body>
+</html>

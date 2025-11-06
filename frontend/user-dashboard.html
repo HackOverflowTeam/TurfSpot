@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Bookings - TurfSpot</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="user-dashboard.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fas fa-futbol"></i>
+                <span>TurfSpot</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html" class="nav-link">Home</a></li>
+                <li><a href="discover.html" class="nav-link">Discover</a></li>
+                <li><a href="user-dashboard.html" class="nav-link active">My Bookings</a></li>
+            </ul>
+            <div class="nav-buttons">
+                <div class="user-profile">
+                    <img src="https://ui-avatars.com/api/?name=John+Doe&background=2E8B57&color=fff" alt="User" class="user-avatar">
+                    <span class="user-name">John Doe</span>
+                    <button class="btn-logout" onclick="logout()">Logout</button>
+                </div>
+            </div>
+            <div class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- User Dashboard -->
+    <div class="user-dashboard">
+        <div class="dashboard-header">
+            <div class="container">
+                <h1>My Bookings</h1>
+                <p>Manage your turf bookings</p>
+            </div>
+        </div>
+
+        <div class="dashboard-content">
+            <div class="container">
+                <!-- Stats Cards -->
+                <div class="stats-cards">
+                    <div class="stat-card">
+                        <div class="stat-icon confirmed">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-details">
+                            <h3>1</h3>
+                            <p>Confirmed</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon pending">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-details">
+                            <h3>1</h3>
+                            <p>Pending</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon completed">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                        <div class="stat-details">
+                            <h3>1</h3>
+                            <p>Completed</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon total">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div class="stat-details">
+                            <h3>3</h3>
+                            <p>Total Bookings</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filter Tabs -->
+                <div class="booking-filters">
+                    <button class="filter-tab active" data-status="all">All</button>
+                    <button class="filter-tab" data-status="confirmed">Confirmed</button>
+                    <button class="filter-tab" data-status="pending">Pending</button>
+                    <button class="filter-tab" data-status="completed">Completed</button>
+                    <button class="filter-tab" data-status="cancelled">Cancelled</button>
+                </div>
+
+                <!-- Bookings List -->
+                <div class="bookings-list" id="bookingsList">
+                    <!-- Booking Card 1 -->
+                    <div class="booking-card" data-status="confirmed">
+                        <div class="booking-image">
+                            <img src="https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=300&h=200&fit=crop" alt="Turf">
+                            <div class="booking-status confirmed">Confirmed</div>
+                        </div>
+                        <div class="booking-details">
+                            <h3>Green Field Sports Complex</h3>
+                            <div class="booking-info">
+                                <div class="info-item">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span>Downtown, City Center</span>
+                                </div>
+                                <div class="info-item">
+                                    <i class="fas fa-calendar"></i>
+                                    <span>Oct 28, 2025</span>
+                                </div>
+                                <div class="info-item">
+                                    <i class="fas fa-clock"></i>
+                                    <span>6:00 PM - 8:00 PM</span>
+                                </div>
+                                <div class="info-item">
+                                    <i class="fas fa-futbol"></i>
+                                    <span>Football</span>
+                                </div>
+                            </div>
+                            <div class="booking-footer">
+                                <div class="booking-price">
+                                    <span class="price-label">Total Amount</span>
+                                    <span class="price">₹1000</span>
+                                </div>
+                                <div class="booking-actions">
+                                    <button class="btn-view" onclick="viewBooking(1)">View Details</button>
+                                    <button class="btn-cancel" onclick="cancelBooking(1)">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Booking Card 2 -->
+                    <div class="booking-card" data-status="pending">
+                        <div class="booking-image">
+                            <img src="https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=300&h=200&fit=crop" alt="Turf">
+                            <div class="booking-status pending">Pending</div>
+                        </div>
+                        <div class="booking-details">
+                            <h3>Elite Cricket Academy</h3>
+                            <div class="booking-info">
+                                <div class="info-item">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span>Suburb Park</span>
+                                </div>
+                                <div class="info-item">
+                                    <i class="fas fa-calendar"></i>
+                                    <span>Oct 30, 2025</span>
+                                </div>
+                                <div class="info-item">
+                                    <i class="fas fa-clock"></i>
+                                    <span>4:00 PM - 6:00 PM</span>
+                                </div>
+                                <div class="info-item">
+                                    <i class="fas fa-baseball-ball"></i>
+                                    <span>Cricket</span>
+                                </div>
+                            </div>
+                            <div class="booking-footer">
+                                <div class="booking-price">
+                                    <span class="price-label">Total Amount</span>
+                                    <span class="price">₹1600</span>
+                                </div>
+                                <div class="booking-actions">
+                                    <button class="btn-view" onclick="viewBooking(2)">View Details</button>
+                                    <button class="btn-cancel" onclick="cancelBooking(2)">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Booking Card 3 -->
+                    <div class="booking-card" data-status="completed">
+                        <div class="booking-image">
+                            <img src="https://images.unsplash.com/photo-1504450758481-7338eba7524a?w=300&h=200&fit=crop" alt="Turf">
+                            <div class="booking-status completed">Completed</div>
+                        </div>
+                        <div class="booking-details">
+                            <h3>Urban Hoops Arena</h3>
+                            <div class="booking-info">
+                                <div class="info-item">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span>Industrial Area</span>
+                                </div>
+                                <div class="info-item">
+                                    <i class="fas fa-calendar"></i>
+                                    <span>Oct 20, 2025</span>
+                                </div>
+                                <div class="info-item">
+                                    <i class="fas fa-clock"></i>
+                                    <span>7:00 PM - 9:00 PM</span>
+                                </div>
+                                <div class="info-item">
+                                    <i class="fas fa-basketball-ball"></i>
+                                    <span>Basketball</span>
+                                </div>
+                            </div>
+                            <div class="booking-footer">
+                                <div class="booking-price">
+                                    <span class="price-label">Total Amount</span>
+                                    <span class="price">₹1200</span>
+                                </div>
+                                <div class="booking-actions">
+                                    <button class="btn-view" onclick="viewBooking(3)">View Details</button>
+                                    <button class="btn-review" onclick="addReview(3)">Add Review</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div class="empty-state" id="emptyState" style="display: none;">
+                    <i class="fas fa-calendar-times"></i>
+                    <h2>No Bookings Found</h2>
+                    <p>You haven't made any bookings yet.</p>
+                    <a href="discover.html" class="btn-browse">Browse Turfs</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <i class="fas fa-futbol"></i>
+                        <span>TurfSpot</span>
+                    </div>
+                    <p>Connecting players with premium sports turfs. Book your perfect game today!</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="discover.html">Discover</a></li>
+                        <li><a href="user-dashboard.html">My Bookings</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact Info</h4>
+                    <div class="contact-info">
+                        <p><i class="fas fa-envelope"></i> support@turfspot.com</p>
+                        <p><i class="fas fa-phone"></i> +1 (555) 123-4567</p>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 TurfSpot. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/script.js"></script>
+    <script src="js/user-dashboard.js"></script>
+</body>
+</html>

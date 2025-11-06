@@ -170,6 +170,117 @@
         </div>
     </footer>
 
+    <!-- Login Modal -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content">
+            <span class="close" id="closeLoginModal">&times;</span>
+            <h2>Welcome Back</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="loginEmail" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Login</button>
+                <div class="divider">OR</div>
+                <button type="button" class="btn btn-google" id="googleLoginBtn">
+                    <i class="fab fa-google"></i> Continue with Google
+                </button>
+                <p class="text-center" style="margin-top: 1rem;">
+                    Don't have an account? <a href="#" id="switchToRegister">Register</a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div class="modal" id="registerModal">
+        <div class="modal-content">
+            <span class="close" id="closeRegisterModal">&times;</span>
+            <h2>Create Account</h2>
+            <form id="registerForm">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="registerName" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="registerEmail" required>
+                </div>
+                <div class="form-group">
+                    <label>Phone</label>
+                    <input type="tel" id="registerPhone" pattern="[0-9]{10}" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="registerPassword" minlength="6" required>
+                </div>
+                <div class="form-group">
+                    <label>I want to</label>
+                    <select id="registerRole" required>
+                        <option value="user">Book Turfs</option>
+                        <option value="owner">List My Turf</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Register</button>
+                <div class="divider">OR</div>
+                <button type="button" class="btn btn-google" id="googleRegisterBtn">
+                    <i class="fab fa-google"></i> Continue with Google
+                </button>
+                <p class="text-center" style="margin-top: 1rem;">
+                    Already have an account? <a href="#" id="switchToLogin">Login</a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Email Verification Modal -->
+    <div class="modal" id="otpModal">
+        <div class="modal-content" style="max-width: 450px;">
+            <span class="close" id="closeOtpModal">&times;</span>
+            <div style="text-align: center; margin-bottom: 1.5rem;">
+                <div style="font-size: 3rem; color: var(--primary-color);">
+                    <i class="fas fa-envelope-open-text"></i>
+                </div>
+                <h2 style="margin-top: 1rem;">Verify Your Email</h2>
+                <p style="color: #6b7280; margin-top: 0.5rem;">
+                    We've sent a 6-digit OTP to <strong id="otpEmail"></strong>
+                </p>
+            </div>
+            <form id="otpForm">
+                <div class="form-group">
+                    <label>Enter OTP</label>
+                    <input 
+                        type="text" 
+                        id="otpInput" 
+                        placeholder="000000" 
+                        maxlength="6" 
+                        pattern="[0-9]{6}"
+                        style="text-align: center; font-size: 1.5rem; letter-spacing: 0.5rem;"
+                        required
+                    >
+                    <small style="color: #6b7280; display: block; margin-top: 0.5rem;">
+                        <i class="fas fa-clock"></i> OTP is valid for 10 minutes
+                    </small>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">
+                    <i class="fas fa-check-circle"></i> Verify Email
+                </button>
+                <div style="text-align: center; margin-top: 1rem;">
+                    <p style="color: #6b7280;">
+                        Didn't receive the code? 
+                        <a href="#" id="resendOtpBtn" style="color: var(--primary-color); font-weight: 600;">
+                            Resend OTP
+                        </a>
+                    </p>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBRlfL0E9kadx7PYmejv1XN5BTK-yEIUAc&loading=async" async defer></script>
     <script type="module" src="js/api.js"></script>

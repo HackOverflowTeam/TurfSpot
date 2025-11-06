@@ -6,7 +6,10 @@ const {
   getMyBookings,
   getBooking,
   cancelBooking,
-  getOwnerBookings
+  getOwnerBookings,
+  uploadTierPaymentScreenshot,
+  verifyTierPayment,
+  getPendingTierVerifications
 } = require('../controllers/booking.controller');
 const { protect, authorize } = require('../middleware/auth.middleware');
 const validate = require('../middleware/validation.middleware');
@@ -77,7 +80,12 @@ router.get('/my-bookings', getMyBookings);
 router.get('/:id', getBooking);
 router.put('/:id/cancel', cancelBooking);
 
+// Tier payment routes
+router.post('/:bookingId/tier-payment', uploadTierPaymentScreenshot);
+router.put('/:bookingId/verify-tier-payment', authorize('owner'), verifyTierPayment);
+
 // Owner routes
 router.get('/owner/bookings', authorize('owner', 'admin'), getOwnerBookings);
+router.get('/owner/pending-verifications', authorize('owner'), getPendingTierVerifications);
 
 module.exports = router;

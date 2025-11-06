@@ -6,6 +6,25 @@
     <title>Owner Dashboard - TurfSpot</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            background: #ef4444;
+            color: white;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-left: 0.5rem;
+        }
+        .payment-option input[type="radio"]:checked + div {
+            font-weight: bold;
+        }
+        .payment-option:has(input[type="radio"]:checked) {
+            border-color: var(--primary, #10b981) !important;
+            background: rgba(16, 185, 129, 0.05);
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar">
@@ -81,6 +100,8 @@
             <div class="tabs">
                 <button class="tab-btn active" data-tab="turfs">My Turfs</button>
                 <button class="tab-btn" data-tab="bookings">Bookings</button>
+                <button class="tab-btn" data-tab="verifications">Pending Verifications <span id="pendingCount" class="badge" style="display: none;">0</span></button>
+                <button class="tab-btn" data-tab="subscription">Subscription</button>
                 <button class="tab-btn" data-tab="analytics">Analytics</button>
             </div>
 
@@ -110,6 +131,33 @@
                     <i class="fas fa-spinner fa-spin"></i> Loading bookings...
                 </div>
                 <div id="bookingsList"></div>
+            </div>
+
+            <!-- Pending Verifications Tab -->
+            <div class="tab-content" id="verificationsTab">
+                <div style="margin-bottom: 1.5rem;">
+                    <h3>Pending Payment Verifications</h3>
+                    <p style="color: var(--text-secondary);">Review and verify payment screenshots from users booking your tier-based turfs</p>
+                </div>
+                <div id="verificationsLoader" class="loader" style="display: none;">
+                    <i class="fas fa-spinner fa-spin"></i> Loading verifications...
+                </div>
+                <div id="verificationsList"></div>
+            </div>
+
+            <!-- Subscription Tab -->
+            <div class="tab-content" id="subscriptionTab">
+                <div id="subscriptionContent">
+                    <div id="subscriptionLoader" class="loader" style="display: none;">
+                        <i class="fas fa-spinner fa-spin"></i> Loading subscription...
+                    </div>
+                    <div id="subscriptionInfo"></div>
+                    <div style="text-align: center; margin-top: 2rem;">
+                        <a href="owner-subscription.html" class="btn btn-primary">
+                            <i class="fas fa-crown"></i> Subscribe to Tier Plan
+                        </a>
+                    </div>
+                </div>
             </div>
 
             <!-- Analytics Tab -->
@@ -230,9 +278,78 @@
                     <label><input type="checkbox" value="first_aid"> First Aid</label>
                 </div>
 
+                <h4>Turf Images</h4>
                 <div class="form-group">
+                    <label>Upload Image from Device</label>
+                    <input type="file" id="turfImageFile" accept="image/*" style="margin-bottom: 0.5rem;">
+                    <small style="color: var(--text-secondary); display: block; margin-bottom: 1rem;">
+                        <i class="fas fa-info-circle"></i> Upload a turf image from your device (JPG, PNG, max 5MB)
+                    </small>
+                    
+                    <div style="text-align: center; margin: 0.5rem 0; color: var(--text-secondary);">
+                        <strong>OR</strong>
+                    </div>
+                    
                     <label>Image URL (Optional)</label>
                     <input type="url" id="turfImageUrl" placeholder="https://example.com/image.jpg">
+                    <small style="color: var(--text-secondary); display: block; margin-top: 0.5rem;">
+                        <i class="fas fa-link"></i> Paste an image URL if you prefer
+                    </small>
+                    
+                    <div id="imagePreview" style="margin-top: 1rem; display: none;">
+                        <img id="previewImg" src="" alt="Preview" style="max-width: 200px; max-height: 150px; border-radius: 8px; border: 2px solid var(--border-color);">
+                    </div>
+                </div>
+
+                <h4>Payment Method</h4>
+                <div class="form-group">
+                    <label>Choose Payment Method*</label>
+                    <div class="payment-method-selection" style="display: flex; gap: 1rem; flex-direction: column;">
+                        <label class="payment-option" style="padding: 1rem; border: 2px solid var(--border-color); border-radius: 8px; cursor: pointer; display: flex; align-items: start; gap: 0.75rem;">
+                            <input type="radio" name="paymentMethod" value="commission" id="commissionMethod" checked style="margin-top: 0.25rem;">
+                            <div>
+                                <strong style="display: block; margin-bottom: 0.25rem;">Commission-Based (Default)</strong>
+                                <small style="color: var(--text-secondary);">Platform handles payments via Razorpay. 15% platform commission on each booking.</small>
+                            </div>
+                        </label>
+                        <label class="payment-option" style="padding: 1rem; border: 2px solid var(--border-color); border-radius: 8px; cursor: pointer; display: flex; align-items: start; gap: 0.75rem;">
+                            <input type="radio" name="paymentMethod" value="tier" id="tierMethod" style="margin-top: 0.25rem;">
+                            <div>
+                                <strong style="display: block; margin-bottom: 0.25rem;">Tier-Based (Subscription Required)</strong>
+                                <small style="color: var(--text-secondary);">Users pay directly to you via UPI. No commission! Requires active subscription.</small>
+                            </div>
+                        </label>
+                    </div>
+                    <div id="subscriptionWarning" style="display: none; margin-top: 0.75rem; padding: 0.75rem; background: var(--warning-bg, #fef3c7); border-left: 4px solid var(--warning, #f59e0b); border-radius: 4px;">
+                        <i class="fas fa-exclamation-triangle" style="color: var(--warning, #f59e0b);"></i>
+                        <span id="subscriptionWarningText"></span>
+                    </div>
+                </div>
+
+                <div id="upiQrSection" style="display: none;">
+                    <h4>UPI Payment Details</h4>
+                    <div class="form-group">
+                        <label>Upload UPI QR Code from Device*</label>
+                        <input type="file" id="upiQrCodeFile" accept="image/*" style="margin-bottom: 0.5rem;">
+                        <small style="color: var(--text-secondary); display: block; margin-bottom: 1rem;">
+                            <i class="fas fa-info-circle"></i> Upload your UPI QR code from device (JPG, PNG)
+                        </small>
+                        
+                        <div style="text-align: center; margin: 0.5rem 0; color: var(--text-secondary);">
+                            <strong>OR</strong>
+                        </div>
+                        
+                        <label>UPI QR Code URL*</label>
+                        <input type="url" id="upiQrCodeUrl" placeholder="https://example.com/upi-qr.jpg">
+                        <small style="color: var(--text-secondary); display: block; margin-top: 0.5rem;">
+                            <i class="fas fa-link"></i> Or paste a URL from Imgur/ImgBB
+                        </small>
+                        
+                        <div id="qrPreview" style="margin-top: 1rem; display: none;">
+                            <strong style="display: block; margin-bottom: 0.5rem;">Preview:</strong>
+                            <img id="previewQr" src="" alt="QR Preview" style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 2px solid var(--border-color);">
+                        </div>
+                    </div>
                 </div>
 
                 <div class="modal-actions">

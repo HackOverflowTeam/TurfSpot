@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Owner Subscription Plans - TurfSpot</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            padding: 30px 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .current-subscription {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .current-subscription h2 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .subscription-status {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85em;
+        }
+
+        .subscription-status.active {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .subscription-status.pending {
+            background: #fed7aa;
+            color: #92400e;
+        }
+
+        .subscription-status.expired {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .plans-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .plan-card {
+            background: white;
+            border-radius: 20px;
+            padding: 35px 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .plan-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, #10b981, #059669);
+        }
+
+        .plan-card.pro::before {
+            background: linear-gradient(90deg, #f59e0b, #d97706);
+        }
+
+        .plan-card.enterprise::before {
+            background: linear-gradient(90deg, #8b5cf6, #7c3aed);
+        }
+
+        .plan-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+        }
+
+        .plan-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .plan-card.pro .plan-badge {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        .plan-name {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 10px;
+        }
+
+        .plan-description {
+            color: #6b7280;
+            margin-bottom: 20px;
+            font-size: 0.95em;
+        }
+
+        .billing-toggle {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: #f3f4f6;
+            padding: 5px;
+            border-radius: 10px;
+        }
+
+        .billing-option {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .billing-option.active {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+        .plan-price {
+            font-size: 3em;
+            font-weight: 800;
+            color: #10b981;
+            margin-bottom: 5px;
+        }
+
+        .plan-card.pro .plan-price {
+            color: #f59e0b;
+        }
+
+        .plan-card.enterprise .plan-price {
+            color: #8b5cf6;
+        }
+
+        .price-period {
+            color: #9ca3af;
+            font-size: 0.9em;
+            margin-bottom: 25px;
+        }
+
+        .plan-features {
+            list-style: none;
+            margin-bottom: 30px;
+        }
+
+        .plan-features li {
+            padding: 12px 0;
+            color: #4b5563;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .plan-features li:last-child {
+            border-bottom: none;
+        }
+
+        .plan-features li::before {
+            content: '✓';
+            color: #10b981;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .plan-button {
+            width: 100%;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .plan-card.pro .plan-button {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+        }
+
+        .plan-card.enterprise .plan-button {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+        }
+
+        .plan-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .plan-button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Payment Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            margin-bottom: 30px;
+        }
+
+        .modal-header h2 {
+            color: #1f2937;
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .payment-info {
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .payment-info h3 {
+            color: #1e40af;
+            margin-bottom: 10px;
+        }
+
+        .payment-details {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .payment-details p {
+            margin: 8px 0;
+            color: #374151;
+        }
+
+        .payment-details strong {
+            color: #1f2937;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #374151;
+            font-weight: 600;
+        }
+
+        .form-group input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px dashed #d1d5db;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.05em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .btn-secondary:hover {
+            background: #d1d5db;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #10b981;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏏 TurfSpot Owner Subscription Plans</h1>
+            <p>Choose the perfect plan to grow your turf business</p>
+        </div>
+
+        <div class="current-subscription" id="currentSubscription" style="display: none;">
+            <h2>Your Current Subscription</h2>
+            <div id="subscriptionInfo"></div>
+        </div>
+
+        <div class="plans-container">
+            <!-- Basic Plan -->
+            <div class="plan-card">
+                <div class="plan-badge">LAUNCH OFFER</div>
+                <h3 class="plan-name">Basic Plan</h3>
+                <p class="plan-description">Perfect for single-turf owners starting out</p>
+                
+                <div class="billing-toggle" data-plan="basic">
+                    <div class="billing-option active" data-cycle="annual">
+                        <div>Annual</div>
+                        <div style="font-size: 0.8em; color: #059669;">Save ₹1,188/year</div>
+                    </div>
+                    <div class="billing-option" data-cycle="monthly">Monthly</div>
+                </div>
+
+                <div class="plan-price" data-plan="basic" data-cycle="annual">₹600</div>
+                <div class="price-period">/month (Billed Annually)</div>
+
+                <ul class="plan-features">
+                    <li>List 1 turf</li>
+                    <li>Standard Booking Management</li>
+                    <li>Basic Analytics (Total revenue, booking count)</li>
+                    <li>Standard Support</li>
+                    <li>Direct payment from users</li>
+                    <li>No commission on bookings</li>
+                </ul>
+
+                <button class="plan-button" onclick="selectPlan('basic', 'annual')">Get Started</button>
+            </div>
+
+            <!-- Pro Plan -->
+            <div class="plan-card pro">
+                <div class="plan-badge">BEST VALUE</div>
+                <h3 class="plan-name">Pro Plan</h3>
+                <p class="plan-description">Ideal for established single-location businesses</p>
+                
+                <div class="billing-toggle" data-plan="pro">
+                    <div class="billing-option active" data-cycle="annual">
+                        <div>Annual</div>
+                        <div style="font-size: 0.8em; color: #d97706;">Save ₹12,000/year</div>
+                    </div>
+                    <div class="billing-option" data-cycle="monthly">Monthly</div>
+                </div>
+
+                <div class="plan-price" data-plan="pro" data-cycle="annual">₹3,000</div>
+                <div class="price-period">/month (Billed Annually)</div>
+
+                <ul class="plan-features">
+                    <li>List up to 5 turfs</li>
+                    <li>All Basic features</li>
+                    <li>Dynamic Pricing Control (Peak/Off-peak)</li>
+                    <li>Advanced Analytics Dashboard</li>
+                    <li>Priority Support</li>
+                    <li>Direct payment from users</li>
+                    <li>No commission on bookings</li>
+                </ul>
+
+                <button class="plan-button" onclick="selectPlan('pro', 'annual')">Upgrade to Pro</button>
+            </div>
+
+            <!-- Enterprise Plan -->
+            <div class="plan-card enterprise">
+                <div class="plan-badge">CUSTOM</div>
+                <h3 class="plan-name">Enterprise Plan</h3>
+                <p class="plan-description">For large businesses with multiple locations</p>
+
+                <div class="plan-price">Custom</div>
+                <div class="price-period">Contact us for pricing</div>
+
+                <ul class="plan-features">
+                    <li>Unlimited turfs</li>
+                    <li>All Pro features</li>
+                    <li>Dedicated Account Manager</li>
+                    <li>API Access for integrations</li>
+                    <li>Custom analytics & reports</li>
+                    <li>24/7 Premium Support</li>
+                    <li>White-label options</li>
+                </ul>
+
+                <button class="plan-button" onclick="contactUs()">Contact Sales</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div class="modal" id="paymentModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Complete Your Subscription</h2>
+                <p>Plan: <strong id="selectedPlanName"></strong></p>
+            </div>
+
+            <div class="payment-info">
+                <h3>💳 Payment Details</h3>
+                <div class="payment-details">
+                    <p><strong>Amount:</strong> ₹<span id="paymentAmount"></span></p>
+                    <p><strong>Billing Cycle:</strong> <span id="billingCycle"></span></p>
+                    <p><strong>UPI ID:</strong> turfspot@paytm</p>
+                    <p><strong>Account:</strong> TurfSpot Business (SBI)</p>
+                    <p><strong>Account Number:</strong> 1234567890</p>
+                    <p><strong>IFSC:</strong> SBIN0001234</p>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="paymentProof">Upload Payment Screenshot *</label>
+                <input type="file" id="paymentProof" accept="image/*" required>
+            </div>
+
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="closePaymentModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="submitSubscription()">Submit Payment</button>
+            </div>
+
+            <div class="loading" id="uploadLoading">
+                <div class="spinner"></div>
+                <p>Uploading payment proof...</p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { api } from './js/api.js';
+        import { auth } from './js/auth.js';
+
+        // Check authentication
+        if (!auth.isAuthenticated()) {
+            window.location.href = '/index.html';
+        }
+
+        const user = auth.getUser();
+        if (user.role !== 'owner') {
+            alert('Only owners can access subscription plans');
+            window.location.href = '/owner-dashboard.html';
+        }
+
+        // Load current subscription
+        async function loadCurrentSubscription() {
+            try {
+                const response = await api.getMySubscription();
+                if (response.success && response.data) {
+                    const sub = response.data;
+                    if (sub.status === 'active' || sub.status === 'pending') {
+                        document.getElementById('currentSubscription').style.display = 'block';
+                        document.getElementById('subscriptionInfo').innerHTML = `
+                            <p><strong>Plan:</strong> ${sub.plan.toUpperCase()} - ${sub.billingCycle}</p>
+                            <p><strong>Status:</strong> <span class="subscription-status ${sub.status}">${sub.status}</span></p>
+                            ${sub.startDate ? `<p><strong>Start Date:</strong> ${new Date(sub.startDate).toLocaleDateString()}</p>` : ''}
+                            ${sub.endDate ? `<p><strong>End Date:</strong> ${new Date(sub.endDate).toLocaleDateString()}</p>` : ''}
+                            <p><strong>Max Turfs:</strong> ${sub.maxTurfs}</p>
+                        `;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading subscription:', error);
+            }
+        }
+
+        loadCurrentSubscription();
+
+        // Make functions global
+        window.selectPlan = function(plan, cycle) {
+            window.selectedPlan = { plan, cycle };
+            
+            const prices = {
+                basic: { monthly: 699, annual: 600 },
+                pro: { monthly: 1999, annual: 3000 }
+            };
+
+            const planNames = {
+                basic: 'Basic Plan',
+                pro: 'Pro Plan'
+            };
+
+            document.getElementById('selectedPlanName').textContent = 
+                `${planNames[plan]} (${cycle === 'annual' ? 'Annual' : 'Monthly'})`;
+            document.getElementById('paymentAmount').textContent = prices[plan][cycle];
+            document.getElementById('billingCycle').textContent = 
+                cycle === 'annual' ? 'Annual (12 months)' : 'Monthly (1 month)';
+
+            document.getElementById('paymentModal').classList.add('active');
+        };
+
+        window.closePaymentModal = function() {
+            document.getElementById('paymentModal').classList.remove('active');
+            document.getElementById('paymentProof').value = '';
+        };
+
+        window.submitSubscription = async function() {
+            const fileInput = document.getElementById('paymentProof');
+            if (!fileInput.files[0]) {
+                alert('Please upload payment screenshot');
+                return;
+            }
+
+            const loading = document.getElementById('uploadLoading');
+            loading.classList.add('active');
+
+            try {
+                // Upload image to cloudinary or convert to base64
+                const file = fileInput.files[0];
+                const base64 = await fileToBase64(file);
+
+                const subscriptionData = {
+                    plan: window.selectedPlan.plan,
+                    billingCycle: window.selectedPlan.cycle,
+                    paymentProof: base64
+                };
+
+                const response = await api.createSubscription(subscriptionData);
+
+                if (response.success) {
+                    alert('Subscription request submitted! Pending admin approval.');
+                    window.location.reload();
+                } else {
+                    alert('Error: ' + response.message);
+                }
+            } catch (error) {
+                console.error('Error submitting subscription:', error);
+                alert('Error submitting subscription: ' + error.message);
+            } finally {
+                loading.classList.remove('active');
+            }
+        };
+
+        window.contactUs = function() {
+            window.location.href = 'mailto:enterprise@turfspot.com?subject=Enterprise Plan Inquiry';
+        };
+
+        // Billing toggle functionality
+        document.querySelectorAll('.billing-toggle').forEach(toggle => {
+            toggle.querySelectorAll('.billing-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    const plan = this.parentElement.dataset.plan;
+                    const cycle = this.dataset.cycle;
+                    
+                    // Update active state
+                    this.parentElement.querySelectorAll('.billing-option').forEach(opt => {
+                        opt.classList.remove('active');
+                    });
+                    this.classList.add('active');
+
+                    // Update price
+                    const priceElement = document.querySelector(`[data-plan="${plan}"][data-cycle]`);
+                    const prices = {
+                        basic: { monthly: 699, annual: 600 },
+                        pro: { monthly: 1999, annual: 3000 }
+                    };
+                    
+                    priceElement.dataset.cycle = cycle;
+                    priceElement.textContent = '₹' + prices[plan][cycle];
+
+                    // Update period text
+                    const periodElement = priceElement.nextElementSibling;
+                    periodElement.textContent = cycle === 'annual' 
+                        ? '/month (Billed Annually)' 
+                        : '/month (Billed Monthly)';
+
+                    // Update button onclick
+                    const button = this.closest('.plan-card').querySelector('.plan-button');
+                    button.setAttribute('onclick', `selectPlan('${plan}', '${cycle}')`);
+                });
+            });
+        });
+
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+    </script>
+</body>
+</html>

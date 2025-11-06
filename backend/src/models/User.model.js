@@ -43,6 +43,32 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  isEmailVerified: {
+    type: Boolean,
+    default: false
+  },
+  emailOTP: {
+    type: String,
+    select: false // Don't return OTP by default
+  },
+  otpExpiry: {
+    type: Date,
+    select: false // Don't return OTP expiry by default
+  },
+  otpAttempts: {
+    type: Number,
+    default: 0,
+    select: false // Track failed OTP attempts
+  },
+  otpRequestCount: {
+    type: Number,
+    default: 0,
+    select: false // Track how many times OTP was requested
+  },
+  lastOtpRequest: {
+    type: Date,
+    select: false // Track last OTP request time
+  },
   isActive: {
     type: Boolean,
     default: true

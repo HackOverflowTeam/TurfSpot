@@ -152,6 +152,30 @@ const turfSchema = new mongoose.Schema({
   isFeatured: {
     type: Boolean,
     default: false
+  },
+  paymentMethod: {
+    type: String,
+    enum: ['commission', 'tier'],
+    default: 'commission',
+    required: true
+  },
+  upiQrCode: {
+    url: String,
+    publicId: String
+  },
+  upiId: {
+    type: String,
+    trim: true
+  },
+  subscription: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Subscription'
+  },
+  commissionRate: {
+    type: Number,
+    default: 15, // 15% commission
+    min: 0,
+    max: 100
   }
 }, {
   timestamps: true

@@ -1,16 +1,56 @@
 const Turf = require('../models/Turf.model');
 const Booking = require('../models/Booking.model');
+const Subscription = require('../models/subscription.model');
 
 // @desc    Create new turf
 // @route   POST /api/turfs
 // @access  Private (Owner only)
 exports.createTurf = async (req, res) => {
   try {
+    const { paymentMethod, upiQrCodeUrl, ...otherData } = req.body;
+
+    // If tier-based payment, check subscription
+    if (paymentMethod === 'tier') {
+      const subscription = await Subscription.hasActiveSubscription(req.user._id);
+      
+      if (!subscription) {
+        return res.status(400).json({
+          success: false,
+          message: 'You need an active subscription to use tier-based payment method'
+        });
+      }
+
+      // Check if owner can add more turfs
+      const canAdd = await subscription.canAddTurf();
+      if (!canAdd) {
+        return res.status(400).json({
+          success: false,
+          message: `Your ${subscription.plan} plan allows only ${subscription.maxTurfs} turf(s). Please upgrade your plan.`
+        });
+      }
+
+      // Require UPI QR code for tier-based turfs
+      if (!upiQrCodeUrl) {
+        return res.status(400).json({
+          success: false,
+          message: 'UPI QR code is required for tier-based payment method'
+        });
+      }
+    }
+
     const turfData = {
-      ...req.body,
+      ...otherData,
       owner: req.user._id,
-      status: 'pending' // All new turfs need admin approval
+      status: 'pending', // All new turfs need admin approval
+      paymentMethod: paymentMethod || 'commission',
+      upiQrCode: upiQrCodeUrl ? { url: upiQrCodeUrl } : undefined
     };
+
+    // If tier-based, link to subscription
+    if (paymentMethod === 'tier') {
+      const subscription = await Subscription.hasActiveSubscription(req.user._id);
+      turfData.subscription = subscription._id;
+    }
 
     const turf = await Turf.create(turfData);
 
