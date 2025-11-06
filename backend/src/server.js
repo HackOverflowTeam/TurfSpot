@@ -50,7 +50,7 @@ app.use('/api', limiter);
 
 // CORS - Allow frontend domain and localhost for development
 app.use(cors({
-  origin: ['http://localhost:5500', 'http://127.0.0.1:5500', 'http://localhost:5501', 'http://127.0.0.1:5501', 'https://turfspot-1.onrender.com'],
+  origin: ['http://localhost:5500', 'https://trycloudflare.com', 'http://127.0.0.1:5500', 'http://localhost:5501', 'http://127.0.0.1:5501', 'https://turfspot-1.onrender.com', 'https://travis-afterwards-monsters-mark.trycloudflare.com'],
   credentials: true
 }));
 
