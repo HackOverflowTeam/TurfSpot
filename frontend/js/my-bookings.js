@@ -97,7 +97,7 @@ function createBookingCard(booking) {
                         ${booking.payment.status.toUpperCase()}
                     </p>
                 </div>
-                ${booking.tierPayment && booking.tierPayment.verificationStatus ? `
+                ${booking.tierPayment && booking.tierPayment.verificationStatus && booking.turf?.paymentMethod === 'tier' ? `
                 <div>
                     <strong>Verification:</strong>
                     <p class="${
@@ -120,7 +120,7 @@ function createBookingCard(booking) {
                     ${booking.notes ? `<br><strong>Notes:</strong> ${booking.notes}` : ''}
                 </div>
             ` : ''}
-            ${booking.tierPayment && booking.tierPayment.verificationStatus === 'pending' ? `
+            ${booking.tierPayment && booking.tierPayment.verificationStatus === 'pending' && booking.turf?.paymentMethod === 'tier' ? `
                 <div style="margin-top: 1rem; padding: 1rem; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px;">
                     <i class="fas fa-clock" style="color: #f59e0b;"></i>
                     <strong>Waiting for owner to verify your payment</strong>
@@ -129,6 +129,18 @@ function createBookingCard(booking) {
                             <small>Screenshot uploaded on ${new Date(booking.tierPayment.uploadedAt).toLocaleString()}</small>
                         </div>
                     ` : ''}
+                </div>
+            ` : ''}
+            ${booking.status === 'pending' && booking.payment.status === 'pending' && !booking.tierPayment ? `
+                <div style="margin-top: 1rem; padding: 1rem; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px;">
+                    <i class="fas fa-exclamation-circle" style="color: #f59e0b;"></i>
+                    <strong>Payment pending - Please complete payment to confirm booking</strong>
+                </div>
+            ` : ''}
+            ${booking.status === 'confirmed' && booking.payment.status === 'completed' && !booking.tierPayment ? `
+                <div style="margin-top: 1rem; padding: 1rem; background: #d1fae5; border-left: 4px solid #10b981; border-radius: 4px;">
+                    <i class="fas fa-check-circle" style="color: #10b981;"></i>
+                    <strong>Booking confirmed! Payment completed successfully.</strong>
                 </div>
             ` : ''}
             ${booking.tierPayment && booking.tierPayment.verificationStatus === 'rejected' ? `

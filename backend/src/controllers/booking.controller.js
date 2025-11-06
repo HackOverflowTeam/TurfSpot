@@ -296,7 +296,7 @@ exports.getMyBookings = async (req, res) => {
     const skip = (page - 1) * limit;
 
     const bookings = await Booking.find(query)
-      .populate('turf', 'name address images pricing')
+      .populate('turf', 'name address images pricing paymentMethod')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit));
@@ -494,7 +494,7 @@ exports.getOwnerBookings = async (req, res) => {
     const skip = (page - 1) * limit;
 
     const bookings = await Booking.find(query)
-      .populate('turf', 'name address')
+      .populate('turf', 'name address paymentMethod')
       .populate('user', 'name email phone')
       .sort({ bookingDate: -1, 'timeSlot.startTime': 1 })
       .skip(skip)

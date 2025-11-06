@@ -34,22 +34,52 @@ exports.register = async (req, res) => {
     // PRODUCTION SECURITY: Hash OTP before storing
     const hashedOTP = hashOTP(otp);
 
-    // Check if pending user exists and delete it
-    await PendingUser.findOneAndDelete({ email });
+    // Check if pending user exists and delete it (with retry logic)
+    try {
+      await PendingUser.deleteMany({ email });
+      console.log(`[INFO] Deleted any existing pending users for ${email}`);
+    } catch (deleteError) {
+      console.log(`[WARN] Error deleting pending user:`, deleteError);
+    }
 
     // Create pending user (NOT in main User collection yet)
-    const pendingUser = await PendingUser.create({
-      email,
-      password, // Will be hashed by User model pre-save hook when moved to User collection
-      name,
-      phone,
-      role: role || 'user',
-      emailOTP: hashedOTP,
-      otpExpiry: otpExpiry,
-      otpAttempts: 0,
-      otpRequestCount: 1,
-      lastOtpRequest: new Date()
-    });
+    let pendingUser;
+    try {
+      pendingUser = await PendingUser.create({
+        email,
+        password, // Will be hashed by User model pre-save hook when moved to User collection
+        name,
+        phone,
+        role: role || 'user',
+        emailOTP: hashedOTP,
+        otpExpiry: otpExpiry,
+        otpAttempts: 0,
+        otpRequestCount: 1,
+        lastOtpRequest: new Date()
+      });
+    } catch (createError) {
+      // If duplicate key error, try to update existing instead
+      if (createError.code === 11000) {
+        console.log(`[INFO] Updating existing pending user for ${email}`);
+        pendingUser = await PendingUser.findOneAndUpdate(
+          { email },
+          {
+            password,
+            name,
+            phone,
+            role: role || 'user',
+            emailOTP: hashedOTP,
+            otpExpiry: otpExpiry,
+            otpAttempts: 0,
+            otpRequestCount: 1,
+            lastOtpRequest: new Date()
+          },
+          { new: true, upsert: true }
+        );
+      } else {
+        throw createError;
+      }
+    }
 
     // Send OTP email
     try {

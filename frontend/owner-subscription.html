@@ -543,34 +543,51 @@
     </div>
 
     <script type="module">
-        import { api } from './js/api.js';
-        import { auth } from './js/auth.js';
+        import api from './js/api.js';
+        import authManager from './js/auth.js';
 
         // Check authentication
-        if (!auth.isAuthenticated()) {
+        await authManager.init();
+        
+        if (!authManager.isAuthenticated()) {
+            alert('Please login to access subscription plans');
             window.location.href = '/index.html';
         }
 
-        const user = auth.getUser();
+        const user = authManager.getUser();
         if (user.role !== 'owner') {
             alert('Only owners can access subscription plans');
-            window.location.href = '/owner-dashboard.html';
+            window.location.href = '/index.html';
         }
 
         // Load current subscription
         async function loadCurrentSubscription() {
             try {
                 const response = await api.getMySubscription();
-                if (response.success && response.data) {
-                    const sub = response.data;
+                if (response.success && response.data && response.data.subscription) {
+                    const sub = response.data.subscription;
+                    const turfCount = response.data.currentTurfCount || 0;
+                    const canAddMore = response.data.canAddMoreTurfs;
+                    
                     if (sub.status === 'active' || sub.status === 'pending') {
                         document.getElementById('currentSubscription').style.display = 'block';
                         document.getElementById('subscriptionInfo').innerHTML = `
                             <p><strong>Plan:</strong> ${sub.plan.toUpperCase()} - ${sub.billingCycle}</p>
-                            <p><strong>Status:</strong> <span class="subscription-status ${sub.status}">${sub.status}</span></p>
+                            <p><strong>Status:</strong> <span class="subscription-status ${sub.status}">${sub.status.toUpperCase()}</span></p>
+                            <p><strong>Price:</strong> ₹${sub.price}/${sub.billingCycle}</p>
+                            <p><strong>Turfs:</strong> ${turfCount} / ${sub.maxTurfs === -1 ? 'Unlimited' : sub.maxTurfs}</p>
                             ${sub.startDate ? `<p><strong>Start Date:</strong> ${new Date(sub.startDate).toLocaleDateString()}</p>` : ''}
                             ${sub.endDate ? `<p><strong>End Date:</strong> ${new Date(sub.endDate).toLocaleDateString()}</p>` : ''}
-                            <p><strong>Max Turfs:</strong> ${sub.maxTurfs}</p>
+                            ${sub.status === 'pending' ? `
+                                <div style="margin-top: 15px; padding: 15px; background: #fed7aa; color: #92400e; border-radius: 10px;">
+                                    ⏳ Your subscription is pending admin verification
+                                </div>
+                            ` : ''}
+                            ${!canAddMore && sub.status === 'active' ? `
+                                <div style="margin-top: 15px; padding: 15px; background: #fee2e2; color: #991b1b; border-radius: 10px;">
+                                    ⚠️ You've reached the maximum number of turfs for your plan. Please upgrade to add more turfs.
+                                </div>
+                            ` : ''}
                         `;
                     }
                 }
@@ -617,32 +634,51 @@
             }
 
             const loading = document.getElementById('uploadLoading');
+            const submitBtn = document.querySelector('.btn-primary');
+            
             loading.classList.add('active');
+            submitBtn.disabled = true;
 
             try {
-                // Upload image to cloudinary or convert to base64
+                // Step 1: Create subscription first (or get existing pending one)
+                const subscriptionData = {
+                    plan: window.selectedPlan.plan,
+                    billingCycle: window.selectedPlan.cycle
+                };
+
+                console.log('Creating subscription:', subscriptionData);
+                const createResponse = await api.createSubscription(subscriptionData);
+                console.log('Subscription create response:', createResponse);
+
+                if (!createResponse.success) {
+                    alert('❌ Error: ' + (createResponse.message || 'Failed to create subscription'));
+                    return;
+                }
+
+                // Get subscription ID
+                const subscriptionId = createResponse.data._id;
+                
+                // Step 2: Upload payment proof
                 const file = fileInput.files[0];
                 const base64 = await fileToBase64(file);
 
-                const subscriptionData = {
-                    plan: window.selectedPlan.plan,
-                    billingCycle: window.selectedPlan.cycle,
-                    paymentProof: base64
-                };
+                console.log('Uploading payment proof for subscription:', subscriptionId);
+                const uploadResponse = await api.uploadSubscriptionPaymentProof(subscriptionId, base64);
+                console.log('Payment proof upload response:', uploadResponse);
 
-                const response = await api.createSubscription(subscriptionData);
-
-                if (response.success) {
-                    alert('Subscription request submitted! Pending admin approval.');
-                    window.location.reload();
+                if (uploadResponse.success) {
+                    alert('✅ Subscription request submitted successfully! \n\nYour payment proof has been uploaded. Waiting for admin verification.');
+                    closePaymentModal();
+                    loadCurrentSubscription();
                 } else {
-                    alert('Error: ' + response.message);
+                    alert('❌ Error uploading payment proof: ' + (uploadResponse.message || 'Failed to upload'));
                 }
             } catch (error) {
                 console.error('Error submitting subscription:', error);
-                alert('Error submitting subscription: ' + error.message);
+                alert('❌ Error submitting subscription: ' + (error.message || 'Unknown error'));
             } finally {
                 loading.classList.remove('active');
+                submitBtn.disabled = false;
             }
         };
 

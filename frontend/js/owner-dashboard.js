@@ -632,7 +632,7 @@ async function loadSubscription() {
                     <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
                         Subscribe to a tier plan to list your turfs without paying commission on bookings
                     </p>
-                    <a href="subscription.html" class="btn btn-primary">
+                    <a href="owner-subscription.html" class="btn btn-primary">
                         <i class="fas fa-rocket"></i> View Plans
                     </a>
                 </div>
@@ -824,7 +824,7 @@ async function checkSubscriptionForTier() {
         if (!response.data || !response.data.subscription) {
             tierMethod.disabled = true;
             warning.style.display = 'block';
-            warningText.innerHTML = '<strong>No subscription found.</strong> <a href="subscription.html" style="color: var(--primary); text-decoration: underline;">Subscribe now</a> to use tier-based payment.';
+            warningText.innerHTML = '<strong>No subscription found.</strong> <a href="owner-subscription.html" style="color: var(--primary); text-decoration: underline;">Subscribe now</a> to use tier-based payment.';
             return false;
         }
         
@@ -833,14 +833,14 @@ async function checkSubscriptionForTier() {
         if (subscription.status !== 'active') {
             tierMethod.disabled = true;
             warning.style.display = 'block';
-            warningText.innerHTML = `<strong>Subscription ${subscription.status}.</strong> Please wait for admin approval or <a href="subscription.html" style="color: var(--primary); text-decoration: underline;">check status</a>.`;
+            warningText.innerHTML = `<strong>Subscription ${subscription.status}.</strong> Please wait for admin approval or <a href="owner-subscription.html" style="color: var(--primary); text-decoration: underline;">check status</a>.`;
             return false;
         }
         
         if (!canAddMoreTurfs) {
             tierMethod.disabled = true;
             warning.style.display = 'block';
-            warningText.innerHTML = `<strong>Turf limit reached.</strong> <a href="subscription.html" style="color: var(--primary); text-decoration: underline;">Upgrade your plan</a> to add more turfs.`;
+            warningText.innerHTML = `<strong>Turf limit reached.</strong> <a href="owner-subscription.html" style="color: var(--primary); text-decoration: underline;">Upgrade your plan</a> to add more turfs.`;
             return false;
         }
         

@@ -297,40 +297,87 @@ if (loginForm) {
 }
 
 // Handle signup form
-const signupForm = document.getElementById('signupForm');
+const signupForm = document.getElementById('registerForm');
 if (signupForm) {
+    let isSubmitting = false; // Prevent double submission
+    
     signupForm.addEventListener('submit', async (e) => {
         e.preventDefault();
+        
+        // Prevent double submission
+        if (isSubmitting) {
+            console.log('Registration already in progress, ignoring duplicate submission');
+            return;
+        }
+        
         const formData = {
-            name: e.target.name.value,
-            email: e.target.email.value,
-            phone: e.target.phone.value,
-            password: e.target.password.value,
-            role: 'user'
+            name: document.getElementById('registerName').value,
+            email: document.getElementById('registerEmail').value,
+            phone: document.getElementById('registerPhone').value,
+            password: document.getElementById('registerPassword').value,
+            role: document.getElementById('registerRole').value
         };
         
         try {
+            isSubmitting = true;
+            const submitBtn = document.getElementById('registerSubmitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Sending OTP...';
+            
             const response = await api.register(formData);
+            
+            console.log('Registration response:', response);
+            
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Register';
+            isSubmitting = false;
             
             // Check if email verification is required
             if (response.data && response.data.requiresEmailVerification) {
+                console.log('OTP verification required, showing OTP field');
                 showToast('OTP sent! Please check your email.', 'success');
-                closeModal('signupModal');
+                
                 // Store email for OTP verification
                 sessionStorage.setItem('pendingVerificationEmail', formData.email);
-                // Show OTP modal
-                openOtpModal();
+                
+                // Show OTP input field inline
+                const otpGroup = document.getElementById('otpInputGroup');
+                const otpInput = document.getElementById('registerOtpInput');
+                
+                console.log('OTP Group element:', otpGroup);
+                console.log('OTP Input element:', otpInput);
+                
+                if (otpGroup) {
+                    otpGroup.style.display = 'block';
+                    console.log('OTP group display set to block');
+                }
+                
+                if (otpInput) {
+                    setTimeout(() => otpInput.focus(), 100);
+                }
+                
+                // Disable form fields except OTP
+                document.getElementById('registerName').disabled = true;
+                document.getElementById('registerEmail').disabled = true;
+                document.getElementById('registerPhone').disabled = true;
+                document.getElementById('registerPassword').disabled = true;
+                document.getElementById('registerRole').disabled = true;
+                submitBtn.style.display = 'none';
             } else if (response.data && response.data.token) {
                 // Old flow - if token is returned
                 authManager.setToken(response.data.token);
                 authManager.setUser(response.data.user);
                 showToast('Registration successful!', 'success');
-                closeModal('signupModal');
+                closeModal('registerModal');
                 setTimeout(() => {
                     window.location.href = 'turfs.html';
                 }, 1000);
             }
         } catch (error) {
+            isSubmitting = false;
+            const submitBtn = document.getElementById('registerSubmitBtn');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Register';
             showToast(error.message || 'Registration failed', 'error');
         }
     });
@@ -351,15 +398,19 @@ if (ownerSignupForm) {
         
         try {
             const response = await api.register(formData);
+            console.log('Owner registration response:', response);
             
             // Check if email verification is required
-            if (response.data && response.data.requiresEmailVerification) {
+            if (response && response.data && response.data.requiresEmailVerification === true) {
+                console.log('Owner OTP verification required - opening modal');
                 showToast('OTP sent! Please check your email.', 'success');
                 closeModal('ownerSignupModal');
                 // Store email for OTP verification
                 sessionStorage.setItem('pendingVerificationEmail', formData.email);
                 // Show OTP modal
-                openOtpModal();
+                setTimeout(() => {
+                    openOtpModal();
+                }, 100);
             } else if (response.data && response.data.token) {
                 // Old flow - if token is returned
                 authManager.setToken(response.data.token);
@@ -369,14 +420,196 @@ if (ownerSignupForm) {
                 setTimeout(() => {
                     window.location.href = 'owner-dashboard.html';
                 }, 1000);
+            } else {
+                console.error('Unexpected owner response structure:', response);
             }
         } catch (error) {
+            console.error('Owner registration error:', error);
             showToast(error.message || 'Registration failed', 'error');
         }
     });
 }
 
-// Handle OTP verification form
+// Handle OTP verification form (in register modal)
+const otpVerifyForm = document.getElementById('otpVerifyForm');
+if (otpVerifyForm) {
+    otpVerifyForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const otp = document.getElementById('otpInputField').value.trim();
+        const email = sessionStorage.getItem('pendingVerificationEmail');
+        
+        if (!otp || otp.length !== 6) {
+            showToast('Please enter a valid 6-digit OTP', 'error');
+            return;
+        }
+        
+        if (!email) {
+            showToast('Session expired. Please register again.', 'error');
+            closeModal('registerModal');
+            return;
+        }
+        
+        try {
+            const submitBtn = otpVerifyForm.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Verifying...';
+            
+            const response = await api.verifyOTP({ otp, email });
+            
+            // Save token and user data
+            authManager.setToken(response.data.token);
+            authManager.setUser(response.data.user);
+            
+            // Clear stored email
+            sessionStorage.removeItem('pendingVerificationEmail');
+            
+            showToast('Email verified successfully! Account created.', 'success');
+            
+            // Reset modal
+            document.getElementById('registerForm').style.display = 'block';
+            document.getElementById('otpVerificationSection').style.display = 'none';
+            document.getElementById('registerTitle').textContent = 'Create Account';
+            document.getElementById('registerForm').reset();
+            document.getElementById('otpInputField').value = '';
+            
+            closeModal('registerModal');
+            
+            // Redirect based on role
+            const user = authManager.getUser();
+            setTimeout(() => {
+                if (user.role === 'owner') {
+                    window.location.href = 'owner-dashboard.html';
+                } else {
+                    window.location.href = 'turfs.html';
+                }
+            }, 1000);
+        } catch (error) {
+            const submitBtn = otpVerifyForm.querySelector('button[type="submit"]');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Verify OTP';
+            showToast(error.message || 'Invalid or expired OTP', 'error');
+        }
+    });
+}
+
+// Handle back to register button
+const backToRegister = document.getElementById('backToRegister');
+if (backToRegister) {
+    backToRegister.addEventListener('click', (e) => {
+        e.preventDefault();
+        // Show registration form, hide OTP section
+        document.getElementById('registerForm').style.display = 'block';
+        document.getElementById('otpVerificationSection').style.display = 'none';
+        document.getElementById('registerTitle').textContent = 'Create Account';
+        document.getElementById('otpInputField').value = '';
+    });
+}
+
+// Handle resend OTP link
+const resendOtpLink = document.getElementById('resendOtpLink');
+if (resendOtpLink) {
+    resendOtpLink.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const email = sessionStorage.getItem('pendingVerificationEmail');
+        
+        if (!email) {
+            showToast('Session expired. Please register again.', 'error');
+            return;
+        }
+        
+        try {
+            // You would need to create a resend OTP endpoint
+            // For now, just show a message
+            showToast('Please try registering again to receive a new OTP.', 'info');
+        } catch (error) {
+            showToast('Failed to resend OTP', 'error');
+        }
+    });
+}
+
+// Handle inline OTP verify button
+const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+if (verifyOtpBtn) {
+    verifyOtpBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const otp = document.getElementById('registerOtpInput').value.trim();
+        const email = sessionStorage.getItem('pendingVerificationEmail');
+        
+        if (!otp || otp.length !== 6) {
+            showToast('Please enter a valid 6-digit OTP', 'error');
+            return;
+        }
+        
+        if (!email) {
+            showToast('Session expired. Please register again.', 'error');
+            closeModal('registerModal');
+            return;
+        }
+        
+        try {
+            verifyOtpBtn.disabled = true;
+            verifyOtpBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
+            
+            const response = await api.verifyOTP({ otp, email });
+            
+            // Save token and user data
+            authManager.setToken(response.data.token);
+            authManager.setUser(response.data.user);
+            
+            // Clear stored email
+            sessionStorage.removeItem('pendingVerificationEmail');
+            
+            showToast('Email verified successfully! Account created.', 'success');
+            closeModal('registerModal');
+            
+            // Reset form
+            document.getElementById('registerForm').reset();
+            document.getElementById('otpInputGroup').style.display = 'none';
+            document.getElementById('registerName').disabled = false;
+            document.getElementById('registerEmail').disabled = false;
+            document.getElementById('registerPhone').disabled = false;
+            document.getElementById('registerPassword').disabled = false;
+            document.getElementById('registerRole').disabled = false;
+            document.getElementById('registerSubmitBtn').style.display = 'block';
+            
+            // Redirect based on role
+            const user = authManager.getUser();
+            setTimeout(() => {
+                if (user.role === 'owner') {
+                    window.location.href = 'owner-dashboard.html';
+                } else {
+                    window.location.href = 'turfs.html';
+                }
+            }, 1000);
+        } catch (error) {
+            verifyOtpBtn.disabled = false;
+            verifyOtpBtn.textContent = 'Verify OTP';
+            showToast(error.message || 'Invalid or expired OTP', 'error');
+        }
+    });
+}
+
+// Handle inline resend OTP link
+const resendOtpInline = document.getElementById('resendOtpInline');
+if (resendOtpInline) {
+    resendOtpInline.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const email = sessionStorage.getItem('pendingVerificationEmail');
+        
+        if (!email) {
+            showToast('Session expired. Please register again.', 'error');
+            return;
+        }
+        
+        try {
+            showToast('Please wait 60 seconds before requesting a new OTP', 'info');
+        } catch (error) {
+            showToast('Failed to resend OTP', 'error');
+        }
+    });
+}
+
+// Handle OTP verification form (old modal - keeping for compatibility)
 const otpForm = document.getElementById('otpForm');
 if (otpForm) {
     otpForm.addEventListener('submit', async (e) => {
@@ -423,17 +656,29 @@ if (otpForm) {
     });
 }
 
-// Handle resend OTP
-const resendOtpBtn = document.getElementById('resendOtpBtn');
-if (resendOtpBtn) {
-    resendOtpBtn.addEventListener('click', async (e) => {
-        e.preventDefault();
-        
-        try {
-            await api.sendOTP();
-            showToast('OTP resent successfully! Please check your email.', 'success');
-        } catch (error) {
-            showToast(error.message || 'Failed to resend OTP', 'error');
-        }
+// Function to show OTP section in register modal
+function showOtpSection(email) {
+    document.getElementById('registerForm').style.display = 'none';
+    document.getElementById('otpVerificationSection').style.display = 'block';
+    document.getElementById('otpEmailDisplay').textContent = email;
+    document.getElementById('registerTitle').textContent = 'Verify Your Email';
+    document.getElementById('otpInputField').focus();
+}
+
+// Function to hide OTP section in register modal
+function hideOtpSection() {
+    document.getElementById('registerForm').style.display = 'block';
+    document.getElementById('otpVerificationSection').style.display = 'none';
+    document.getElementById('registerTitle').textContent = 'Create Account';
+    document.getElementById('otpInputField').value = '';
+    sessionStorage.removeItem('pendingVerificationEmail');
+}
+
+// Reset register modal when closed
+const closeRegisterModal = document.getElementById('closeRegisterModal');
+if (closeRegisterModal) {
+    closeRegisterModal.addEventListener('click', () => {
+        hideOtpSection();
+        closeModal('registerModal');
     });
 }
