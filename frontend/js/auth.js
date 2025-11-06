@@ -104,6 +104,23 @@ class AuthManager {
         window.location.href = 'index.html';
     }
 
+    getUser() {
+        return this.user;
+    }
+
+    setUser(user) {
+        this.user = user;
+        this.updateUI();
+    }
+
+    setToken(token) {
+        api.setToken(token);
+    }
+
+    getToken() {
+        return api.getToken();
+    }
+
     isAuthenticated() {
         return !!this.user;
     }

@@ -7,6 +7,9 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function initializeApp() {
+    // Initialize auth first
+    await authManager.init();
+    
     // Check authentication and update UI
     updateAuthUI();
     
