@@ -14,7 +14,7 @@ async function initializeApp() {
     updateAuthUI();
     
     // Load popular turfs on homepage
-    if (document.getElementById('turfsGrid')) {
+    if (document.getElementById('popularTurfs')) {
         loadPopularTurfs();
     }
     
@@ -138,17 +138,27 @@ function handleSearch() {
 
 // Load popular turfs on homepage
 async function loadPopularTurfs() {
-    const turfsGrid = document.getElementById('turfsGrid');
+    const turfsGrid = document.getElementById('popularTurfs');
+    const loader = document.getElementById('turfsLoader');
     
-    if (!turfsGrid) return;
+    if (!turfsGrid) {
+        console.log('popularTurfs element not found');
+        return;
+    }
     
     try {
-        turfsGrid.innerHTML = '<div class="loader"><i class="fas fa-spinner fa-spin"></i> Loading turfs...</div>';
+        console.log('Loading turfs...');
+        if (loader) loader.style.display = 'flex';
         
         const response = await api.getTurfs({ limit: 6, sortBy: 'rating.average', order: 'desc' });
+        console.log('API Response:', response);
+        
+        // Hide loader
+        if (loader) loader.style.display = 'none';
         
         // Handle response data
         const turfs = (response && response.data) ? response.data : [];
+        console.log('Turfs data:', turfs);
         
         if (turfs.length > 0) {
             turfsGrid.innerHTML = turfs.map(turf => createTurfCard(turf)).join('');
@@ -157,6 +167,8 @@ async function loadPopularTurfs() {
         }
     } catch (error) {
         console.error('Error loading turfs:', error);
+        console.error('Error details:', error.message, error.stack);
+        if (loader) loader.style.display = 'none';
         turfsGrid.innerHTML = '<p class="text-center" style="grid-column: 1/-1; color: var(--danger);">Failed to load turfs. Please try again.</p>';
     }
 }
