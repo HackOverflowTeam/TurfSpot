@@ -70,25 +70,25 @@
             try {
                 const response = await api.getTurfs({ status: 'approved' });
                 if (response.data && response.data.length > 0) {
-                    grid.innerHTML = response.data.map(t => \`
-                        <div class="turf-card-discover" onclick="location.href='turf-details.html?id=\${t._id}'">
+                    grid.innerHTML = response.data.map(t => `
+                        <div class="turf-card-discover" onclick="location.href='turf-details.html?id=${t._id}'">
                             <div class="turf-image-discover">
-                                <img src="\${t.images?.[0]?.url || 'https://via.placeholder.com/400x300'}" alt="\${t.name}">
+                                <img src="${t.images?.[0]?.url || 'https://via.placeholder.com/400x300'}" alt="${t.name}">
                             </div>
                             <div class="turf-content-discover">
-                                <h3 class="turf-name-discover">\${t.name}</h3>
+                                <h3 class="turf-name-discover">${t.name}</h3>
                                 <div class="turf-location-discover">
-                                    <i class="fas fa-map-marker-alt"></i> \${t.address?.city}
+                                    <i class="fas fa-map-marker-alt"></i> ${t.address?.city}
                                 </div>
                                 <div class="turf-footer-discover">
                                     <div class="turf-price-discover">
-                                        <span class="price">₹\${t.pricing?.hourlyRate}/hr</span>
+                                        <span class="price">₹${t.pricing?.hourlyRate}/hr</span>
                                     </div>
                                     <button class="btn-book">Book Now</button>
                                 </div>
                             </div>
                         </div>
-                    \`).join('');
+                    `).join('');
                     document.getElementById('resultCount').textContent = response.data.length;
                 }
             } catch (e) {
