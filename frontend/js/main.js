@@ -142,10 +142,13 @@ async function loadPopularTurfs() {
     try {
         turfsGrid.innerHTML = '<div class="loader"><i class="fas fa-spinner fa-spin"></i> Loading turfs...</div>';
         
-        const response = await api.getTurfs({ limit: 6, status: 'approved' });
+        const response = await api.getTurfs({ limit: 6, sortBy: 'rating.average', order: 'desc' });
         
-        if (response.data && response.data.length > 0) {
-            turfsGrid.innerHTML = response.data.map(turf => createTurfCard(turf)).join('');
+        // Handle response data
+        const turfs = (response && response.data) ? response.data : [];
+        
+        if (turfs.length > 0) {
+            turfsGrid.innerHTML = turfs.map(turf => createTurfCard(turf)).join('');
         } else {
             turfsGrid.innerHTML = '<p class="text-center" style="grid-column: 1/-1;">No turfs available at the moment.</p>';
         }
@@ -213,6 +216,13 @@ window.showSignupModal = function() {
 
 window.showOwnerSignup = function() {
     const modal = document.getElementById('ownerSignupModal');
+    if (modal) {
+        modal.classList.add('active');
+    }
+};
+
+window.openOtpModal = function() {
+    const modal = document.getElementById('otpModal');
     if (modal) {
         modal.classList.add('active');
     }
@@ -286,13 +296,24 @@ if (signupForm) {
         
         try {
             const response = await api.register(formData);
-            authManager.setToken(response.token);
+            
+            // Save token
+            authManager.setToken(response.data.token);
             authManager.setUser(response.data.user);
-            showToast('Registration successful!', 'success');
-            closeModal('signupModal');
-            setTimeout(() => {
-                window.location.href = 'turfs.html';
-            }, 1000);
+            
+            // Check if email verification is required
+            if (response.data.requiresEmailVerification) {
+                showToast('Registration successful! Please check your email for OTP.', 'success');
+                closeModal('signupModal');
+                // Show OTP modal
+                openOtpModal();
+            } else {
+                showToast('Registration successful!', 'success');
+                closeModal('signupModal');
+                setTimeout(() => {
+                    window.location.href = 'turfs.html';
+                }, 1000);
+            }
         } catch (error) {
             showToast(error.message || 'Registration failed', 'error');
         }
@@ -314,15 +335,74 @@ if (ownerSignupForm) {
         
         try {
             const response = await api.register(formData);
-            authManager.setToken(response.token);
+            
+            // Save token
+            authManager.setToken(response.data.token);
             authManager.setUser(response.data.user);
-            showToast('Registration successful! Welcome to TurfSpot', 'success');
-            closeModal('ownerSignupModal');
-            setTimeout(() => {
-                window.location.href = 'owner-dashboard.html';
-            }, 1000);
+            
+            // Check if email verification is required
+            if (response.data.requiresEmailVerification) {
+                showToast('Registration successful! Please check your email for OTP.', 'success');
+                closeModal('ownerSignupModal');
+                // Show OTP modal
+                openOtpModal();
+            } else {
+                showToast('Registration successful! Welcome to TurfSpot', 'success');
+                closeModal('ownerSignupModal');
+                setTimeout(() => {
+                    window.location.href = 'owner-dashboard.html';
+                }, 1000);
+            }
         } catch (error) {
             showToast(error.message || 'Registration failed', 'error');
+        }
+    });
+}
+
+// Handle OTP verification form
+const otpForm = document.getElementById('otpForm');
+if (otpForm) {
+    otpForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const otp = document.getElementById('otpInput').value.trim();
+        
+        if (!otp || otp.length !== 6) {
+            showToast('Please enter a valid 6-digit OTP', 'error');
+            return;
+        }
+        
+        try {
+            const response = await api.verifyOTP({ otp });
+            authManager.setUser(response.data.user);
+            showToast('Email verified successfully!', 'success');
+            closeModal('otpModal');
+            
+            // Redirect based on role
+            const user = authManager.getUser();
+            setTimeout(() => {
+                if (user.role === 'owner') {
+                    window.location.href = 'owner-dashboard.html';
+                } else {
+                    window.location.href = 'turfs.html';
+                }
+            }, 1000);
+        } catch (error) {
+            showToast(error.message || 'Invalid or expired OTP', 'error');
+        }
+    });
+}
+
+// Handle resend OTP
+const resendOtpBtn = document.getElementById('resendOtpBtn');
+if (resendOtpBtn) {
+    resendOtpBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        
+        try {
+            await api.sendOTP();
+            showToast('OTP resent successfully! Please check your email.', 'success');
+        } catch (error) {
+            showToast(error.message || 'Failed to resend OTP', 'error');
         }
     });
 }

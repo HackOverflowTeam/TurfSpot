@@ -14,13 +14,18 @@ async function loadTurfs() {
 
     try {
         const response = await api.getTurfs();
-        allTurfs = response.data || [];
-        filteredTurfs = [...allTurfs];
         
+        // Hide loader
         if (loader) loader.style.display = 'none';
         
+        // Handle response
+        allTurfs = (response && response.data) ? response.data : [];
+        filteredTurfs = [...allTurfs];
+        
         if (allTurfs.length === 0) {
-            grid.innerHTML = '<div class="empty-state"><i class="fas fa-building"></i><h3>No Turfs Available</h3><p>Check back later for new turfs</p></div>';
+            if (grid) {
+                grid.innerHTML = '<div class="empty-state"><i class="fas fa-building"></i><h3>No Turfs Available</h3><p>Check back later for new turfs</p></div>';
+            }
             return;
         }
         
@@ -29,7 +34,9 @@ async function loadTurfs() {
     } catch (error) {
         console.error('Error loading turfs:', error);
         if (loader) loader.style.display = 'none';
-        if (grid) grid.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><h3>Error Loading Turfs</h3><p>Please try again later</p></div>';
+        if (grid) {
+            grid.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><h3>Error Loading Turfs</h3><p>Please try again later</p></div>';
+        }
         showToast('Failed to load turfs', 'error');
     }
 }
