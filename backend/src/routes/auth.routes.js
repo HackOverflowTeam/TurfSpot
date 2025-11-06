@@ -44,7 +44,8 @@ const changePasswordValidation = [
 ];
 
 const verifyOTPValidation = [
-  body('otp').notEmpty().trim().isLength({ min: 6, max: 6 }).withMessage('Valid 6-digit OTP is required')
+  body('otp').notEmpty().trim().isLength({ min: 6, max: 6 }).withMessage('Valid 6-digit OTP is required'),
+  body('email').isEmail().normalizeEmail().withMessage('Valid email is required')
 ];
 
 // Routes
@@ -57,6 +58,6 @@ router.put('/change-password', protect, changePasswordValidation, validate, chan
 
 // Email verification routes
 router.post('/send-otp', protect, sendOTP);
-router.post('/verify-otp', protect, verifyOTPValidation, validate, verifyOTP);
+router.post('/verify-otp', verifyOTPValidation, validate, verifyOTP); // Public route - no auth required
 
 module.exports = router;

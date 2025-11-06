@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const { getFirebaseAdmin } = require('../config/firebase');
 const User = require('../models/User.model');
+const PendingUser = require('../models/PendingUser.model');
 const { generateOTP, hashOTP, sendOTPEmail, sendWelcomeEmail } = require('../utils/emailService');
 
 // Generate JWT token
@@ -17,7 +18,7 @@ exports.register = async (req, res) => {
   try {
     const { email, password, name, phone, role } = req.body;
 
-    // Check if user already exists
+    // Check if user already exists in main User collection
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({
@@ -30,49 +31,51 @@ exports.register = async (req, res) => {
     const otp = generateOTP();
     const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
 
-    // PRODUCTION SECURITY: Hash OTP before storing in database
+    // PRODUCTION SECURITY: Hash OTP before storing
     const hashedOTP = hashOTP(otp);
 
-    // Create user (email not verified yet)
-    const user = await User.create({
+    // Check if pending user exists and delete it
+    await PendingUser.findOneAndDelete({ email });
+
+    // Create pending user (NOT in main User collection yet)
+    const pendingUser = await PendingUser.create({
       email,
-      password,
+      password, // Will be hashed by User model pre-save hook when moved to User collection
       name,
       phone,
       role: role || 'user',
-      authProvider: 'email',
-      emailOTP: hashedOTP, // Store hashed OTP
+      emailOTP: hashedOTP,
       otpExpiry: otpExpiry,
-      isEmailVerified: false,
       otpAttempts: 0,
-      otpRequestCount: 1, // First OTP request
+      otpRequestCount: 1,
       lastOtpRequest: new Date()
     });
 
-    // Send OTP email (send plain OTP to user, but we store hashed version)
+    // Send OTP email
     try {
       await sendOTPEmail(email, name, otp);
-      
-      // PRODUCTION SECURITY: Log OTP generation (without exposing OTP)
-      console.log(`[SECURITY] OTP generated for new user: ${email} (ID: ${user._id})`);
+      console.log(`[INFO] OTP sent to ${email} for registration`);
     } catch (emailError) {
       console.error('[ERROR] Failed to send OTP email:', emailError);
-      // Continue registration even if email fails
+      // Delete pending user if email fails
+      await PendingUser.findByIdAndDelete(pendingUser._id);
+      
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to send verification email. Please try again.'
+      });
     }
 
-    // Generate token (user can login but some features may be restricted)
-    const token = generateToken(user._id);
-
-    res.status(201).json({
+    res.status(200).json({
       success: true,
-      message: 'User registered successfully. Please verify your email with the OTP sent to your email address.',
+      message: 'OTP sent to your email. Please verify to complete registration.',
       data: {
-        user,
-        token,
+        email: email,
         requiresEmailVerification: true
       }
     });
   } catch (error) {
+    console.error('[ERROR] Registration error:', error);
     res.status(500).json({
       success: false,
       message: error.message
@@ -395,41 +398,32 @@ exports.sendOTP = async (req, res) => {
   }
 };
 
-// @desc    Verify email with OTP
+// @desc    Verify email with OTP and complete registration
 // @route   POST /api/auth/verify-otp
-// @access  Private
+// @access  Public
 exports.verifyOTP = async (req, res) => {
   try {
-    const { otp } = req.body;
-    const userId = req.user._id;
+    const { otp, email } = req.body;
 
-    if (!otp) {
+    if (!otp || !email) {
       return res.status(400).json({
         success: false,
-        message: 'OTP is required'
+        message: 'OTP and email are required'
       });
     }
 
-    // Get user with OTP fields
-    const user = await User.findById(userId).select('+emailOTP +otpExpiry +otpAttempts');
+    // Find pending user
+    const pendingUser = await PendingUser.findOne({ email }).select('+emailOTP');
 
-    if (!user) {
+    if (!pendingUser) {
       return res.status(404).json({
         success: false,
-        message: 'User not found'
-      });
-    }
-
-    // Check if already verified
-    if (user.isEmailVerified) {
-      return res.status(400).json({
-        success: false,
-        message: 'Email is already verified'
+        message: 'No pending registration found. Please register again.'
       });
     }
 
     // Check if OTP exists
-    if (!user.emailOTP) {
+    if (!pendingUser.emailOTP) {
       return res.status(400).json({
         success: false,
         message: 'No OTP found. Please request a new OTP.'
@@ -437,39 +431,36 @@ exports.verifyOTP = async (req, res) => {
     }
 
     // Check if OTP expired
-    if (new Date() > user.otpExpiry) {
+    if (new Date() > pendingUser.otpExpiry) {
       return res.status(400).json({
         success: false,
-        message: 'OTP has expired. Please request a new OTP.'
+        message: 'OTP has expired. Please register again.'
       });
     }
 
-    // PRODUCTION SECURITY: Check if too many failed attempts (max 5 attempts)
-    if (user.otpAttempts >= 5) {
-      // Invalidate current OTP after 5 failed attempts
-      user.emailOTP = undefined;
-      user.otpExpiry = undefined;
-      user.otpAttempts = 0;
-      await user.save();
+    // Check if too many failed attempts (max 5 attempts)
+    if (pendingUser.otpAttempts >= 5) {
+      // Delete pending user after max attempts
+      await PendingUser.findByIdAndDelete(pendingUser._id);
 
-      console.log(`[SECURITY] Max OTP attempts exceeded for user: ${user.email} (ID: ${user._id})`);
+      console.log(`[SECURITY] Max OTP attempts exceeded for: ${email}`);
 
       return res.status(429).json({
         success: false,
-        message: 'Too many failed attempts. OTP has been invalidated. Please request a new OTP.'
+        message: 'Too many failed attempts. Please register again.'
       });
     }
 
     // Verify OTP
     const hashedInputOTP = hashOTP(otp.trim());
-    if (user.emailOTP !== hashedInputOTP) {
-      // PRODUCTION SECURITY: Increment failed attempts
-      user.otpAttempts = (user.otpAttempts || 0) + 1;
-      await user.save();
+    if (pendingUser.emailOTP !== hashedInputOTP) {
+      // Increment failed attempts
+      pendingUser.otpAttempts = (pendingUser.otpAttempts || 0) + 1;
+      await pendingUser.save();
 
-      const remainingAttempts = 5 - user.otpAttempts;
+      const remainingAttempts = 5 - pendingUser.otpAttempts;
 
-      console.log(`[SECURITY] Invalid OTP attempt for user: ${user.email} (ID: ${user._id}) - Remaining attempts: ${remainingAttempts}`);
+      console.log(`[SECURITY] Invalid OTP attempt for: ${email} - Remaining: ${remainingAttempts}`);
 
       return res.status(400).json({
         success: false,
@@ -477,35 +468,48 @@ exports.verifyOTP = async (req, res) => {
       });
     }
 
-    // PRODUCTION SECURITY: OTP is correct - Update user as verified
-    user.isEmailVerified = true;
-    user.emailOTP = undefined;
-    user.otpExpiry = undefined;
-    user.otpAttempts = 0;
-    user.otpRequestCount = 0; // Reset request count on successful verification
-    user.lastOtpRequest = undefined;
-    await user.save();
+    // OTP is correct - Create actual user in User collection
+    const user = await User.create({
+      email: pendingUser.email,
+      password: pendingUser.password,
+      name: pendingUser.name,
+      phone: pendingUser.phone,
+      role: pendingUser.role,
+      authProvider: 'email',
+      isEmailVerified: true, // Mark as verified immediately
+      isActive: true
+    });
 
-    // PRODUCTION SECURITY: Log successful verification
-    console.log(`[SECURITY] Email verified successfully for user: ${user.email} (ID: ${user._id})`);
+    // Delete pending user
+    await PendingUser.findByIdAndDelete(pendingUser._id);
 
     // Send welcome email
     try {
       await sendWelcomeEmail(user.email, user.name, user.role);
+      console.log(`[INFO] Welcome email sent to ${user.email}`);
     } catch (emailError) {
       console.error('[ERROR] Failed to send welcome email:', emailError);
-      // Continue even if welcome email fails
+      // Don't fail registration if welcome email fails
     }
 
-    res.status(200).json({
+    // Generate token
+    const token = generateToken(user._id);
+
+    // Remove password from response
+    user.password = undefined;
+
+    console.log(`[SUCCESS] User registered and verified: ${user.email} (ID: ${user._id})`);
+
+    res.status(201).json({
       success: true,
-      message: 'Email verified successfully!',
+      message: 'Email verified successfully! Your account has been created.',
       data: {
-        user
+        user,
+        token
       }
     });
   } catch (error) {
-    console.error('[ERROR] OTP verification failed:', error);
+    console.error('[ERROR] OTP verification error:', error);
     res.status(500).json({
       success: false,
       message: error.message

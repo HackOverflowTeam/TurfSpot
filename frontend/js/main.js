@@ -297,17 +297,18 @@ if (signupForm) {
         try {
             const response = await api.register(formData);
             
-            // Save token
-            authManager.setToken(response.data.token);
-            authManager.setUser(response.data.user);
-            
             // Check if email verification is required
-            if (response.data.requiresEmailVerification) {
-                showToast('Registration successful! Please check your email for OTP.', 'success');
+            if (response.data && response.data.requiresEmailVerification) {
+                showToast('OTP sent! Please check your email.', 'success');
                 closeModal('signupModal');
+                // Store email for OTP verification
+                sessionStorage.setItem('pendingVerificationEmail', formData.email);
                 // Show OTP modal
                 openOtpModal();
-            } else {
+            } else if (response.data && response.data.token) {
+                // Old flow - if token is returned
+                authManager.setToken(response.data.token);
+                authManager.setUser(response.data.user);
                 showToast('Registration successful!', 'success');
                 closeModal('signupModal');
                 setTimeout(() => {
@@ -336,17 +337,18 @@ if (ownerSignupForm) {
         try {
             const response = await api.register(formData);
             
-            // Save token
-            authManager.setToken(response.data.token);
-            authManager.setUser(response.data.user);
-            
             // Check if email verification is required
-            if (response.data.requiresEmailVerification) {
-                showToast('Registration successful! Please check your email for OTP.', 'success');
+            if (response.data && response.data.requiresEmailVerification) {
+                showToast('OTP sent! Please check your email.', 'success');
                 closeModal('ownerSignupModal');
+                // Store email for OTP verification
+                sessionStorage.setItem('pendingVerificationEmail', formData.email);
                 // Show OTP modal
                 openOtpModal();
-            } else {
+            } else if (response.data && response.data.token) {
+                // Old flow - if token is returned
+                authManager.setToken(response.data.token);
+                authManager.setUser(response.data.user);
                 showToast('Registration successful! Welcome to TurfSpot', 'success');
                 closeModal('ownerSignupModal');
                 setTimeout(() => {
@@ -365,16 +367,30 @@ if (otpForm) {
     otpForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const otp = document.getElementById('otpInput').value.trim();
+        const email = sessionStorage.getItem('pendingVerificationEmail');
         
         if (!otp || otp.length !== 6) {
             showToast('Please enter a valid 6-digit OTP', 'error');
             return;
         }
         
+        if (!email) {
+            showToast('Session expired. Please register again.', 'error');
+            closeModal('otpModal');
+            return;
+        }
+        
         try {
-            const response = await api.verifyOTP({ otp });
+            const response = await api.verifyOTP({ otp, email });
+            
+            // Save token and user data
+            authManager.setToken(response.data.token);
             authManager.setUser(response.data.user);
-            showToast('Email verified successfully!', 'success');
+            
+            // Clear stored email
+            sessionStorage.removeItem('pendingVerificationEmail');
+            
+            showToast('Email verified successfully! Account created.', 'success');
             closeModal('otpModal');
             
             // Redirect based on role
