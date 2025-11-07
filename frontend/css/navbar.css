@@ -51,9 +51,10 @@ body {
     top: 0;
     left: 0;
     right: 0;
-    background-color: var(--ts-charcoal);
+    background-color: #FFFFFF !important;
+    background: #FFFFFF !important;
     height: var(--navbar-height);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     z-index: 1000;
     width: 100%;
     margin: 0;
@@ -69,6 +70,7 @@ body {
     align-items: center;
     justify-content: space-between;
     gap: 1.5rem;
+    background-color: transparent !important;
 }
 
 /* Add top padding to body to account for fixed navbar */
@@ -86,7 +88,7 @@ body {
     align-items: center;
     gap: 0.75rem;
     text-decoration: none;
-    color: var(--ts-white);
+    color: #1A1F1B;
     font-size: 1.5rem;
     font-weight: 700;
     transition: var(--ts-transition-smooth);
@@ -123,10 +125,11 @@ body {
 }
 
 .navbar-brand-text {
-    background: linear-gradient(135deg, var(--ts-white), var(--ts-gray-light));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: #1A1F1B;
+    background: none;
+    -webkit-background-clip: unset;
+    -webkit-text-fill-color: unset;
+    background-clip: unset;
 }
 
 /* ========================================
@@ -139,30 +142,37 @@ body {
     gap: 2.5rem;
     flex: 1;
     margin: 0 3rem;
+    background-color: transparent !important;
+    background: transparent !important;
 }
 
 /* Navigation Links - High Specificity */
 .navbar .navbar-menu .navbar-link,
 .navbar-link {
-    color: #FFFFFF !important;
+    color: #1A1F1B !important;
     text-decoration: none !important;
     font-size: 0.95rem;
-    font-weight: 500;
+    font-weight: 600 !important;
     transition: var(--ts-transition-smooth);
     position: relative;
     letter-spacing: 0.3px;
     background: none !important;
     background-color: transparent !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: inline-block !important;
+    -webkit-font-smoothing: antialiased !important;
 }
 
 .navbar .navbar-menu .navbar-link:hover,
 .navbar-link:hover {
     color: #34A87E !important;
+    font-weight: 600 !important;
 }
 
 .navbar .navbar-menu .navbar-link:visited,
 .navbar-link:visited {
-    color: #FFFFFF !important;
+    color: #1A1F1B !important;
 }
 
 .navbar-link::after {
@@ -187,6 +197,26 @@ body {
 
 .navbar-link.active::after {
     width: 100%;
+}
+
+/* Hide role-based links by default - only show when user is logged in */
+#myBookingsLink,
+#ownerDashLink,
+#adminDashLink,
+#mobileMyBookingsLink,
+#mobileOwnerDashLink,
+#mobileAdminDashLink {
+    display: none !important;
+}
+
+/* Show links when explicitly enabled by JavaScript */
+#myBookingsLink.show,
+#ownerDashLink.show,
+#adminDashLink.show,
+#mobileMyBookingsLink.show,
+#mobileOwnerDashLink.show,
+#mobileAdminDashLink.show {
+    display: inline-block !important;
 }
 
 /* ========================================
@@ -423,7 +453,7 @@ body {
 .hamburger-line {
     width: 100%;
     height: 2.5px;
-    background: var(--ts-white);
+    background: #1A1F1B;
     border-radius: 2px;
     transition: var(--ts-transition-smooth);
     transform-origin: center;
@@ -432,7 +462,7 @@ body {
 
 .hamburger.active .hamburger-line:nth-child(1) {
     transform: translateY(8.5px) rotate(45deg);
-    background: var(--ts-white);
+    background: #1A1F1B;
 }
 
 .hamburger.active .hamburger-line:nth-child(2) {
@@ -442,7 +472,7 @@ body {
 
 .hamburger.active .hamburger-line:nth-child(3) {
     transform: translateY(-8.5px) rotate(-45deg);
-    background: var(--ts-white);
+    background: #1A1F1B;
 }
 
 /* ========================================
@@ -455,7 +485,7 @@ body {
     left: 0;
     width: 100%;
     max-height: calc(100vh - 70px);
-    background: var(--ts-charcoal);
+    background: #FFFFFF;
     display: none;
     flex-direction: column;
     transform: translateX(-100%);
@@ -463,6 +493,7 @@ body {
     z-index: 999;
     overflow-y: auto;
     border-top: 2px solid var(--ts-green);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .mobile-menu.active {
@@ -477,7 +508,7 @@ body {
 .mobile-menu-link {
     display: block;
     padding: 1rem 2rem;
-    color: var(--ts-white);
+    color: #1A1F1B;
     text-decoration: none;
     font-weight: 500;
     transition: var(--ts-transition-smooth);

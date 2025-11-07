@@ -1,0 +1,472 @@
+/* ========================================
+   TURFSPOT PREMIUM TURFS SECTION
+   Clean, Modern, Fully Responsive
+   ======================================== */
+
+/* Features/Popular Turfs Section */
+.features {
+    padding: 5rem 0;
+    background: #F8F9FA;
+}
+
+.section-title {
+    text-align: center;
+    font-family: 'Inter', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 3rem;
+    color: #1A1F1B;
+    letter-spacing: -0.5px;
+}
+
+/* Turfs Grid - Premium Layout */
+.turfs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+}
+
+/* Premium Turf Card */
+.turf-card {
+    background: #FFFFFF;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.turf-card:hover {
+    transform: scale(1.02);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* Turf Image Container */
+.turf-image {
+    position: relative;
+    width: 100%;
+    height: 220px;
+    overflow: hidden;
+    border-radius: 16px 16px 0 0;
+}
+
+.turf-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.turf-card:hover .turf-image img {
+    transform: scale(1.05);
+}
+
+/* Featured Badge */
+.turf-badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: #34A87E;
+    color: #FFFFFF;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 8px rgba(52, 168, 126, 0.3);
+    z-index: 10;
+}
+
+/* Turf Content */
+.turf-content {
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex: 1;
+}
+
+/* Turf Name */
+.turf-name {
+    font-family: 'Inter', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1A1F1B;
+    margin: 0;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Location */
+.turf-location {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #6B7280;
+    font-size: 0.9rem;
+    font-family: 'Inter', sans-serif;
+}
+
+.turf-location i {
+    color: #34A87E;
+    font-size: 0.95rem;
+}
+
+/* Amenities/Sports Tags */
+.turf-amenities {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.amenity {
+    background: #E7F6EF;
+    color: #2E8D6A;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 999px;
+    display: inline-block;
+    line-height: 1;
+}
+
+/* Turf Footer - Price & Button */
+.turf-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: auto;
+    padding-top: 12px;
+    border-top: 1px solid #E5E7EB;
+}
+
+/* Price */
+.turf-price {
+    font-family: 'Inter', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #34A87E;
+    line-height: 1;
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+}
+
+.turf-price span {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #6B7280;
+}
+
+/* Premium Book Now Button */
+.btn-book {
+    background: linear-gradient(135deg, #34A87E, #2E8D6A);
+    color: #FFFFFF;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    padding: 10px 24px;
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(52, 168, 126, 0.25);
+}
+
+.btn-book:hover {
+    background: linear-gradient(135deg, #3FC490, #34A87E);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(52, 168, 126, 0.4);
+}
+
+.btn-book:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(52, 168, 126, 0.25);
+}
+
+/* Loading State */
+#turfsLoader {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 4rem 0;
+    font-family: 'Inter', sans-serif;
+    color: #6B7280;
+}
+
+/* Empty State */
+.turfs-grid .text-center {
+    font-family: 'Inter', sans-serif;
+    color: #6B7280;
+    font-size: 1.1rem;
+    padding: 3rem;
+}
+
+/* View All Button */
+.btn-outline {
+    display: inline-block;
+    background: transparent;
+    color: #34A87E;
+    font-family: 'Inter', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 12px 32px;
+    border: 2px solid #34A87E;
+    border-radius: 999px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.btn-outline:hover {
+    background: #34A87E;
+    color: #FFFFFF;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(52, 168, 126, 0.3);
+}
+
+.text-center {
+    text-align: center;
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
+
+/* Desktop Large (1200px+) */
+@media (min-width: 1200px) {
+    .turfs-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* Tablet (768px - 1024px) */
+@media (max-width: 1024px) {
+    .features {
+        padding: 4rem 0;
+    }
+    
+    .section-title {
+        font-size: 2.2rem;
+        margin-bottom: 2.5rem;
+    }
+    
+    .turfs-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 20px;
+        padding: 0 1.25rem;
+    }
+    
+    .turf-image {
+        height: 200px;
+    }
+}
+
+/* Mobile (max-width: 768px) */
+@media (max-width: 768px) {
+    .features {
+        padding: 3rem 0;
+    }
+    
+    .section-title {
+        font-size: 2rem;
+        margin-bottom: 2rem;
+        padding: 0 1rem;
+    }
+    
+    .turfs-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+        padding: 0 1rem;
+        max-width: 500px;
+    }
+    
+    .turf-card {
+        margin: 0 auto;
+        width: 100%;
+    }
+    
+    .turf-image {
+        height: 200px;
+    }
+    
+    .turf-footer {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+    
+    .turf-price {
+        text-align: center;
+        justify-content: center;
+    }
+    
+    .btn-book {
+        width: 100%;
+        text-align: center;
+        justify-content: center;
+        padding: 12px 24px;
+    }
+}
+
+/* Small Mobile (max-width: 520px) */
+@media (max-width: 520px) {
+    .features {
+        padding: 2.5rem 0;
+    }
+    
+    .section-title {
+        font-size: 1.75rem;
+        margin-bottom: 1.75rem;
+    }
+    
+    .turfs-grid {
+        gap: 16px;
+        padding: 0 0.875rem;
+    }
+    
+    .turf-content {
+        padding: 1rem;
+        gap: 10px;
+    }
+    
+    .turf-name {
+        font-size: 1rem;
+    }
+    
+    .turf-location {
+        font-size: 0.85rem;
+    }
+    
+    .amenity {
+        font-size: 0.75rem;
+        padding: 5px 10px;
+    }
+    
+    .turf-price {
+        font-size: 1.35rem;
+    }
+    
+    .btn-book {
+        font-size: 0.85rem;
+        padding: 11px 20px;
+    }
+}
+
+/* Extra Small Mobile (max-width: 400px) */
+@media (max-width: 400px) {
+    .section-title {
+        font-size: 1.6rem;
+    }
+    
+    .turfs-grid {
+        padding: 0 0.75rem;
+    }
+    
+    .turf-image {
+        height: 180px;
+    }
+    
+    .turf-badge {
+        font-size: 0.7rem;
+        padding: 5px 12px;
+        top: 10px;
+        left: 10px;
+    }
+    
+    .turf-name {
+        font-size: 0.95rem;
+    }
+    
+    .turf-price {
+        font-size: 1.25rem;
+    }
+}
+
+/* Features Grid for Feature Cards (if used) */
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+}
+
+.feature-card {
+    text-align: center;
+    padding: 2rem;
+    background: #FFFFFF;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.feature-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #34A87E, #2E8D6A);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    font-size: 2rem;
+    color: #FFFFFF;
+    box-shadow: 0 4px 12px rgba(52, 168, 126, 0.3);
+}
+
+.feature-card h3 {
+    font-family: 'Inter', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1A1F1B;
+    margin-bottom: 0.75rem;
+}
+
+.feature-card p {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+    color: #6B7280;
+    line-height: 1.6;
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .features-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        padding: 0 1rem;
+    }
+    
+    .feature-card {
+        padding: 1.75rem;
+    }
+    
+    .feature-icon {
+        width: 70px;
+        height: 70px;
+        font-size: 1.75rem;
+        margin-bottom: 1.25rem;
+    }
+}

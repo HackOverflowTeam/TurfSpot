@@ -265,6 +265,9 @@ class TurfSpotNavbar {
                 userMenu.style.display = 'none';
                 this.closeUserDropdown();
             }
+            
+            // Hide all dashboard links when not logged in
+            this.updateDashboardLinks(null);
         }
     }
 
@@ -282,27 +285,83 @@ class TurfSpotNavbar {
         const mobileOwnerDashLink = document.getElementById('mobileOwnerDashLink');
         const mobileAdminDashLink = document.getElementById('mobileAdminDashLink');
 
-        // Hide all by default
+        // Hide all by default - remove show class
         [myBookingsLink, ownerDashLink, adminDashLink, dropdownMyBookings, 
          dropdownOwnerDash, dropdownAdminDash, mobileMyBookingsLink, 
          mobileOwnerDashLink, mobileAdminDashLink].forEach(el => {
-            if (el) el.style.display = 'none';
+            if (el) {
+                el.classList.remove('show');
+                el.style.display = 'none';
+            }
         });
 
-        // Show based on role
+        // Show based on role - add show class
         if (role === 'admin') {
-            if (adminDashLink) adminDashLink.style.display = 'block';
-            if (dropdownAdminDash) dropdownAdminDash.style.display = 'block';
-            if (mobileAdminDashLink) mobileAdminDashLink.style.display = 'block';
+            if (adminDashLink) {
+                adminDashLink.classList.add('show');
+                adminDashLink.style.display = 'inline-block';
+            }
+            if (dropdownAdminDash) {
+                dropdownAdminDash.classList.add('show');
+                dropdownAdminDash.style.display = 'block';
+            }
+            if (mobileAdminDashLink) {
+                mobileAdminDashLink.classList.add('show');
+                mobileAdminDashLink.style.display = 'block';
+            }
+            if (myBookingsLink) {
+                myBookingsLink.classList.add('show');
+                myBookingsLink.style.display = 'inline-block';
+            }
+            if (dropdownMyBookings) {
+                dropdownMyBookings.classList.add('show');
+                dropdownMyBookings.style.display = 'block';
+            }
+            if (mobileMyBookingsLink) {
+                mobileMyBookingsLink.classList.add('show');
+                mobileMyBookingsLink.style.display = 'block';
+            }
         } else if (role === 'owner') {
-            if (ownerDashLink) ownerDashLink.style.display = 'block';
-            if (dropdownOwnerDash) dropdownOwnerDash.style.display = 'block';
-            if (mobileOwnerDashLink) mobileOwnerDashLink.style.display = 'block';
-        } else {
-            if (myBookingsLink) myBookingsLink.style.display = 'block';
-            if (dropdownMyBookings) dropdownMyBookings.style.display = 'block';
-            if (mobileMyBookingsLink) mobileMyBookingsLink.style.display = 'block';
+            if (ownerDashLink) {
+                ownerDashLink.classList.add('show');
+                ownerDashLink.style.display = 'inline-block';
+            }
+            if (dropdownOwnerDash) {
+                dropdownOwnerDash.classList.add('show');
+                dropdownOwnerDash.style.display = 'block';
+            }
+            if (mobileOwnerDashLink) {
+                mobileOwnerDashLink.classList.add('show');
+                mobileOwnerDashLink.style.display = 'block';
+            }
+            if (myBookingsLink) {
+                myBookingsLink.classList.add('show');
+                myBookingsLink.style.display = 'inline-block';
+            }
+            if (dropdownMyBookings) {
+                dropdownMyBookings.classList.add('show');
+                dropdownMyBookings.style.display = 'block';
+            }
+            if (mobileMyBookingsLink) {
+                mobileMyBookingsLink.classList.add('show');
+                mobileMyBookingsLink.style.display = 'block';
+            }
+        } else if (role === 'user') {
+            // Only show My Bookings for regular logged-in users
+            if (myBookingsLink) {
+                myBookingsLink.classList.add('show');
+                myBookingsLink.style.display = 'inline-block';
+            }
+            if (dropdownMyBookings) {
+                dropdownMyBookings.classList.add('show');
+                dropdownMyBookings.style.display = 'block';
+            }
+            if (mobileMyBookingsLink) {
+                mobileMyBookingsLink.classList.add('show');
+                mobileMyBookingsLink.style.display = 'block';
+            }
         }
+        // If no role or not logged in, all links stay hidden
     }
 
     // ==================== Utility Methods ====================
