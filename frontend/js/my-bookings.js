@@ -3,6 +3,56 @@ import authManager from './auth.js';
 
 let currentStatus = 'all';
 let currentBookingId = null;
+let qrImageBase64 = null;
+
+// Helper function to convert file to base64
+async function fileToBase64(file, maxWidth = 800, maxHeight = 800) {
+    return new Promise((resolve, reject) => {
+        if (file.size > 5 * 1024 * 1024) {
+            reject(new Error('File size must be less than 5MB'));
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        
+        reader.onload = (e) => {
+            const img = new Image();
+            img.src = e.target.result;
+            
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > maxWidth) {
+                        height *= maxWidth / width;
+                        width = maxWidth;
+                    }
+                } else {
+                    if (height > maxHeight) {
+                        width *= maxHeight / height;
+                        height = maxHeight;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                const base64 = canvas.toDataURL('image/jpeg', 0.8);
+                resolve(base64);
+            };
+
+            img.onerror = () => reject(new Error('Failed to load image'));
+        };
+        
+        reader.onerror = () => reject(new Error('Failed to read file'));
+    });
+}
 
 // Load user bookings
 async function loadBookings() {
@@ -41,13 +91,15 @@ async function loadBookings() {
 
 // Create booking card
 function createBookingCard(booking) {
-    const statusClass = `status-${booking.status}`;
-    const canCancel = booking.status === 'confirmed' || booking.status === 'pending';
+    const statusClass = booking.status.toLowerCase().replace(/_/g, '-');
+    const canCancel = (booking.status === 'confirmed' || booking.status === 'pending') && 
+                      booking.status !== 'pending_refund' && 
+                      booking.status !== 'refund_completed' &&
+                      booking.status !== 'refund_denied';
     
     // Format time slots - support both single and multiple
     let timeDisplay;
     if (booking.timeSlots && booking.timeSlots.length > 1) {
-        // Show all individual slots in 12-hour format
         const slotsList = booking.timeSlots
             .map(slot => formatTimeSlot(slot.startTime, slot.endTime))
             .join(', ');
@@ -60,122 +112,105 @@ function createBookingCard(booking) {
         timeDisplay = 'N/A';
     }
 
+    // Determine status message
+    let statusMessage = '';
+    let statusMessageClass = '';
+    
+    // Handle refund statuses
+    if (booking.status === 'pending_refund' && booking.refundRequest) {
+        statusMessage = ' Cancellation request sent. Awaiting refund confirmation from owner.';
+        statusMessageClass = 'pending-refund';
+    } else if (booking.status === 'refund_completed' && booking.refundRequest) {
+        const refundDate = new Date(booking.refundRequest.verifiedAt).toLocaleDateString('en-IN');
+        const verifierName = booking.refundRequest.verifiedBy?.name || 'Owner';
+        statusMessage = `💸 Refund Successful! Confirmed on ${refundDate} by ${verifierName}. Amount: ${formatCurrency(booking.refundRequest.refundAmount)}`;
+        statusMessageClass = 'refund-success';
+    } else if (booking.status === 'refund_denied' && booking.refundRequest) {
+        const reason = booking.refundRequest.verificationNote || 'No reason provided';
+        statusMessage = ` Refund request rejected by owner. Reason: ${reason}`;
+        statusMessageClass = 'refund-denied';
+    } else if (booking.tierPayment && booking.tierPayment.verificationStatus === 'pending' && booking.turf?.paymentMethod === 'tier') {
+        statusMessage = ' Waiting for owner to verify your payment';
+        statusMessageClass = 'pending';
+    } else if (booking.status === 'pending' && booking.payment.status === 'pending' && !booking.tierPayment) {
+        statusMessage = ' Payment pending - Please complete payment to confirm booking';
+        statusMessageClass = 'pending';
+    } else if (booking.status === 'confirmed' && booking.payment.status === 'completed') {
+        statusMessage = ' Booking confirmed! Payment completed successfully.';
+        statusMessageClass = 'confirmed';
+    } else if (booking.tierPayment && booking.tierPayment.verificationStatus === 'approved') {
+        statusMessage = ' Payment verified and booking confirmed!';
+        statusMessageClass = 'confirmed';
+    } else if (booking.tierPayment && booking.tierPayment.verificationStatus === 'rejected') {
+        statusMessage = ` Payment verification failed${booking.tierPayment.rejectionReason ? ': ' + booking.tierPayment.rejectionReason : ''}`;
+        statusMessageClass = 'cancelled';
+    } else if (booking.status === 'cancelled' && booking.cancellation) {
+        statusMessage = ` Cancelled: ${booking.cancellation.reason}`;
+        statusMessageClass = 'cancelled';
+    } else if (booking.status === 'completed') {
+        statusMessage = '🎉 Booking completed successfully!';
+        statusMessageClass = 'completed';
+    }
+
+    // Enhanced status badge text
+    let statusBadgeText = booking.status;
+    if (booking.status === 'pending_refund') {
+        statusBadgeText = 'Pending Refund';
+    } else if (booking.status === 'refund_completed') {
+        statusBadgeText = 'Refund Completed';
+    } else if (booking.status === 'refund_denied') {
+        statusBadgeText = 'Refund Denied';
+    }
+
     return `
-        <div class="booking-card-item">
-            <div class="booking-header">
-                <div>
+        <div class="booking-card">
+            <div class="booking-card-header">
+                <div class="turf-info">
                     <h3>${booking.turf?.name || 'Unknown Turf'}</h3>
-                    <p class="text-muted">${booking.turf?.address?.city}, ${booking.turf?.address?.state}</p>
+                    <div class="city">${booking.turf?.address?.city || 'N/A'}, ${booking.turf?.address?.state || 'N/A'}</div>
                 </div>
-                <span class="status-badge ${statusClass}">${booking.status.toUpperCase()}</span>
+                <span class="status-badge ${statusClass}">${statusBadgeText}</span>
             </div>
+
             <div class="booking-details">
-                <div>
-                    <strong>Date:</strong>
-                    <p>${new Date(booking.bookingDate).toLocaleDateString('en-IN', { 
-                        weekday: 'long', 
-                        year: 'numeric', 
-                        month: 'long', 
-                        day: 'numeric' 
-                    })}</p>
+                <div class="detail-item">
+                    <span class="label date">Date</span>
+                    <span class="value">${new Date(booking.bookingDate).toLocaleDateString('en-IN', { 
+                        day: 'numeric',
+                        month: 'short', 
+                        year: 'numeric' 
+                    })}</span>
                 </div>
-                <div>
-                    <strong>Time:</strong>
-                    <p>${timeDisplay}</p>
+                <div class="detail-item">
+                    <span class="label time">Time</span>
+                    <span class="value">${timeDisplay}</span>
                 </div>
-                <div>
-                    <strong>Sport:</strong>
-                    <p>${booking.sport.charAt(0).toUpperCase() + booking.sport.slice(1)}</p>
+                <div class="detail-item">
+                    <span class="label sport">Sport</span>
+                    <span class="value">${booking.sport.charAt(0).toUpperCase() + booking.sport.slice(1)}</span>
                 </div>
-                <div>
-                    <strong>Amount:</strong>
-                    <p>${formatCurrency(booking.pricing?.totalAmount || 0)}</p>
-                </div>
-                <div>
-                    <strong>Payment:</strong>
-                    <p class="${booking.payment.status === 'completed' ? 'text-success' : 'text-warning'}">
-                        ${booking.payment.status.toUpperCase()}
-                    </p>
-                </div>
-                ${booking.tierPayment && booking.tierPayment.verificationStatus && booking.turf?.paymentMethod === 'tier' ? `
-                <div>
-                    <strong>Verification:</strong>
-                    <p class="${
-                        booking.tierPayment.verificationStatus === 'approved' ? 'text-success' : 
-                        booking.tierPayment.verificationStatus === 'rejected' ? 'text-danger' : 
-                        'text-warning'
-                    }">
-                        ${booking.tierPayment.verificationStatus.toUpperCase()}
-                    </p>
-                </div>
-                ` : ''}
-                <div>
-                    <strong>Booked on:</strong>
-                    <p>${formatDateTime(booking.createdAt)}</p>
+                <div class="detail-item">
+                    <span class="label amount">Amount</span>
+                    <span class="value">${formatCurrency(booking.pricing?.totalAmount || 0)}</span>
                 </div>
             </div>
-            ${booking.playerDetails ? `
-                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
-                    <strong>Players:</strong> ${booking.playerDetails.numberOfPlayers}
-                    ${booking.notes ? `<br><strong>Notes:</strong> ${booking.notes}` : ''}
+
+            ${statusMessage ? `
+                <div class="status-message ${statusMessageClass}">
+                    ${statusMessage}
                 </div>
             ` : ''}
-            ${booking.tierPayment && booking.tierPayment.verificationStatus === 'pending' && booking.turf?.paymentMethod === 'tier' ? `
-                <div style="margin-top: 1rem; padding: 1rem; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px;">
-                    <i class="fas fa-clock" style="color: #f59e0b;"></i>
-                    <strong>Waiting for owner to verify your payment</strong>
-                    ${booking.tierPayment.screenshot ? `
-                        <div style="margin-top: 0.5rem;">
-                            <small>Screenshot uploaded on ${new Date(booking.tierPayment.uploadedAt).toLocaleString()}</small>
-                        </div>
-                    ` : ''}
-                </div>
-            ` : ''}
-            ${booking.status === 'pending' && booking.payment.status === 'pending' && !booking.tierPayment ? `
-                <div style="margin-top: 1rem; padding: 1rem; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px;">
-                    <i class="fas fa-exclamation-circle" style="color: #f59e0b;"></i>
-                    <strong>Payment pending - Please complete payment to confirm booking</strong>
-                </div>
-            ` : ''}
-            ${booking.status === 'confirmed' && booking.payment.status === 'completed' && !booking.tierPayment ? `
-                <div style="margin-top: 1rem; padding: 1rem; background: #d1fae5; border-left: 4px solid #10b981; border-radius: 4px;">
-                    <i class="fas fa-check-circle" style="color: #10b981;"></i>
-                    <strong>Booking confirmed! Payment completed successfully.</strong>
-                </div>
-            ` : ''}
-            ${booking.tierPayment && booking.tierPayment.verificationStatus === 'rejected' ? `
-                <div style="margin-top: 1rem; padding: 1rem; background: #fee2e2; border-left: 4px solid #ef4444; border-radius: 4px;">
-                    <i class="fas fa-times-circle" style="color: #ef4444;"></i>
-                    <strong>Payment verification failed</strong>
-                    ${booking.tierPayment.rejectionReason ? `
-                        <div style="margin-top: 0.5rem;">
-                            <small>Reason: ${booking.tierPayment.rejectionReason}</small>
-                        </div>
-                    ` : ''}
-                </div>
-            ` : ''}
-            ${booking.tierPayment && booking.tierPayment.verificationStatus === 'approved' ? `
-                <div style="margin-top: 1rem; padding: 1rem; background: #d1fae5; border-left: 4px solid #10b981; border-radius: 4px;">
-                    <i class="fas fa-check-circle" style="color: #10b981;"></i>
-                    <strong>Payment verified and booking confirmed!</strong>
-                </div>
-            ` : ''}
-            ${canCancel ? `
-                <div class="booking-actions">
-                    <button class="btn btn-outline" onclick="window.location.href='turf-details.html?id=${booking.turf._id}'">
-                        View Turf
-                    </button>
-                    <button class="btn btn-danger" onclick="openCancelModal('${booking._id}')">
+
+            <div class="booking-actions">
+                <a href="turf-details.html?id=${booking.turf._id}" class="btn-view-turf">
+                    View Turf
+                </a>
+                ${canCancel ? `
+                    <button class="btn-cancel-booking" onclick="openCancelModal('${booking._id}')">
                         Cancel Booking
                     </button>
-                </div>
-            ` : ''}
-            ${booking.status === 'cancelled' && booking.cancellation ? `
-                <div style="margin-top: 1rem; padding: 1rem; background: #fee2e2; border-radius: 0.5rem;">
-                    <strong>Cancellation Reason:</strong> ${booking.cancellation.reason}<br>
-                    <small>Cancelled on: ${formatDateTime(booking.cancellation.cancelledAt)}</small>
-                </div>
-            ` : ''}
+                ` : ''}
+            </div>
         </div>
     `;
 }
@@ -183,6 +218,7 @@ function createBookingCard(booking) {
 // Open cancel modal
 window.openCancelModal = function(bookingId) {
     currentBookingId = bookingId;
+    qrImageBase64 = null;
     const modal = document.getElementById('cancelModal');
     if (modal) modal.classList.add('active');
 };
@@ -192,7 +228,11 @@ function closeCancelModal() {
     const modal = document.getElementById('cancelModal');
     if (modal) modal.classList.remove('active');
     currentBookingId = null;
+    qrImageBase64 = null;
     document.getElementById('cancelReason').value = '';
+    document.getElementById('qrImageFile').value = '';
+    document.getElementById('qrPreview').style.display = 'none';
+    document.getElementById('uploadPlaceholder').style.display = 'flex';
 }
 
 // Handle cancel booking
@@ -201,16 +241,34 @@ async function handleCancelBooking(e) {
 
     if (!currentBookingId) return;
 
-    const reason = document.getElementById('cancelReason').value;
+    const reason = document.getElementById('cancelReason').value.trim();
+    
+    if (!reason) {
+        showToast('Please provide a reason for cancellation', 'error');
+        return;
+    }
+
+    if (!qrImageBase64) {
+        showToast('Please upload QR code image for refund verification', 'error');
+        return;
+    }
+
+    const confirmBtn = document.getElementById('confirmCancelBtn');
+    const originalText = confirmBtn.innerHTML;
+    confirmBtn.disabled = true;
+    confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
 
     try {
-        await api.cancelBooking(currentBookingId, reason);
-        showToast('Booking cancelled successfully', 'success');
+        await api.cancelBooking(currentBookingId, reason, qrImageBase64);
+        showToast('Cancellation request sent. Awaiting refund confirmation from owner.', 'success');
         closeCancelModal();
         loadBookings();
     } catch (error) {
         console.error('Error cancelling booking:', error);
         showToast(error.message || 'Failed to cancel booking', 'error');
+    } finally {
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = originalText;
     }
 }
 
@@ -249,5 +307,59 @@ document.addEventListener('DOMContentLoaded', async () => {
     const closeCancelModalBtn = document.getElementById('closeCancelModal');
     if (closeCancelModalBtn) {
         closeCancelModalBtn.addEventListener('click', closeCancelModal);
+    }
+
+    // QR Upload handlers
+    const qrUploadArea = document.getElementById('qrUploadArea');
+    const qrImageFile = document.getElementById('qrImageFile');
+    const removeQrBtn = document.getElementById('removeQrBtn');
+
+    if (qrUploadArea) {
+        qrUploadArea.addEventListener('click', (e) => {
+            if (e.target.id !== 'removeQrBtn' && !e.target.closest('#removeQrBtn')) {
+                qrImageFile.click();
+            }
+        });
+    }
+
+    if (qrImageFile) {
+        qrImageFile.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Validate file type
+            const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+            if (!validTypes.includes(file.type)) {
+                showToast('Please upload only JPG, JPEG, or PNG files', 'error');
+                e.target.value = '';
+                return;
+            }
+
+            try {
+                showToast('Processing QR image...', 'info');
+                qrImageBase64 = await fileToBase64(file);
+                
+                // Show preview
+                document.getElementById('qrPreviewImg').src = qrImageBase64;
+                document.getElementById('uploadPlaceholder').style.display = 'none';
+                document.getElementById('qrPreview').style.display = 'flex';
+                
+                showToast('QR image uploaded successfully', 'success');
+            } catch (error) {
+                showToast('Failed to process image: ' + error.message, 'error');
+                e.target.value = '';
+            }
+        });
+    }
+
+    if (removeQrBtn) {
+        removeQrBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            qrImageBase64 = null;
+            qrImageFile.value = '';
+            document.getElementById('qrPreview').style.display = 'none';
+            document.getElementById('uploadPlaceholder').style.display = 'flex';
+            showToast('QR image removed', 'info');
+        });
     }
 });

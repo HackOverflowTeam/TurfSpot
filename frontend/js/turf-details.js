@@ -44,37 +44,65 @@ function populateTurfDetails(turf) {
     document.getElementById('turfLocation').textContent = `${turf.address.city}, ${turf.address.state}`;
     document.getElementById('turfDescription').textContent = turf.description;
 
+    // Price range
+    document.getElementById('priceRange').textContent = `₹${turf.pricing.hourlyRate} - ₹${turf.pricing.weekendRate}/hr`;
+    
+    // Operating time (general)
+    if (turf.operatingHours?.monday) {
+        const hours = turf.operatingHours.monday;
+        document.getElementById('operatingTime').textContent = hours.isOpen ? 
+            `${hours.open} - ${hours.close}` : 'Closed';
+    }
+
+    // Update rating stars
+    const avgRating = turf.rating?.average || 0;
+    const starsContainer = document.getElementById('ratingStars');
+    starsContainer.innerHTML = '';
+    for (let i = 1; i <= 5; i++) {
+        const starClass = i <= Math.round(avgRating) ? 'fas fa-star' : 'far fa-star';
+        starsContainer.innerHTML += `<i class="${starClass}"></i>`;
+    }
+
     // Images
     if (turf.images && turf.images.length > 0) {
         const primaryImage = turf.images.find(img => img.isPrimary) || turf.images[0];
         document.getElementById('mainImage').src = primaryImage.url;
         document.getElementById('mainImage').onerror = function() {
-            this.src = 'https://placehold.co/800x400/10b981/white?text=Turf+Image';
+            this.src = 'https://placehold.co/800x500/34A87E/white?text=Turf+Image';
         };
 
         // Thumbnails
         const thumbnails = document.getElementById('thumbnails');
         thumbnails.innerHTML = turf.images.map((img, idx) => `
-            <div class="thumbnail ${idx === 0 ? 'active' : ''}" onclick="changeMainImage('${img.url}', this)">
-                <img src="${img.url}" alt="Turf ${idx + 1}" onerror="this.src='https://placehold.co/100x80/10b981/white?text=Image'">
+            <div class="thumbnail-item ${idx === 0 ? 'active' : ''}" onclick="changeMainImage('${img.url}', this)">
+                <img src="${img.url}" alt="Turf ${idx + 1}" onerror="this.src='https://placehold.co/140x90/34A87E/white?text=Image'">
             </div>
         `).join('');
     }
 
-    // Sports
+    // Sports with icons
     const sportsTags = document.getElementById('sportsTags');
-    sportsTags.innerHTML = turf.sportsSupported.map(sport => 
-        `<span class="sport-tag">${sport}</span>`
-    ).join('');
+    const sportIcons = {
+        cricket: '🏏',
+        football: '⚽',
+        basketball: '🏀',
+        tennis: '🎾',
+        badminton: '🏸',
+        volleyball: '🏐'
+    };
+    sportsTags.innerHTML = turf.sportsSupported.map(sport => {
+        const icon = sportIcons[sport.toLowerCase()] || '⚽';
+        return `<div class="sport-pill">${icon} ${sport}</div>`;
+    }).join('');
 
     // Populate booking sport options
     const bookingSport = document.getElementById('bookingSport');
-    bookingSport.innerHTML = '<option value="">Choose sport</option>' + 
+    bookingSport.innerHTML = '<option value="">Choose a sport</option>' + 
         turf.sportsSupported.map(sport => 
             `<option value="${sport}">${sport.charAt(0).toUpperCase() + sport.slice(1)}</option>`
         ).join('');
 
-    // Amenities
+    // Amenities with icons
     const amenitiesList = document.getElementById('amenitiesList');
     const amenityIcons = {
         parking: 'fa-parking',
@@ -82,34 +110,79 @@ function populateTurfDetails(turf) {
         washroom: 'fa-restroom',
         changing_room: 'fa-door-open',
         drinking_water: 'fa-tint',
-        first_aid: 'fa-first-aid'
+        first_aid: 'fa-first-aid',
+        shower: 'fa-shower',
+        seating: 'fa-chair',
+        cafeteria: 'fa-coffee',
+        locker: 'fa-lock'
     };
-    amenitiesList.innerHTML = turf.amenities.map(amenity => `
-        <div class="amenity-item">
-            <i class="fas ${amenityIcons[amenity] || 'fa-check'}"></i>
-            ${amenity.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-        </div>
-    `).join('');
-
-    // Operating hours
-    const operatingHours = document.getElementById('operatingHours');
-    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-    operatingHours.innerHTML = days.map(day => {
-        const hours = turf.operatingHours[day];
+    amenitiesList.innerHTML = turf.amenities.map(amenity => {
+        const iconClass = amenityIcons[amenity.toLowerCase()] || 'fa-check-circle';
         return `
-            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--border-color);">
-                <strong>${day.charAt(0).toUpperCase() + day.slice(1)}</strong>
-                <span>${hours.isOpen ? `${hours.open} - ${hours.close}` : 'Closed'}</span>
+            <div class="amenity-item">
+                <i class="fas ${iconClass}"></i>
+                <span>${amenity.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
             </div>
         `;
     }).join('');
 
-    // Contact info
+    // Operating hours - Table (Desktop)
+    const operatingHoursTable = document.getElementById('operatingHoursTable');
+    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    operatingHoursTable.innerHTML = days.map(day => {
+        const hours = turf.operatingHours[day];
+        return `
+            <tr>
+                <td>${day.charAt(0).toUpperCase() + day.slice(1)}</td>
+                <td>${hours.isOpen ? `${hours.open} - ${hours.close}` : 'Closed'}</td>
+            </tr>
+        `;
+    }).join('');
+
+    // Operating hours - Cards (Mobile)
+    const operatingHoursCards = document.getElementById('operatingHoursCards');
+    operatingHoursCards.innerHTML = days.map(day => {
+        const hours = turf.operatingHours[day];
+        return `
+            <div class="hour-card">
+                <span class="day">${day.charAt(0).toUpperCase() + day.slice(1)}</span>
+                <span class="time">${hours.isOpen ? `${hours.open} - ${hours.close}` : 'Closed'}</span>
+            </div>
+        `;
+    }).join('');
+
+    // Contact info with icons
     const contactInfo = document.getElementById('contactInfo');
     contactInfo.innerHTML = `
-        <div style="margin-bottom: 0.5rem;"><i class="fas fa-phone"></i> ${turf.contactInfo.phone}</div>
-        ${turf.contactInfo.email ? `<div style="margin-bottom: 0.5rem;"><i class="fas fa-envelope"></i> ${turf.contactInfo.email}</div>` : ''}
-        <div><i class="fas fa-map-marker-alt"></i> ${turf.address.street}, ${turf.address.city}, ${turf.address.state} - ${turf.address.pincode}</div>
+        <div class="contact-item">
+            <div class="contact-icon">
+                <i class="fas fa-phone"></i>
+            </div>
+            <div class="contact-info">
+                <div class="contact-label">Phone</div>
+                <div class="contact-value">${turf.contactInfo.phone}</div>
+            </div>
+        </div>
+        ${turf.contactInfo.email ? `
+        <div class="contact-item">
+            <div class="contact-icon">
+                <i class="fas fa-envelope"></i>
+            </div>
+            <div class="contact-info">
+                <div class="contact-label">Email</div>
+                <div class="contact-value">${turf.contactInfo.email}</div>
+            </div>
+        </div>
+        ` : ''}
+        <div class="contact-item">
+            <div class="contact-icon">
+                <i class="fas fa-map-marker-alt"></i>
+            </div>
+            <div class="contact-info">
+                <div class="contact-label">Address</div>
+                <div class="contact-value">${turf.address.street}, ${turf.address.city}, ${turf.address.state} - ${turf.address.pincode}</div>
+            </div>
+        </div>
     `;
 
     // Pricing
@@ -119,7 +192,37 @@ function populateTurfDetails(turf) {
     // Initialize map if location coordinates are available
     if (turf.location && turf.location.coordinates && turf.location.coordinates.length === 2) {
         const [lng, lat] = turf.location.coordinates;
+        
+        // Show loading state
+        const mapElement = document.getElementById('turfMap');
+        if (mapElement) {
+            mapElement.innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: center; height: 100%; background: #F0FAF5; color: #34A87E;">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 2rem;"></i>
+                </div>
+            `;
+        }
+        
         initTurfMap(lat, lng, turf.name);
+        
+        // Set Google Maps link
+        const googleMapsLink = document.getElementById('googleMapsLink');
+        if (googleMapsLink) {
+            googleMapsLink.href = `https://www.google.com/maps?q=${lat},${lng}`;
+        }
+    } else {
+        // No location data available
+        const mapElement = document.getElementById('turfMap');
+        if (mapElement) {
+            mapElement.innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: center; height: 100%; background: #F0FAF5; color: #5B6B61; font-family: 'Inter', sans-serif;">
+                    <div style="text-align: center; padding: 2rem;">
+                        <i class="fas fa-map-marked-alt" style="font-size: 3rem; color: #34A87E; margin-bottom: 1rem;"></i>
+                        <p>Location not available</p>
+                    </div>
+                </div>
+            `;
+        }
     }
 
     // Set min date for booking
@@ -129,29 +232,109 @@ function populateTurfDetails(turf) {
 
 // Initialize map for turf location
 function initTurfMap(lat, lng, turfName) {
-    const location = { lat, lng };
-    
-    const map = new google.maps.Map(document.getElementById('turfMap'), {
-        center: location,
-        zoom: 15,
-        mapTypeControl: true,
-        streetViewControl: true,
-        fullscreenControl: true
-    });
+    // Check if Google Maps is loaded
+    if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
+        console.log('Waiting for Google Maps to load...');
+        // Retry after a short delay
+        let retryCount = 0;
+        const maxRetries = 10;
+        const retryInterval = setInterval(() => {
+            retryCount++;
+            if (typeof google !== 'undefined' && typeof google.maps !== 'undefined') {
+                clearInterval(retryInterval);
+                initTurfMap(lat, lng, turfName);
+            } else if (retryCount >= maxRetries) {
+                clearInterval(retryInterval);
+                console.error('Google Maps failed to load');
+                showMapFallback(lat, lng);
+            }
+        }, 500);
+        return;
+    }
 
-    // Add marker
-    new google.maps.Marker({
-        position: location,
-        map: map,
-        title: turfName,
-        animation: google.maps.Animation.DROP
-    });
+    try {
+        const location = { lat, lng };
+        
+        const mapElement = document.getElementById('turfMap');
+        if (!mapElement) {
+            console.error('Map element not found');
+            return;
+        }
+        
+        const map = new google.maps.Map(mapElement, {
+            center: location,
+            zoom: 15,
+            mapTypeControl: true,
+            streetViewControl: true,
+            fullscreenControl: true,
+            styles: [
+                {
+                    featureType: 'poi',
+                    elementType: 'labels',
+                    stylers: [{ visibility: 'on' }]
+                }
+            ]
+        });
+
+        // Add marker with custom styling
+        const marker = new google.maps.Marker({
+            position: location,
+            map: map,
+            title: turfName,
+            animation: google.maps.Animation.DROP,
+            icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 10,
+                fillColor: '#34A87E',
+                fillOpacity: 1,
+                strokeColor: '#FFFFFF',
+                strokeWeight: 3
+            }
+        });
+
+        // Add info window
+        const infoWindow = new google.maps.InfoWindow({
+            content: `<div style="padding: 10px; font-family: 'Inter', sans-serif;">
+                <h3 style="margin: 0 0 5px 0; color: #1A2E22; font-size: 1rem;">${turfName}</h3>
+                <p style="margin: 0; color: #5B6B61; font-size: 0.9rem;">Click marker for directions</p>
+            </div>`
+        });
+
+        marker.addListener('click', () => {
+            infoWindow.open(map, marker);
+        });
+
+        console.log('Map initialized successfully at:', lat, lng);
+    } catch (error) {
+        console.error('Error initializing map:', error);
+        showMapFallback(lat, lng);
+    }
+}
+
+// Show map fallback
+function showMapFallback(lat, lng) {
+    const mapElement = document.getElementById('turfMap');
+    if (mapElement) {
+        mapElement.innerHTML = `
+            <div style="display: flex; align-items: center; justify-content: center; height: 100%; background: #F0FAF5; color: #5B6B61; font-family: 'Inter', sans-serif;">
+                <div style="text-align: center; padding: 2rem;">
+                    <i class="fas fa-map-marked-alt" style="font-size: 3rem; color: #34A87E; margin-bottom: 1rem;"></i>
+                    <p style="margin-bottom: 1rem;">Map temporarily unavailable</p>
+                    <a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank" 
+                       style="display: inline-flex; align-items: center; gap: 0.5rem; color: #34A87E; font-weight: 600; text-decoration: none; padding: 0.75rem 1.5rem; background: white; border: 2px solid #34A87E; border-radius: 8px; transition: all 0.3s ease;">
+                        <i class="fas fa-external-link-alt"></i>
+                        Open in Google Maps
+                    </a>
+                </div>
+            </div>
+        `;
+    }
 }
 
 // Change main image
 window.changeMainImage = function(url, element) {
     document.getElementById('mainImage').src = url;
-    document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.thumbnail-item').forEach(t => t.classList.remove('active'));
     element.classList.add('active');
 };
 
@@ -168,7 +351,7 @@ function isSlotPast(date, startTime) {
 // Load available slots
 async function loadAvailableSlots(date) {
     const slotsContainer = document.getElementById('slotsContainer');
-    slotsContainer.innerHTML = '<div class="loader"><i class="fas fa-spinner fa-spin"></i> Loading slots...</div>';
+    slotsContainer.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--primary-green); padding: 2rem;"><i class="fas fa-spinner fa-spin"></i> Loading slots...</p>';
 
     // Clear selected slots when date changes
     selectedSlots = [];
@@ -178,32 +361,28 @@ async function loadAvailableSlots(date) {
         const slots = response.data;
 
         if (slots && slots.length > 0) {
-            slotsContainer.innerHTML = `
-                <p class="text-muted" style="margin-bottom: 1rem;">
-                    <i class="fas fa-info-circle"></i> Click to select one or more time slots
-                </p>
-                <div class="slots-grid">` + slots.map(slot => {
-                    const isPast = isSlotPast(date, slot.startTime);
-                    const isDisabled = !slot.isAvailable || isPast;
-                    const disabledReason = isPast ? '(Time passed)' : '(Booked)';
-                    
-                    return `
-                <button type="button" class="slot-btn" 
-                    ${isDisabled ? 'disabled' : ''}
-                    data-start="${slot.startTime}"
-                    data-end="${slot.endTime}"
-                    onclick="toggleSlot('${slot.startTime}', '${slot.endTime}', this)">
-                    ${slot.startTime} - ${slot.endTime}
-                    ${isDisabled ? `<br><small>${disabledReason}</small>` : ''}
-                </button>
-            `;
-                }).join('') + '</div>';
+            slotsContainer.innerHTML = slots.map(slot => {
+                const isPast = isSlotPast(date, slot.startTime);
+                const isDisabled = !slot.isAvailable || isPast;
+                const disabledReason = isPast ? 'Time passed' : 'Booked';
+                
+                return `
+                    <button type="button" class="slot-button" 
+                        ${isDisabled ? 'disabled' : ''}
+                        data-start="${slot.startTime}"
+                        data-end="${slot.endTime}"
+                        onclick="toggleSlot('${slot.startTime}', '${slot.endTime}', this)">
+                        ${slot.startTime} - ${slot.endTime}
+                        ${isDisabled ? `<br><small style="font-size: 0.75rem; opacity: 0.7;">${disabledReason}</small>` : ''}
+                    </button>
+                `;
+            }).join('');
         } else {
-            slotsContainer.innerHTML = '<p class="text-muted">No slots available for this date</p>';
+            slotsContainer.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 2rem;">No slots available for this date</p>';
         }
     } catch (error) {
         console.error('Error loading slots:', error);
-        slotsContainer.innerHTML = '<p class="text-muted" style="color: var(--danger);">Failed to load slots</p>';
+        slotsContainer.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #e74c3c; padding: 2rem;">Failed to load slots</p>';
     }
 }
 
@@ -502,6 +681,9 @@ window.submitTierPayment = async function() {
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize auth
+    authManager.init();
+    
     loadTurfDetails();
 
     // Date change listener
@@ -510,7 +692,7 @@ document.addEventListener('DOMContentLoaded', () => {
         bookingDate.addEventListener('change', (e) => {
             if (e.target.value) {
                 loadAvailableSlots(e.target.value);
-                selectedSlot = null;
+                selectedSlots = [];
                 document.getElementById('bookingSummary').style.display = 'none';
             }
         });
@@ -520,5 +702,52 @@ document.addEventListener('DOMContentLoaded', () => {
     const bookingForm = document.getElementById('bookingForm');
     if (bookingForm) {
         bookingForm.addEventListener('submit', handleBooking);
+    }
+    
+    // Show/hide mobile CTA on scroll
+    const mobileCTA = document.querySelector('.mobile-booking-cta');
+    if (mobileCTA) {
+        const handleScroll = () => {
+            // Only show on mobile/tablet
+            if (window.innerWidth > 768) {
+                mobileCTA.style.display = 'none';
+                return;
+            }
+
+            const bookingSidebar = document.querySelector('.booking-sidebar');
+            const slotsGrid = document.querySelector('.slots-grid');
+            const bookingFormElement = document.getElementById('bookingForm');
+            
+            if (bookingSidebar && slotsGrid) {
+                const sidebarRect = bookingSidebar.getBoundingClientRect();
+                const slotsRect = slotsGrid.getBoundingClientRect();
+                const formRect = bookingFormElement ? bookingFormElement.getBoundingClientRect() : null;
+                
+                // Hide CTA when we've scrolled to or past the booking form
+                if (formRect && formRect.top <= window.innerHeight) {
+                    mobileCTA.style.display = 'none';
+                    return;
+                }
+                
+                // Hide CTA when we've scrolled past the slots section
+                if (slotsRect.bottom < 0) {
+                    mobileCTA.style.display = 'none';
+                    return;
+                }
+                
+                // Show CTA when booking sidebar is not visible but we haven't passed slots
+                if (sidebarRect.top < -100 || sidebarRect.bottom > window.innerHeight + 100) {
+                    mobileCTA.style.display = 'block';
+                } else {
+                    mobileCTA.style.display = 'none';
+                }
+            }
+        };
+
+        window.addEventListener('scroll', handleScroll);
+        window.addEventListener('resize', handleScroll);
+        
+        // Initial check
+        handleScroll();
     }
 });

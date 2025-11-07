@@ -360,14 +360,14 @@ exports.getBooking = async (req, res) => {
   }
 };
 
-// @desc    Cancel booking
+// @desc    Cancel booking with QR-based refund verification
 // @route   PUT /api/bookings/:id/cancel
 // @access  Private
 exports.cancelBooking = async (req, res) => {
   try {
-    const { reason } = req.body;
+    const { reason, qrImageUrl } = req.body;
 
-    const booking = await Booking.findById(req.params.id);
+    const booking = await Booking.findById(req.params.id).populate('turf');
 
     if (!booking) {
       return res.status(404).json({
@@ -385,10 +385,10 @@ exports.cancelBooking = async (req, res) => {
     }
 
     // Check if booking can be cancelled
-    if (booking.status === 'cancelled') {
+    if (booking.status === 'cancelled' || booking.status === 'pending_refund' || booking.status === 'refund_completed') {
       return res.status(400).json({
         success: false,
-        message: 'Booking already cancelled'
+        message: 'Booking already cancelled or refund already processed'
       });
     }
 
@@ -413,40 +413,54 @@ exports.cancelBooking = async (req, res) => {
       });
     }
 
+    // Validate QR image and reason are provided
+    if (!reason || !reason.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Cancellation reason is required'
+      });
+    }
+
+    if (!qrImageUrl || !qrImageUrl.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: 'QR code image is required for refund verification'
+      });
+    }
+
     // Calculate refund (90% refund for cancellations)
     const refundAmount = booking.pricing.totalAmount * 0.9;
 
-    // Update booking
-    booking.status = 'cancelled';
+    // Update booking with refund request
+    booking.status = 'pending_refund';
     booking.cancellation = {
       cancelledBy: req.user._id,
       cancelledAt: new Date(),
       reason,
       refundAmount
     };
-
-    // Initiate refund if payment was completed
-    if (booking.payment.status === 'completed' && booking.payment.razorpayPaymentId) {
-      try {
-        const refund = await razorpay.payments.refund(booking.payment.razorpayPaymentId, {
-          amount: Math.round(refundAmount * 100), // Amount in paise
-          speed: 'normal'
-        });
-
-        booking.payment.refundId = refund.id;
-        booking.payment.status = 'refunded';
-        booking.payment.refundedAt = new Date();
-      } catch (refundError) {
-        console.error('Refund error:', refundError);
-        // Continue with cancellation even if refund fails
-      }
-    }
+    
+    booking.refundRequest = {
+      qrImage: {
+        url: qrImageUrl
+      },
+      reason,
+      requestedAt: new Date(),
+      requestedBy: req.user._id,
+      status: 'pending',
+      refundAmount
+    };
 
     await booking.save();
 
+    await booking.populate([
+      { path: 'turf', select: 'name address owner' },
+      { path: 'user', select: 'name email phone' }
+    ]);
+
     res.status(200).json({
       success: true,
-      message: 'Booking cancelled successfully',
+      message: 'Cancellation request sent. Awaiting refund confirmation from owner.',
       data: booking
     });
   } catch (error) {
@@ -674,3 +688,125 @@ exports.getPendingTierVerifications = async (req, res) => {
     });
   }
 };
+
+// @desc    Get pending refund requests for owner
+// @route   GET /api/bookings/owner/pending-refunds
+// @access  Private (Owner)
+exports.getPendingRefundRequests = async (req, res) => {
+  try {
+    // Get owner's turfs
+    const ownerTurfs = await Turf.find({ 
+      owner: req.user._id
+    }).select('_id');
+    
+    const turfIds = ownerTurfs.map(t => t._id);
+
+    const bookings = await Booking.find({
+      turf: { $in: turfIds },
+      status: 'pending_refund',
+      'refundRequest.status': 'pending'
+    })
+      .populate('turf', 'name address pricing')
+      .populate('user', 'name email phone')
+      .populate('refundRequest.requestedBy', 'name')
+      .sort({ 'refundRequest.requestedAt': 1 });
+
+    res.status(200).json({
+      success: true,
+      count: bookings.length,
+      data: bookings
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// @desc    Confirm or reject refund request
+// @route   PUT /api/bookings/:bookingId/refund-decision
+// @access  Private (Owner)
+exports.processRefundDecision = async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+    const { approved, verificationNote } = req.body;
+
+    const booking = await Booking.findById(bookingId).populate('turf');
+    
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: 'Booking not found'
+      });
+    }
+
+    // Verify owner owns this turf
+    if (booking.turf.owner.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to process this refund'
+      });
+    }
+
+    // Verify booking is in correct state
+    if (booking.status !== 'pending_refund' || booking.refundRequest.status !== 'pending') {
+      return res.status(400).json({
+        success: false,
+        message: 'Refund request is not pending or already processed'
+      });
+    }
+
+    if (approved) {
+      // Approve refund
+      booking.refundRequest.status = 'approved';
+      booking.refundRequest.verifiedBy = req.user._id;
+      booking.refundRequest.verifiedAt = new Date();
+      booking.refundRequest.verificationNote = verificationNote || 'Refund approved by owner';
+      booking.status = 'refund_completed';
+      
+      // Process actual refund if payment was via Razorpay
+      if (booking.payment.status === 'completed' && booking.payment.razorpayPaymentId) {
+        try {
+          const refund = await razorpay.payments.refund(booking.payment.razorpayPaymentId, {
+            amount: Math.round(booking.refundRequest.refundAmount * 100), // Amount in paise
+            speed: 'normal'
+          });
+
+          booking.payment.refundId = refund.id;
+          booking.payment.status = 'refunded';
+          booking.payment.refundedAt = new Date();
+        } catch (refundError) {
+          console.error('Refund error:', refundError);
+          // Continue even if Razorpay refund fails - owner confirmed manually
+        }
+      }
+    } else {
+      // Reject refund
+      booking.refundRequest.status = 'rejected';
+      booking.refundRequest.verifiedBy = req.user._id;
+      booking.refundRequest.verifiedAt = new Date();
+      booking.refundRequest.verificationNote = verificationNote || 'Refund request rejected by owner';
+      booking.status = 'refund_denied';
+    }
+
+    await booking.save();
+
+    await booking.populate([
+      { path: 'user', select: 'name email phone' },
+      { path: 'refundRequest.verifiedBy', select: 'name' }
+    ]);
+
+    res.status(200).json({
+      success: true,
+      message: approved ? 'Refund confirmed successfully' : 'Refund request rejected',
+      data: booking
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+

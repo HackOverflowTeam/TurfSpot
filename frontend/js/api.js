@@ -179,16 +179,39 @@ class APIService {
         return this.request(`/bookings/${id}`);
     }
 
-    async cancelBooking(id, reason) {
+    async cancelBooking(id, reason, qrImageUrl) {
         return this.request(`/bookings/${id}/cancel`, {
             method: 'PUT',
-            body: JSON.stringify({ reason })
+            body: JSON.stringify({ reason, qrImageUrl })
         });
     }
 
     async getOwnerBookings(queryParams = {}) {
         const query = new URLSearchParams(queryParams).toString();
         return this.request(`/bookings/owner/bookings${query ? '?' + query : ''}`);
+    }
+
+    async getPendingTierVerifications() {
+        return this.request('/bookings/owner/pending-verifications');
+    }
+
+    async verifyTierPayment(bookingId, approved, reason = '') {
+        return this.request(`/bookings/${bookingId}/verify-tier-payment`, {
+            method: 'PUT',
+            body: JSON.stringify({ approved, reason })
+        });
+    }
+
+    // REFUND ENDPOINTS
+    async getOwnerPendingRefunds() {
+        return this.request('/bookings/owner/pending-refunds');
+    }
+
+    async processRefundDecision(bookingId, approved, verificationNote = '') {
+        return this.request(`/bookings/${bookingId}/refund-decision`, {
+            method: 'PUT',
+            body: JSON.stringify({ approved, verificationNote })
+        });
     }
 
     // ADMIN ENDPOINTS
@@ -317,17 +340,6 @@ class APIService {
             method: 'POST',
             body: JSON.stringify({ screenshotUrl })
         });
-    }
-
-    async verifyTierPayment(bookingId, approved, reason = '') {
-        return this.request(`/bookings/${bookingId}/verify-tier-payment`, {
-            method: 'PUT',
-            body: JSON.stringify({ approved, reason })
-        });
-    }
-
-    async getPendingTierVerifications() {
-        return this.request('/bookings/owner/pending-verifications');
     }
 }
 

@@ -1,0 +1,621 @@
+/* ========================================
+   TURFSPOT PROFILE PAGE - BENTO GRID
+   Modern, Minimal, Premium Design
+   ======================================== */
+
+/* CSS Variables */
+:root {
+    --ts-green: #34A87E;
+    --ts-accent: #2CC997;
+    --ts-accent-dark: #2E8D6A;
+    --ts-bg-light: #F9FCFB;
+    --ts-text-primary: #1A2E22;
+    --ts-text-secondary: #5B6B61;
+    --ts-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+    --ts-shadow-hover: 0 12px 32px rgba(0, 0, 0, 0.12);
+    --ts-radius: 24px;
+    --ts-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Base Styles */
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--ts-bg-light);
+    color: var(--ts-text-primary);
+}
+
+/* Profile Page Container */
+.profile-page {
+    min-height: calc(100vh - 80px);
+    padding: 100px 20px 60px;
+    background: var(--ts-bg-light);
+}
+
+.profile-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Page Header */
+.page-header {
+    text-align: center;
+    margin-bottom: 48px;
+    animation: fadeInDown 0.6s ease;
+}
+
+.page-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--ts-text-primary);
+    margin: 0 0 12px;
+    letter-spacing: -0.02em;
+}
+
+.page-subtitle {
+    font-size: 1.1rem;
+    color: var(--ts-text-secondary);
+    font-weight: 500;
+    margin: 0;
+}
+
+/* ========================================
+   BENTO GRID LAYOUT
+   ======================================== */
+
+.bento-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    margin-bottom: 40px;
+}
+
+/* Bento Card Base */
+.bento-card {
+    background: white;
+    border-radius: var(--ts-radius);
+    padding: 32px;
+    box-shadow: var(--ts-shadow);
+    transition: var(--ts-transition);
+    position: relative;
+    overflow: hidden;
+    animation: fadeInUp 0.6s ease;
+}
+
+.bento-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--ts-shadow-hover);
+}
+
+/* Profile Hero Card (Spans 2 columns) */
+.profile-hero {
+    grid-column: span 2;
+    background: linear-gradient(135deg, #E7F6EF 0%, #F9FCFB 100%);
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    padding: 48px;
+    animation-delay: 0.1s;
+}
+
+.profile-avatar-wrapper {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.profile-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--ts-green), var(--ts-accent));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    color: white;
+    box-shadow: 0 8px 24px rgba(52, 168, 126, 0.3);
+    overflow: hidden;
+}
+
+.profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.profile-avatar i {
+    font-size: 3.5rem;
+}
+
+.avatar-badge {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    width: 32px;
+    height: 32px;
+    background: var(--ts-green);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 4px solid white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.avatar-badge i {
+    color: white;
+    font-size: 0.75rem;
+}
+
+.profile-info {
+    flex: 1;
+}
+
+.profile-name {
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: var(--ts-text-primary);
+    margin: 0 0 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    letter-spacing: -0.02em;
+}
+
+.profile-icon {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, var(--ts-green), var(--ts-accent));
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1rem;
+}
+
+.profile-member-since {
+    font-size: 1rem;
+    color: var(--ts-text-secondary);
+    font-weight: 500;
+    margin: 0;
+}
+
+/* Email Card */
+.email-card {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    animation-delay: 0.2s;
+    border: 1px solid rgba(52, 168, 126, 0.1);
+}
+
+.card-icon-wrapper {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, rgba(52, 168, 126, 0.1), rgba(44, 201, 151, 0.05));
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ts-green);
+    font-size: 1.5rem;
+}
+
+.card-content {
+    flex: 1;
+}
+
+.card-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--ts-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0 0 8px;
+}
+
+.card-value {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--ts-text-primary);
+    margin: 0;
+    word-break: break-word;
+}
+
+/* Active Bookings Card */
+.bookings-card {
+    background: linear-gradient(135deg, var(--ts-green) 0%, var(--ts-accent) 100%);
+    color: white;
+    animation-delay: 0.3s;
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+}
+
+.card-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0;
+    color: white;
+}
+
+.card-badge {
+    width: 48px;
+    height: 48px;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: white;
+}
+
+.bookings-sports {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.sport-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: white;
+}
+
+.sport-tag i {
+    font-size: 1rem;
+}
+
+/* Account Status Card */
+.status-card {
+    background: white;
+    animation-delay: 0.4s;
+    position: relative;
+    overflow: hidden;
+}
+
+.status-icon {
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, rgba(52, 168, 126, 0.1), rgba(44, 201, 151, 0.05));
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.status-icon i {
+    font-size: 2rem;
+    color: var(--ts-green);
+}
+
+.status-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--ts-text-primary);
+    margin: 0 0 8px;
+}
+
+.status-description {
+    font-size: 0.95rem;
+    color: var(--ts-text-secondary);
+    margin: 0;
+    line-height: 1.6;
+}
+
+.status-pattern {
+    position: absolute;
+    bottom: -40px;
+    right: -40px;
+    width: 160px;
+    height: 160px;
+    background: radial-gradient(circle, rgba(52, 168, 126, 0.05) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+/* ========================================
+   ANIMATIONS
+   ======================================== */
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -1000px 0;
+    }
+    100% {
+        background-position: 1000px 0;
+    }
+}
+
+/* ========================================
+   SKELETON LOADING STATES
+   ======================================== */
+
+.skeleton {
+    background: linear-gradient(
+        90deg,
+        rgba(240, 240, 240, 0.8) 0%,
+        rgba(230, 230, 230, 0.8) 50%,
+        rgba(240, 240, 240, 0.8) 100%
+    );
+    background-size: 1000px 100%;
+    animation: shimmer 2s infinite linear;
+    border-radius: 8px;
+}
+
+.skeleton-text {
+    height: 32px;
+    width: 200px;
+    display: inline-block;
+    border-radius: 8px;
+    min-width: 200px;
+}
+
+.skeleton-text-small {
+    height: 20px;
+    width: 150px;
+    display: inline-block;
+    border-radius: 6px;
+    min-width: 150px;
+}
+
+.skeleton-badge {
+    width: 32px;
+    height: 32px;
+    display: inline-block;
+    border-radius: 8px;
+}
+
+.skeleton-tag {
+    height: 40px;
+    width: 120px;
+    border-radius: 12px;
+    display: inline-block;
+}
+
+.skeleton-loading .profile-avatar.skeleton {
+    background: linear-gradient(
+        90deg,
+        rgba(52, 168, 126, 0.3) 0%,
+        rgba(44, 201, 151, 0.3) 50%,
+        rgba(52, 168, 126, 0.3) 100%
+    );
+    background-size: 1000px 100%;
+    animation: shimmer 2s infinite linear;
+}
+
+.skeleton-loading .profile-avatar i {
+    opacity: 0.3;
+}
+
+/* Hide skeleton shimmer when data is loaded */
+.data-loaded .skeleton {
+    animation: none !important;
+    background: none !important;
+    opacity: 1;
+}
+
+.data-loaded .skeleton-text,
+.data-loaded .skeleton-text-small,
+.data-loaded .skeleton-badge,
+.data-loaded .skeleton-tag {
+    background: none !important;
+    width: auto !important;
+    min-width: 0 !important;
+    height: auto !important;
+}
+
+/* ========================================
+   ERROR STATES
+   ======================================== */
+
+.error-message {
+    background: #fee;
+    color: #c33;
+    padding: 16px 20px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 500;
+}
+
+.error-message i {
+    font-size: 1.25rem;
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
+
+/* Tablet (768px - 1024px) */
+@media (max-width: 1024px) {
+    .profile-page {
+        padding: 100px 24px 40px;
+    }
+
+    .page-title {
+        font-size: 2rem;
+    }
+
+    .profile-hero {
+        padding: 36px;
+    }
+
+    .profile-name {
+        font-size: 1.875rem;
+    }
+}
+
+/* Mobile (< 768px) */
+@media (max-width: 768px) {
+    .bento-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .profile-hero {
+        grid-column: span 1;
+        flex-direction: column;
+        text-align: center;
+        padding: 32px 24px;
+        gap: 24px;
+    }
+
+    .profile-avatar {
+        width: 100px;
+        height: 100px;
+        font-size: 2.5rem;
+    }
+
+    .profile-avatar i {
+        font-size: 3rem;
+    }
+
+    .profile-name {
+        font-size: 1.75rem;
+        justify-content: center;
+    }
+
+    .profile-member-since {
+        font-size: 0.95rem;
+    }
+
+    .page-title {
+        font-size: 1.75rem;
+    }
+
+    .page-subtitle {
+        font-size: 1rem;
+    }
+
+    .bento-card {
+        padding: 24px;
+    }
+
+    .card-title {
+        font-size: 1.125rem;
+    }
+
+    .account-actions {
+        flex-direction: column;
+    }
+
+    .action-btn {
+        min-width: 100%;
+    }
+}
+
+/* Small Mobile (< 520px) */
+@media (max-width: 520px) {
+    .profile-page {
+        padding: 90px 16px 32px;
+    }
+
+    .page-header {
+        margin-bottom: 32px;
+    }
+
+    .page-title {
+        font-size: 1.5rem;
+    }
+
+    .page-subtitle {
+        font-size: 0.9rem;
+    }
+
+    .profile-hero {
+        padding: 28px 20px;
+    }
+
+    .profile-avatar {
+        width: 90px;
+        height: 90px;
+    }
+
+    .profile-avatar i {
+        font-size: 2.5rem;
+    }
+
+    .avatar-badge {
+        width: 28px;
+        height: 28px;
+        border-width: 3px;
+    }
+
+    .profile-name {
+        font-size: 1.5rem;
+        gap: 10px;
+    }
+
+    .profile-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 0.9rem;
+    }
+
+    .bento-card {
+        padding: 20px;
+    }
+
+    .card-icon-wrapper {
+        width: 48px;
+        height: 48px;
+        font-size: 1.25rem;
+    }
+
+    .status-icon {
+        width: 56px;
+        height: 56px;
+    }
+
+    .status-icon i {
+        font-size: 1.75rem;
+    }
+
+    .action-btn {
+        padding: 16px 24px;
+        font-size: 0.95rem;
+    }
+}
+
+/* Footer styles are imported from styles.css */
+

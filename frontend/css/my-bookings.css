@@ -1,0 +1,966 @@
+/* ========================================
+   MY BOOKINGS - PREMIUM REDESIGN
+   Modern, Dynamic, User-Focused Dashboard
+   Pixel-Perfect Layout - Desktop & Mobile
+   ======================================== */
+
+:root {
+    --primary-green: #34A87E;
+    --accent-green: #2CC997;
+    --accent-dark: #2E8D6A;
+    --bg-soft: #F9FCFB;
+    --text-primary: #1A2E22;
+    --text-secondary: #5B6B61;
+    --pending-yellow: #FFD966;
+    --pending-amber: #FFC107;
+    --red-gradient-start: #EB5757;
+    --red-gradient-end: #D32F2F;
+    --blue-gradient-start: #56CCF2;
+    --blue-gradient-end: #2F80ED;
+    --card-shadow: rgba(0, 0, 0, 0.06);
+    --card-border: #E6F1EA;
+    --soft-white: #EAF7EF;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --section-gap: 48px;
+}
+
+/* ========================================
+   GLOBAL LAYOUT & SPACING
+   ======================================== */
+
+.page-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 48px 20px;
+    box-sizing: border-box;
+}
+
+.content-wrap {
+    padding-bottom: 160px;
+    position: relative;
+    z-index: 1;
+}
+
+/* ========================================
+   1. PREMIUM HEADER SECTION WITH HERO IMAGE
+   ======================================== */
+
+.page-header {
+    position: relative;
+    background-image: 
+        linear-gradient(135deg, rgba(52, 168, 126, 0.92) 0%, rgba(44, 201, 151, 0.88) 100%),
+        radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+    background-color: var(--primary-green);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: scroll;
+    padding: 64px 20px;
+    overflow: hidden;
+    margin-top: 0;
+    margin-bottom: 0;
+    border-radius: 0;
+    z-index: 2;
+}
+
+.page-header::after {
+    content: '🏟️';
+    position: absolute;
+    right: 10%;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 8rem;
+    opacity: 0.15;
+    animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(-50%) translateX(0); }
+    50% { transform: translateY(-50%) translateX(20px); }
+}
+
+.page-header .container {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.page-header h1 {
+    color: #FFFFFF;
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 800;
+    margin: 0 0 0.5rem;
+    letter-spacing: -0.02em;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.page-header p {
+    color: var(--soft-white);
+    font-size: clamp(1rem, 2vw, 1.25rem);
+    font-weight: 500;
+    margin: 0;
+    opacity: 0.95;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+}
+
+/* Mobile Header Adjustments */
+@media (max-width: 600px) {
+    .page-header {
+        padding: 48px 16px;
+        background-position: center top;
+    }
+    
+    .page-header::after {
+        font-size: 5rem;
+        right: 5%;
+        opacity: 0.1;
+    }
+}
+
+/* ========================================
+   2. FILTER TABS - FULL WIDTH PILL STYLE
+   ======================================== */
+
+.bookings-section {
+    background: var(--bg-soft);
+    padding: var(--section-gap) 0;
+    min-height: 60vh;
+    margin-bottom: var(--section-gap);
+}
+
+.bookings-section .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.bookings-filters {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: var(--section-gap);
+    padding: 20px 0;
+}
+
+.filter-btn {
+    padding: 12px 22px;
+    border-radius: 999px;
+    border: 2px solid var(--card-border);
+    background: #FFFFFF;
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    position: relative;
+    overflow: hidden;
+}
+
+.filter-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(52, 168, 126, 0.1);
+    transform: translate(-50%, -50%);
+    transition: width 0.4s, height 0.4s;
+}
+
+.filter-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(52, 168, 126, 0.2);
+    border-color: var(--primary-green);
+    color: var(--primary-green);
+}
+
+.filter-btn:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+.filter-btn.active {
+    background: linear-gradient(135deg, #34A87E, #2E8D6A);
+    color: #FFFFFF;
+    border-color: transparent;
+    font-weight: 700;
+    box-shadow: 0 6px 20px rgba(52, 168, 126, 0.18);
+    padding: 12px 22px;
+}
+
+.filter-btn.active:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 8px 24px rgba(52, 168, 126, 0.25);
+}
+
+.filter-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(52, 168, 126, 0.14);
+}
+
+@media (max-width: 600px) {
+    .filter-btn {
+        padding: 10px 18px;
+        font-size: 0.875rem;
+    }
+    
+    .filter-btn.active {
+        padding: 10px 18px;
+    }
+    
+    .bookings-filters {
+        gap: 12px;
+    }
+}
+
+/* ========================================
+   3. BOOKING CARDS - PIXEL PERFECT GRID
+   ======================================== */
+
+#bookingsContainer {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 28px;
+    padding: 0;
+    max-width: 100%;
+    margin: 0 0 var(--section-gap) 0;
+    position: relative;
+    z-index: 1;
+}
+
+.booking-card {
+    background: linear-gradient(180deg, #FFFFFF 0%, #F9FBFA 100%);
+    border-radius: 16px;
+    border: 1px solid var(--card-border);
+    box-shadow: 0 8px 30px var(--card-shadow);
+    padding: 28px;
+    transition: var(--transition);
+    position: relative;
+    overflow: visible;
+    margin: 0;
+    margin-bottom: 22px;
+}
+
+.booking-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(180deg, var(--primary-green), var(--accent-green));
+    opacity: 0;
+    transition: opacity 0.3s;
+    border-radius: 16px 0 0 16px;
+}
+
+.booking-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(52, 168, 126, 0.15);
+}
+
+.booking-card:hover::before {
+    opacity: 1;
+}
+
+/* Card Header */
+.booking-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.75rem;
+    gap: 1.5rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--card-border);
+    position: relative;
+}
+
+.turf-info h3 {
+    color: var(--text-primary);
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    transition: color 0.3s;
+    line-height: 1.3;
+}
+
+.turf-info h3:hover {
+    color: var(--primary-green);
+}
+
+.turf-info h3::before {
+    content: '🏟️';
+    font-size: 1.1rem;
+}
+
+.turf-info .city {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.turf-info .city::before {
+    content: '📍';
+    font-size: 0.85rem;
+}
+
+/* Status Badge */
+.status-badge {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
+    z-index: 2;
+}
+
+.status-badge.confirmed {
+    background: linear-gradient(135deg, #34A87E, #2CC997);
+    color: #FFFFFF;
+}
+
+.status-badge.pending {
+    background: linear-gradient(135deg, #FFD966, #FFC107);
+    color: #1A2E22;
+}
+
+.status-badge.cancelled {
+    background: linear-gradient(135deg, #EB5757, #D32F2F);
+    color: #FFFFFF;
+}
+
+.status-badge.completed {
+    background: linear-gradient(135deg, #56CCF2, #2F80ED);
+    color: #FFFFFF;
+}
+
+/* ========================================
+   4. BOOKING DETAILS LAYOUT
+   ======================================== */
+
+.booking-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.75rem;
+    padding: 1.5rem;
+    background: rgba(52, 168, 126, 0.03);
+    border-radius: 12px;
+    border: 1px dashed var(--card-border);
+}
+
+.detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.detail-item .label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.detail-item .value {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.4;
+}
+
+/* Icons for each detail */
+.detail-item .label.date::before { content: '📅'; }
+.detail-item .label.time::before { content: '⏰'; }
+.detail-item .label.sport::before { content: '🏏'; }
+.detail-item .label.amount::before { content: '💰'; }
+
+/* ========================================
+   5. STATUS MESSAGE BLOCK
+   ======================================== */
+
+.status-message {
+    padding: 18px;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    line-height: 1.6;
+    margin-bottom: 1.75rem;
+    border-left: 4px solid;
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.status-message.pending {
+    background: #FFF8E1;
+    border-color: var(--pending-amber);
+    color: #8B6914;
+}
+
+.status-message.pending::before {
+    content: '⏳ ';
+    font-size: 1.25rem;
+}
+
+.status-message.confirmed {
+    background: #E9F8EF;
+    border-color: var(--primary-green);
+    color: #1A5C3E;
+}
+
+.status-message.confirmed::before {
+    content: '✅ ';
+    font-size: 1.25rem;
+}
+
+.status-message.cancelled {
+    background: #FCEAEA;
+    border-color: var(--red-gradient-start);
+    color: #8B2929;
+}
+
+.status-message.cancelled::before {
+    content: '❌ ';
+    font-size: 1.25rem;
+}
+
+.status-message.completed {
+    background: #E3F5FF;
+    border-color: var(--blue-gradient-start);
+    color: #1A4E7C;
+}
+
+.status-message.completed::before {
+    content: '🎉 ';
+    font-size: 1.25rem;
+}
+
+/* ========================================
+   6. ACTION BUTTONS
+   ======================================== */
+
+.booking-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+.booking-actions:has(.btn-view-turf:only-child) {
+    grid-template-columns: 1fr;
+    max-width: 300px;
+}
+
+.btn-view-turf {
+    padding: 0.95rem 1.75rem;
+    border: 2px solid var(--primary-green);
+    background: #FFFFFF;
+    color: var(--primary-green);
+    font-weight: 700;
+    font-size: 0.95rem;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    text-decoration: none;
+}
+
+.btn-view-turf::before {
+    content: '👁️';
+    font-size: 1.1rem;
+}
+
+.btn-view-turf:hover {
+    background: linear-gradient(135deg, #34A87E, #2CC997);
+    color: #FFFFFF;
+    border-color: transparent;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(52, 168, 126, 0.3);
+}
+
+.btn-cancel-booking {
+    padding: 0.95rem 1.75rem;
+    border: none;
+    background: linear-gradient(135deg, #EB5757, #D32F2F);
+    color: #FFFFFF;
+    font-weight: 700;
+    font-size: 0.95rem;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+}
+
+.btn-cancel-booking::before {
+    content: '❌';
+    font-size: 1.1rem;
+}
+
+.btn-cancel-booking:hover {
+    filter: brightness(1.1);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(235, 87, 87, 0.4);
+}
+
+.btn-view-turf:focus,
+.btn-cancel-booking:focus {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(52, 168, 126, 0.14);
+}
+
+.btn-cancel-booking:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ========================================
+   7. LOADER & EMPTY STATE
+   ======================================== */
+
+.loader {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--primary-green);
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.loader i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    display: block;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 1rem;
+}
+
+.empty-state i {
+    font-size: 5rem;
+    color: var(--card-border);
+    margin-bottom: 1.5rem;
+    display: block;
+}
+
+.empty-state h3 {
+    color: var(--text-primary);
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin: 0 0 0.75rem;
+}
+
+.empty-state p {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    margin: 0 0 2rem;
+}
+
+.empty-state .btn {
+    padding: 1rem 2.5rem;
+    font-size: 1rem;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #34A87E, #2CC997);
+    color: #FFFFFF;
+    text-decoration: none;
+    display: inline-block;
+    font-weight: 700;
+    transition: var(--transition);
+}
+
+.empty-state .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(52, 168, 126, 0.3);
+}
+
+/* ========================================
+   8. MOBILE RESPONSIVENESS - KEY BREAKPOINTS
+   ======================================== */
+
+/* Tablet: ≤1024px */
+@media (max-width: 1024px) {
+    .page-inner {
+        padding: 32px 16px;
+    }
+    
+    #bookingsContainer {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 24px;
+    }
+    
+    .booking-card {
+        padding: 24px;
+        margin-bottom: 18px;
+    }
+}
+
+/* Mobile: ≤600px */
+@media (max-width: 600px) {
+    :root {
+        --section-gap: 32px;
+    }
+    
+    .page-inner {
+        padding: 24px 16px;
+    }
+    
+    .page-header {
+        padding: 48px 16px;
+    }
+    
+    .bookings-section {
+        padding: var(--section-gap) 0;
+    }
+    
+    .bookings-section .container {
+        padding: 0 16px;
+    }
+
+    #bookingsContainer {
+        grid-template-columns: 1fr;
+        gap: 18px;
+    }
+
+    .booking-card {
+        padding: 16px;
+        margin-bottom: 16px;
+    }
+
+    .booking-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+    }
+
+    .status-badge {
+        position: static;
+        align-self: flex-start;
+        font-size: 0.7rem;
+        padding: 6px 12px;
+    }
+
+    .booking-details {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+        padding: 16px;
+    }
+
+    .booking-actions {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .btn-view-turf,
+    .btn-cancel-booking {
+        width: 100%;
+        display: block;
+        padding: 14px 20px;
+    }
+    
+    .content-wrap {
+        padding-bottom: 100px;
+    }
+}
+
+/* ========================================
+   9. CANCEL MODAL STYLING
+   ======================================== */
+
+.qr-upload-section {
+    margin: 1.5rem 0;
+}
+
+.qr-upload-section .help-text {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.qr-upload-section .help-text i {
+    color: var(--primary-green);
+}
+
+.upload-area {
+    border: 2px dashed var(--card-border);
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition);
+    background: var(--bg-soft);
+    position: relative;
+    overflow: hidden;
+}
+
+.upload-area:hover {
+    border-color: var(--primary-green);
+    background: rgba(52, 168, 126, 0.05);
+}
+
+.upload-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.upload-placeholder i {
+    font-size: 3rem;
+    color: var(--primary-green);
+    opacity: 0.6;
+}
+
+.upload-placeholder p {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.upload-placeholder small {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.qr-preview {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.qr-preview img {
+    max-width: 250px;
+    max-height: 250px;
+    border-radius: 8px;
+    border: 2px solid var(--card-border);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.btn-remove-qr {
+    padding: 0.5rem 1rem;
+    border: 2px solid var(--red-gradient-start);
+    background: white;
+    color: var(--red-gradient-start);
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-remove-qr:hover {
+    background: var(--red-gradient-start);
+    color: white;
+}
+
+/* Enhanced status badges for refund states */
+.status-badge.pending-refund {
+    background: linear-gradient(135deg, #FFD966, #FFC107);
+    color: #1A2E22;
+}
+
+.status-badge.refund-completed {
+    background: linear-gradient(135deg, #56CCF2, #2F80ED);
+    color: #FFFFFF;
+}
+
+.status-badge.refund-denied {
+    background: linear-gradient(135deg, #EB5757, #D32F2F);
+    color: #FFFFFF;
+}
+
+/* Enhanced status messages for refund states */
+.status-message.pending-refund {
+    background: #FFF8E1;
+    border-color: var(--pending-amber);
+    color: #8B6914;
+}
+
+.status-message.pending-refund::before {
+    content: '⏳ ';
+    font-size: 1.25rem;
+}
+
+.status-message.refund-success {
+    background: #E3F5FF;
+    border-color: var(--blue-gradient-start);
+    color: #1A4E7C;
+}
+
+.status-message.refund-success::before {
+    content: '💸 ';
+    font-size: 1.25rem;
+}
+
+.status-message.refund-denied {
+    background: #FCEAEA;
+    border-color: var(--red-gradient-start);
+    color: #8B2929;
+}
+
+.status-message.refund-denied::before {
+    content: '❌ ';
+    font-size: 1.25rem;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.modal-actions .btn {
+    flex: 1;
+    padding: 0.875rem;
+    border-radius: 999px;
+    font-weight: 700;
+    transition: var(--transition);
+}
+
+.btn-outline {
+    border: 2px solid var(--card-border);
+    background: #FFFFFF;
+    color: var(--text-secondary);
+}
+
+.btn-outline:hover {
+    border-color: var(--primary-green);
+    color: var(--primary-green);
+}
+
+.btn-outline:focus {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(52, 168, 126, 0.14);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #EB5757, #D32F2F);
+    color: #FFFFFF;
+    border: none;
+}
+
+.btn-danger:hover {
+    filter: brightness(1.1);
+    box-shadow: 0 4px 16px rgba(235, 87, 87, 0.3);
+}
+
+.btn-danger:focus {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(235, 87, 87, 0.2);
+}
+
+.btn-danger:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    filter: none;
+}
+
+@media (max-width: 600px) {
+    .modal-actions {
+        flex-direction: column;
+    }
+    
+    .modal-actions .btn {
+        width: 100%;
+    }
+
+    .upload-area {
+        padding: 1.5rem;
+    }
+
+    .qr-preview img {
+        max-width: 200px;
+        max-height: 200px;
+    }
+}
+
+/* ========================================
+   10. Z-INDEX LAYERING
+   ======================================== */
+
+.page-header {
+    z-index: 2;
+}
+
+#bookingsContainer {
+    z-index: 1;
+}
+
+.footer {
+    position: relative;
+    z-index: 3;
+}
+
+/* ========================================
+   11. SUBTLE ANIMATIONS
+   ======================================== */
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.booking-card {
+    animation: fadeIn 0.4s ease-out backwards;
+}
+
+.booking-card:nth-child(1) { animation-delay: 0.05s; }
+.booking-card:nth-child(2) { animation-delay: 0.1s; }
+.booking-card:nth-child(3) { animation-delay: 0.15s; }
+.booking-card:nth-child(4) { animation-delay: 0.2s; }
+.booking-card:nth-child(5) { animation-delay: 0.25s; }
+.booking-card:nth-child(6) { animation-delay: 0.3s; }

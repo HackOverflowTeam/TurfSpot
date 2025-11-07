@@ -40,6 +40,15 @@ class TurfSpotNavbar {
             });
         }
 
+        // Mobile menu close button
+        const mobileMenuClose = document.getElementById('mobileMenuClose');
+        if (mobileMenuClose) {
+            mobileMenuClose.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.closeMobileMenu();
+            });
+        }
+
         // Close mobile menu when link is clicked
         this.mobileMenuLinks.forEach(link => {
             link.addEventListener('click', () => {
@@ -120,9 +129,21 @@ class TurfSpotNavbar {
     openMobileMenu() {
         if (!this.mobileMenu || !this.hamburger) return;
         
+        // Create overlay if it doesn't exist
+        let overlay = document.querySelector('.mobile-menu-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.className = 'mobile-menu-overlay';
+            document.body.appendChild(overlay);
+            
+            // Click overlay to close
+            overlay.addEventListener('click', () => this.closeMobileMenu());
+        }
+        
         this.mobileMenu.classList.add('active');
         this.hamburger.classList.add('active');
-        document.body.style.overflow = 'hidden';
+        overlay.classList.add('active');
+        document.body.classList.add('mobile-menu-open');
         
         // Animate menu items
         this.animateMobileMenuItems();
@@ -131,9 +152,12 @@ class TurfSpotNavbar {
     closeMobileMenu() {
         if (!this.mobileMenu || !this.hamburger) return;
         
+        const overlay = document.querySelector('.mobile-menu-overlay');
+        
         this.mobileMenu.classList.remove('active');
         this.hamburger.classList.remove('active');
-        document.body.style.overflow = '';
+        if (overlay) overlay.classList.remove('active');
+        document.body.classList.remove('mobile-menu-open');
     }
 
     animateMobileMenuItems() {

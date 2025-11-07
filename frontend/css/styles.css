@@ -369,7 +369,7 @@ a {
 .popular-turfs,
 .turfs-listing {
     padding: 5rem 0;
-    background: var(--light-bg);
+    background: #f9fafb;
 }
 
 .turfs-grid {
@@ -471,8 +471,6 @@ a {
 
 /* CTA Section */
 .cta {
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-    color: #fff;
     padding: 5rem 0;
     text-align: center;
 }

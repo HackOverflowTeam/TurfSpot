@@ -790,6 +790,138 @@ async function loadPendingVerifications() {
     }
 }
 
+// Load pending refund requests
+async function loadPendingRefunds() {
+    const loader = document.getElementById('refundsLoader');
+    const list = document.getElementById('refundsList');
+    const badge = document.getElementById('refundsCount');
+    
+    try {
+        loader.style.display = 'block';
+        const response = await api.getOwnerPendingRefunds();
+        loader.style.display = 'none';
+        
+        if (!response.data || response.data.length === 0) {
+            list.innerHTML = `
+                <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                    <i class="fas fa-check-circle fa-3x" style="margin-bottom: 1rem; opacity: 0.3;"></i>
+                    <p>No pending refund requests</p>
+                </div>
+            `;
+            badge.style.display = 'none';
+            return;
+        }
+        
+        badge.textContent = response.data.length;
+        badge.style.display = 'inline-block';
+        
+        list.innerHTML = response.data.map(booking => `
+            <div class="refund-card" style="background: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 4px solid #FFC107;">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                    <div style="flex: 1;">
+                        <h4 style="margin-bottom: 0.5rem; color: var(--text-primary);">
+                            <i class="fas fa-building" style="color: var(--primary);"></i> ${booking.turf.name}
+                        </h4>
+                        <div style="display: grid; gap: 0.5rem; margin-top: 0.75rem;">
+                            <p style="color: var(--text-secondary); margin: 0;">
+                                <i class="fas fa-user"></i> <strong>User:</strong> ${booking.user.name}
+                            </p>
+                            <p style="color: var(--text-secondary); margin: 0;">
+                                <i class="fas fa-phone"></i> <strong>Phone:</strong> ${booking.user.phone}
+                            </p>
+                            <p style="color: var(--text-secondary); margin: 0;">
+                                <i class="fas fa-envelope"></i> <strong>Email:</strong> ${booking.user.email}
+                            </p>
+                            <p style="color: var(--text-secondary); margin: 0;">
+                                <i class="fas fa-calendar"></i> <strong>Booking Date:</strong> ${new Date(booking.bookingDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+                            </p>
+                            <p style="color: var(--text-secondary); margin: 0;">
+                                <i class="fas fa-clock"></i> <strong>Time:</strong> ${formatTimeSlot(booking.timeSlots[0].startTime, booking.timeSlots[booking.timeSlots.length - 1].endTime)}
+                            </p>
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 1.75rem; font-weight: bold; color: var(--primary); margin-bottom: 0.25rem;">
+                            ${formatCurrency(booking.refundRequest.refundAmount)}
+                        </div>
+                        <small style="color: var(--text-secondary); font-weight: 600;">Refund Amount (90%)</small>
+                        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.5rem;">
+                            <i class="fas fa-receipt"></i> Total: ${formatCurrency(booking.pricing.totalAmount)}
+                        </p>
+                    </div>
+                </div>
+                
+                ${booking.refundRequest.reason ? `
+                    <div style="background: #FFF8E1; padding: 1rem; border-radius: 8px; margin: 1rem 0; border-left: 3px solid #FFC107;">
+                        <strong style="display: block; margin-bottom: 0.5rem; color: #8B6914;">
+                            <i class="fas fa-comment-alt"></i> Cancellation Reason:
+                        </strong>
+                        <p style="color: #8B6914; margin: 0; line-height: 1.5;">${booking.refundRequest.reason}</p>
+                    </div>
+                ` : ''}
+                
+                ${booking.refundRequest.qrImage && booking.refundRequest.qrImage.url ? `
+                    <div style="margin: 1rem 0;">
+                        <strong style="display: block; margin-bottom: 0.75rem; color: var(--text-primary);">
+                            <i class="fas fa-qrcode"></i> User's Refund QR Code:
+                        </strong>
+                        <div style="text-align: center; background: var(--bg-soft); padding: 1rem; border-radius: 8px;">
+                            <img src="${booking.refundRequest.qrImage.url}" 
+                                 alt="Refund QR Code" 
+                                 style="max-width: 300px; max-height: 300px; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 2px solid #e5e7eb;"
+                                 onclick="window.open('${booking.refundRequest.qrImage.url}', '_blank')">
+                            <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.75rem;">
+                                <i class="fas fa-clock"></i> Uploaded ${new Date(booking.refundRequest.requestedAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                            </p>
+                            <small style="color: var(--text-secondary); display: block; margin-top: 0.25rem;">
+                                Click to view full size
+                            </small>
+                        </div>
+                    </div>
+                ` : ''}
+                
+                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                    <button class="btn btn-primary" onclick="processRefund('${booking._id}', true)" style="flex: 1; font-weight: 600;">
+                        <i class="fas fa-check-circle"></i> Confirm Refund
+                    </button>
+                    <button class="btn btn-outline" onclick="processRefund('${booking._id}', false)" style="flex: 1; color: #ef4444; border-color: #ef4444; font-weight: 600;">
+                        <i class="fas fa-times-circle"></i> Reject Request
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    } catch (error) {
+        loader.style.display = 'none';
+        showToast('Failed to load pending refunds', 'error');
+        console.error('Error loading refunds:', error);
+    }
+}
+
+// Process refund decision
+window.processRefund = async function(bookingId, approved) {
+    let verificationNote = '';
+    
+    if (!approved) {
+        verificationNote = prompt('Please provide a reason for rejection:');
+        if (!verificationNote || !verificationNote.trim()) {
+            showToast('Rejection reason is required', 'error');
+            return;
+        }
+    } else {
+        const confirmed = confirm('Are you sure you want to confirm this refund? The user will be notified.');
+        if (!confirmed) return;
+    }
+    
+    try {
+        await api.processRefundDecision(bookingId, approved, verificationNote);
+        showToast(approved ? 'Refund confirmed successfully! 💸' : 'Refund request rejected', approved ? 'success' : 'info');
+        loadPendingRefunds();
+        loadOwnerBookings(); // Refresh bookings list
+    } catch (error) {
+        showToast(error.message || 'Failed to process refund', 'error');
+    }
+};
+
 // Verify tier payment
 window.verifyPayment = async function(bookingId, approved) {
     let reason = '';
@@ -878,6 +1010,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 loadAnalytics();
             } else if (tabName === 'verifications') {
                 loadPendingVerifications();
+            } else if (tabName === 'refunds') {
+                loadPendingRefunds();
             } else if (tabName === 'subscription') {
                 loadSubscription();
             }

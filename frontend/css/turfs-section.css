@@ -1,12 +1,18 @@
 /* ========================================
    TURFSPOT PREMIUM TURFS SECTION
    Clean, Modern, Fully Responsive
+   Version 2.0 - Enhanced Premium Design
    ======================================== */
 
 /* Features/Popular Turfs Section */
 .features {
     padding: 5rem 0;
-    background: #F8F9FA;
+    background: #ffffff;
+}
+
+/* Popular Turfs - Light Green Background */
+.popular-turfs {
+    background: #f9fafb;
 }
 
 .section-title {
@@ -29,22 +35,43 @@
     padding: 0 1.5rem;
 }
 
-/* Premium Turf Card */
+/* Premium Turf Card - Enhanced with Gradients & Depth */
 .turf-card {
-    background: #FFFFFF;
+    background: linear-gradient(180deg, #FFFFFF 0%, #F7FAF8 100%);
+    border: 1px solid #E6F1EA;
     border-radius: 16px;
     overflow: hidden;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0px 6px 24px rgba(0, 0, 0, 0.08);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
     display: flex;
     flex-direction: column;
     height: 100%;
+    position: relative;
+}
+
+.turf-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 16px;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(52, 168, 126, 0.1), rgba(46, 141, 106, 0.05));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.4s ease;
 }
 
 .turf-card:hover {
-    transform: scale(1.02);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    transform: translateY(-8px) scale(1.01);
+    box-shadow: 0px 12px 32px rgba(0, 0, 0, 0.14),
+                0px 4px 16px rgba(52, 168, 126, 0.12);
+}
+
+.turf-card:hover::before {
+    opacity: 1;
 }
 
 /* Turf Image Container */
@@ -60,62 +87,87 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.3s ease;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .turf-card:hover .turf-image img {
-    transform: scale(1.05);
+    transform: scale(1.08);
 }
 
-/* Featured Badge */
+/* Featured Badge - Glowing Premium Style */
 .turf-badge {
     position: absolute;
-    top: 12px;
-    left: 12px;
-    background: #34A87E;
+    top: 14px;
+    left: 14px;
+    background: linear-gradient(135deg, #2E8D6A, #34A87E);
     color: #FFFFFF;
     font-family: 'Inter', sans-serif;
-    font-size: 0.75rem;
-    font-weight: 700;
-    padding: 6px 14px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 7px 16px;
     border-radius: 999px;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    box-shadow: 0 2px 8px rgba(52, 168, 126, 0.3);
+    letter-spacing: 0.8px;
+    box-shadow: 0 0 8px rgba(52, 168, 126, 0.5),
+                0 4px 12px rgba(0, 0, 0, 0.2);
     z-index: 10;
+    animation: badgePulse 3s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+    0%, 100% {
+        box-shadow: 0 0 8px rgba(52, 168, 126, 0.5),
+                    0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    50% {
+        box-shadow: 0 0 16px rgba(52, 168, 126, 0.7),
+                    0 4px 16px rgba(0, 0, 0, 0.25);
+    }
+}
+
+.turf-card:hover .turf-badge {
+    animation: badgeGlow 0.6s ease-out;
+}
+
+@keyframes badgeGlow {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
 }
 
 /* Turf Content */
 .turf-content {
-    padding: 1.25rem;
+    padding: 1.4rem;
     display: flex;
     flex-direction: column;
     gap: 12px;
     flex: 1;
 }
 
-/* Turf Name */
+/* Turf Name - Enhanced Hierarchy */
 .turf-name {
     font-family: 'Inter', sans-serif;
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: #1A1F1B;
-    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #1A2E22;
+    margin: 0 0 10px 0;
     line-height: 1.4;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    letter-spacing: -0.3px;
 }
 
-/* Location */
+/* Location - Refined Color */
 .turf-location {
     display: flex;
     align-items: center;
     gap: 8px;
-    color: #6B7280;
+    color: #6E8779;
     font-size: 0.9rem;
     font-family: 'Inter', sans-serif;
+    margin-bottom: 10px;
 }
 
 .turf-location i {
@@ -123,24 +175,33 @@
     font-size: 0.95rem;
 }
 
-/* Amenities/Sports Tags */
+/* Amenities/Sports Tags - Glass-Style Pills */
 .turf-amenities {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
     margin-top: 4px;
+    margin-bottom: 10px;
 }
 
 .amenity {
-    background: #E7F6EF;
+    background: linear-gradient(135deg, #E7F6EF, #CDEEDC);
     color: #2E8D6A;
     font-family: 'Inter', sans-serif;
-    font-size: 0.8rem;
-    font-weight: 600;
-    padding: 6px 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 7px 14px;
     border-radius: 999px;
     display: inline-block;
     line-height: 1;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.amenity:hover {
+    background: linear-gradient(135deg, #CDEEDC, #B8E5D0);
+    transform: translateY(-2px);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
 }
 
 /* Turf Footer - Price & Button */
@@ -150,53 +211,75 @@
     justify-content: space-between;
     gap: 12px;
     margin-top: auto;
-    padding-top: 12px;
-    border-top: 1px solid #E5E7EB;
+    padding-top: 16px;
 }
 
-/* Price */
+/* Price - Bold & Dominant */
 .turf-price {
     font-family: 'Inter', sans-serif;
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: #34A87E;
+    font-size: 1.75rem;
+    font-weight: 900;
+    color: #2E8D6A;
     line-height: 1;
     display: flex;
     align-items: baseline;
-    gap: 4px;
+    gap: 5px;
 }
 
 .turf-price span {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: 500;
-    color: #6B7280;
+    color: #6E8779;
 }
 
-/* Premium Book Now Button */
+/* Premium Book Now Button - Most Attractive Element */
 .btn-book {
-    background: linear-gradient(135deg, #34A87E, #2E8D6A);
+    background: linear-gradient(135deg, #34A87E 0%, #28BFA0 100%);
     color: #FFFFFF;
     font-family: 'Inter', sans-serif;
-    font-size: 0.9rem;
-    font-weight: 700;
-    padding: 10px 24px;
+    font-size: 0.95rem;
+    font-weight: 800;
+    padding: 12px 28px;
     border: none;
     border-radius: 999px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     white-space: nowrap;
-    box-shadow: 0 4px 12px rgba(52, 168, 126, 0.25);
+    box-shadow: 0px 4px 20px rgba(40, 191, 160, 0.4);
+    letter-spacing: 0.3px;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-book::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.btn-book:hover::before {
+    width: 300px;
+    height: 300px;
 }
 
 .btn-book:hover {
-    background: linear-gradient(135deg, #3FC490, #34A87E);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(52, 168, 126, 0.4);
+    background: linear-gradient(135deg, #34A87E 0%, #28BFA0 100%);
+    transform: translateY(-3px);
+    box-shadow: 0px 8px 28px rgba(40, 191, 160, 0.5),
+                0px 4px 16px rgba(52, 168, 126, 0.3);
+    filter: brightness(1.1);
 }
 
 .btn-book:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 8px rgba(52, 168, 126, 0.25);
+    transform: translateY(-1px);
+    box-shadow: 0px 4px 16px rgba(40, 191, 160, 0.4);
 }
 
 /* Loading State */
@@ -297,30 +380,42 @@
     }
     
     .turf-card {
-        margin: 0 auto;
+        margin: 16px auto;
         width: 100%;
+        box-shadow: 0px 8px 28px rgba(0, 0, 0, 0.1);
+    }
+    
+    .turf-card:hover {
+        transform: translateY(-4px) scale(1.005);
     }
     
     .turf-image {
         height: 200px;
     }
     
+    .turf-content {
+        padding: 1.3rem;
+    }
+    
     .turf-footer {
         flex-direction: column;
         align-items: stretch;
-        gap: 12px;
+        gap: 14px;
+        padding-top: 14px;
     }
     
     .turf-price {
         text-align: center;
         justify-content: center;
+        font-size: 1.65rem;
     }
     
     .btn-book {
         width: 100%;
         text-align: center;
         justify-content: center;
-        padding: 12px 24px;
+        padding: 14px 24px;
+        font-size: 1rem;
     }
 }
 

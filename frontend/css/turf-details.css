@@ -1,0 +1,849 @@
+/* =============================================
+   TURFSPOT TURF DETAILS - PREMIUM REDESIGN
+   Modern, Professional, Conversion-Optimized
+   ============================================= */
+
+/* CSS Variables - Brand Palette */
+:root {
+    --primary-green: #34A87E;
+    --accent-green: #28BFA0;
+    --gradient-green: linear-gradient(135deg, #34A87E 0%, #28BFA0 100%);
+    --bg-page: #F9FCFB;
+    --bg-light: #F0FAF5;
+    --bg-card: #FFFFFF;
+    --text-primary: #1A2E22;
+    --text-secondary: #5B6B61;
+    --text-muted: #6E7E73;
+    --text-dark: #1A1F1B;
+    --border-light: #E6F1EA;
+    --shadow-light: 0 4px 16px rgba(0, 0, 0, 0.06);
+    --shadow-medium: 0 8px 24px rgba(0, 0, 0, 0.08);
+    --shadow-hover: 0 12px 32px rgba(0, 0, 0, 0.12);
+    --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    --card-radius: 20px;
+}
+
+/* Page Container */
+.turf-details-page {
+    padding-top: 80px;
+    min-height: 100vh;
+    background: var(--bg-page);
+    font-family: 'Inter', sans-serif;
+}
+
+/* =============================================
+   🏟️ 1. HEADER SECTION (Image Gallery)
+   ============================================= */
+
+.turf-gallery-section {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* Main Image Container */
+.main-image-wrapper {
+    position: relative;
+    width: 100%;
+    height: 500px;
+    border-radius: var(--card-radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-medium);
+    margin-bottom: 1.5rem;
+}
+
+.main-image-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.main-image-wrapper:hover img {
+    transform: scale(1.05);
+}
+
+/* Favorite Button */
+.btn-favorite-large {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 10;
+}
+
+.btn-favorite-large i {
+    font-size: 1.4rem;
+    color: var(--primary-green);
+}
+
+.btn-favorite-large:hover {
+    transform: scale(1.1);
+    background: var(--bg-card);
+}
+
+.btn-favorite-large.active i {
+    color: #e74c3c;
+}
+
+/* Thumbnail Gallery */
+.thumbnail-gallery {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+    padding: 0.5rem 0;
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary-green) var(--bg-light);
+}
+
+.thumbnail-gallery::-webkit-scrollbar {
+    height: 6px;
+}
+
+.thumbnail-gallery::-webkit-scrollbar-track {
+    background: var(--bg-light);
+    border-radius: 10px;
+}
+
+.thumbnail-gallery::-webkit-scrollbar-thumb {
+    background: var(--primary-green);
+    border-radius: 10px;
+}
+
+.thumbnail-item {
+    flex: 0 0 auto;
+    width: 140px;
+    height: 90px;
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 3px solid transparent;
+    transition: var(--transition-smooth);
+}
+
+.thumbnail-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.thumbnail-item:hover,
+.thumbnail-item.active {
+    border-color: var(--primary-green);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(52, 168, 126, 0.3);
+}
+
+/* =============================================
+   📄 CONTENT LAYOUT
+   ============================================= */
+
+.turf-content-wrapper {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.content-grid {
+    display: grid;
+    grid-template-columns: 1fr 420px;
+    gap: 2.5rem;
+    align-items: start;
+}
+
+/* =============================================
+   🏷️ TURF NAME & REVIEWS
+   ============================================= */
+
+.turf-header-section {
+    background: var(--bg-card);
+    padding: 2rem;
+    border-radius: var(--card-radius);
+    box-shadow: var(--shadow-light);
+    margin-bottom: 1.5rem;
+}
+
+.turf-name {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+}
+
+.turf-reviews-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 2px solid var(--border-light);
+}
+
+.rating-stars {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.rating-stars i {
+    color: var(--primary-green);
+    font-size: 1.1rem;
+}
+
+.rating-number {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+}
+
+.review-count {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+/* =============================================
+   🗺️ LOCATION & BASIC INFO ROW
+   ============================================= */
+
+.basic-info-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding-top: 1.25rem;
+}
+
+.info-capsule {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    background: var(--bg-light);
+    border: 1px solid var(--border-light);
+    border-radius: 999px;
+    font-size: 0.9rem;
+    color: var(--text-dark);
+    font-weight: 500;
+}
+
+.info-capsule i {
+    color: var(--primary-green);
+    font-size: 1rem;
+}
+
+/* =============================================
+   📘 ABOUT & SPORTS SECTION
+   ============================================= */
+
+.about-section,
+.sports-section,
+.amenities-section,
+.hours-section,
+.map-section,
+.contact-section {
+    background: var(--bg-card);
+    padding: 2rem;
+    border-radius: var(--card-radius);
+    box-shadow: var(--shadow-light);
+    margin-bottom: 1.5rem;
+}
+
+.section-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.section-title i {
+    color: var(--primary-green);
+    font-size: 1.2rem;
+}
+
+.about-text {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    font-size: 0.95rem;
+}
+
+/* Sports Pills */
+.sports-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.sport-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    background: linear-gradient(135deg, #E7F6EF, #CDEEDC);
+    color: #2E8D6A;
+    font-weight: 700;
+    font-size: 0.9rem;
+    border-radius: 999px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    transition: var(--transition-smooth);
+}
+
+.sport-pill:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+/* =============================================
+   🧺 AMENITIES SECTION
+   ============================================= */
+
+.amenities-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1rem;
+}
+
+.amenity-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: var(--bg-light);
+    border-radius: 12px;
+    font-size: 0.9rem;
+    color: var(--text-dark);
+    font-weight: 500;
+    transition: var(--transition-smooth);
+}
+
+.amenity-item i {
+    color: #2E8D6A;
+    font-size: 1.1rem;
+}
+
+.amenity-item:hover {
+    background: linear-gradient(135deg, #E7F6EF, #CDEEDC);
+    transform: translateX(4px);
+}
+
+/* =============================================
+   🕐 OPERATING HOURS TABLE
+   ============================================= */
+
+.hours-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid var(--border-light);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.hours-table thead {
+    background: var(--bg-light);
+}
+
+.hours-table th {
+    padding: 1rem;
+    text-align: left;
+    font-weight: 700;
+    color: var(--primary-green);
+    font-size: 0.95rem;
+}
+
+.hours-table td {
+    padding: 1rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.hours-table tbody tr:nth-child(even) {
+    background: #FFFFFF;
+}
+
+.hours-table tbody tr:nth-child(odd) {
+    background: #F8FCFA;
+}
+
+.hours-table tbody tr:hover {
+    background: var(--bg-light);
+}
+
+/* Mobile Hours Cards */
+.hours-cards {
+    display: none;
+}
+
+.hour-card {
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem;
+    background: #F8FCFA;
+    border-radius: 12px;
+    margin-bottom: 0.75rem;
+    border: 1px solid var(--border-light);
+}
+
+.hour-card .day {
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.hour-card .time {
+    color: var(--text-secondary);
+}
+
+/* =============================================
+   🗺️ MAP SECTION
+   ============================================= */
+
+.map-container {
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--shadow-light);
+    transition: var(--transition-smooth);
+    border: 2px solid var(--border-light);
+}
+
+.map-container:hover {
+    box-shadow: 0 4px 20px rgba(52, 168, 126, 0.15);
+    border-color: var(--primary-green);
+}
+
+.map-container iframe,
+.map-container > div {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* Fix for Google Maps inside container */
+#turfMap {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.map-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    color: var(--primary-green);
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-decoration: none;
+    transition: var(--transition-smooth);
+}
+
+.map-link:hover {
+    color: var(--accent-green);
+    text-decoration: underline;
+}
+
+/* =============================================
+   ☎️ CONTACT INFORMATION
+   ============================================= */
+
+.contact-grid {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.contact-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.contact-icon {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    background: var(--bg-light);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.contact-icon i {
+    color: var(--primary-green);
+    font-size: 1.2rem;
+}
+
+.contact-info {
+    flex: 1;
+}
+
+.contact-label {
+    font-weight: 700;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+}
+
+.contact-value {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+/* =============================================
+   💳 BOOKING SIDEBAR (Right Panel)
+   ============================================= */
+
+.booking-sidebar {
+    position: sticky;
+    top: 100px;
+    background: var(--bg-card);
+    padding: 2rem;
+    border-radius: var(--card-radius);
+    box-shadow: var(--shadow-medium);
+    border: 1px solid var(--border-light);
+}
+
+/* Price Display */
+.booking-price-section {
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-light);
+    margin-bottom: 1.5rem;
+}
+
+.price-label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.booking-price {
+    font-size: 1.5rem;
+    font-weight: 800;
+    background: var(--gradient-green);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.2;
+}
+
+/* Booking Form */
+.booking-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-label {
+    font-weight: 600;
+    color: #4E6559;
+    font-size: 0.9rem;
+}
+
+.form-input,
+.form-select {
+    padding: 0.875rem 1rem;
+    border: 2px solid var(--border-light);
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-family: 'Inter', sans-serif;
+    color: var(--text-primary);
+    transition: var(--transition-smooth);
+    background: var(--bg-card);
+}
+
+.form-input:focus,
+.form-select:focus {
+    outline: none;
+    border-color: var(--primary-green);
+    box-shadow: 0 0 0 4px rgba(52, 168, 126, 0.12);
+}
+
+/* Slots Grid */
+.slots-section {
+    margin: 1.5rem 0;
+}
+
+.slots-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.slot-button {
+    padding: 1rem;
+    border: 2px solid var(--border-light);
+    border-radius: 12px;
+    background: var(--bg-card);
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    text-align: center;
+}
+
+.slot-button:hover:not(:disabled) {
+    border-color: var(--primary-green);
+    background: var(--bg-light);
+    color: var(--primary-green);
+    transform: translateY(-2px);
+}
+
+.slot-button.selected {
+    background: var(--gradient-green);
+    color: #FFFFFF;
+    border-color: var(--primary-green);
+    font-weight: 700;
+}
+
+.slot-button:disabled {
+    background: #E8ECEA;
+    color: #A0ACA5;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* Book Now Button */
+.btn-book-now {
+    width: 100%;
+    padding: 1.125rem 2rem;
+    background: var(--gradient-green);
+    color: #FFFFFF;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    box-shadow: 0 4px 20px rgba(52, 168, 126, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.btn-book-now i {
+    font-size: 1.1rem;
+}
+
+.btn-book-now:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 28px rgba(52, 168, 126, 0.5);
+    filter: brightness(1.1);
+}
+
+.btn-book-now:active {
+    transform: translateY(-1px);
+}
+
+/* Booking Summary */
+.booking-summary {
+    background: var(--bg-light);
+    padding: 1.25rem;
+    border-radius: 12px;
+    margin-top: 1.5rem;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    font-size: 0.9rem;
+}
+
+.summary-row:last-child {
+    margin-bottom: 0;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-light);
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+.summary-label {
+    color: var(--text-secondary);
+}
+
+.summary-value {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+/* =============================================
+   📱 RESPONSIVE DESIGN
+   ============================================= */
+
+/* Tablet View */
+@media (max-width: 1024px) {
+    .content-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .booking-sidebar {
+        position: static;
+        margin-top: 2rem;
+    }
+}
+
+/* Mobile View */
+@media (max-width: 768px) {
+    .turf-details-page {
+        padding-top: 70px;
+    }
+    
+    .turf-gallery-section,
+    .turf-content-wrapper {
+        padding: 1rem;
+    }
+    
+    .main-image-wrapper {
+        height: 300px;
+        border-radius: 16px;
+    }
+    
+    .turf-header-section,
+    .about-section,
+    .sports-section,
+    .amenities-section,
+    .hours-section,
+    .map-section,
+    .contact-section {
+        padding: 1.5rem;
+        border-radius: 16px;
+    }
+    
+    .turf-name {
+        font-size: 1.4rem;
+    }
+    
+    .basic-info-row {
+        flex-direction: column;
+    }
+    
+    .info-capsule {
+        width: 100%;
+        justify-content: flex-start;
+    }
+    
+    .amenities-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    /* Hide table, show cards on mobile */
+    .hours-table {
+        display: none;
+    }
+    
+    .hours-cards {
+        display: block;
+    }
+    
+    .slots-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    /* Sticky bottom booking button on mobile */
+    .mobile-booking-cta {
+        display: block;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: var(--bg-card);
+        padding: 1rem;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+    }
+    
+    .mobile-booking-cta .btn-book-now {
+        margin: 0;
+    }
+}
+
+/* Small Mobile */
+@media (max-width: 520px) {
+    .thumbnail-item {
+        width: 100px;
+        height: 65px;
+    }
+    
+    .turf-header-section,
+    .about-section,
+    .sports-section,
+    .amenities-section,
+    .hours-section,
+    .map-section,
+    .contact-section,
+    .booking-sidebar {
+        padding: 1.25rem;
+    }
+    
+    .section-title {
+        font-size: 1rem;
+    }
+}
+
+/* =============================================
+   ACCESSIBILITY & ANIMATIONS
+   ============================================= */
+
+/* Focus States */
+.slot-button:focus-visible,
+.form-input:focus-visible,
+.form-select:focus-visible,
+.btn-book-now:focus-visible {
+    outline: 2px solid var(--primary-green);
+    outline-offset: 2px;
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Loading State */
+.loading-skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}

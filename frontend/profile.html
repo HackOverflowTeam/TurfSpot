@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - TurfSpot</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="css/navbar.css">
+    <link rel="stylesheet" href="css/profile.css">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <!-- Brand/Logo -->
+            <a href="index.html" class="navbar-brand">
+                <div class="navbar-brand-icon">
+                    <i class="fas fa-futbol"></i>
+                </div>
+                <span class="navbar-brand-text">TurfSpot</span>
+            </a>
+
+            <!-- Navbar Links (Desktop) -->
+            <div class="navbar-menu">
+                <a href="index.html" class="navbar-link">
+                    <i class="fas fa-home"></i>
+                    <span>Home</span>
+                </a>
+                <a href="turfs.html" class="navbar-link">
+                    <i class="fas fa-search"></i>
+                    <span>Browse Turfs</span>
+                </a>
+                <a href="my-bookings.html" class="navbar-link" id="myBookingsLink" style="display: none;">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>My Bookings</span>
+                </a>
+                <a href="owner-dashboard.html" class="navbar-link" id="ownerDashLink" style="display: none;">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>My Dashboard</span>
+                </a>
+                <a href="admin-dashboard.html" class="navbar-link" id="adminDashLink" style="display: none;">
+                    <i class="fas fa-cog"></i>
+                    <span>Admin</span>
+                </a>
+            </div>
+
+            <!-- Navbar Actions (Login/Register Buttons + User Menu) -->
+            <div class="navbar-actions">
+                <!-- Login Button -->
+                <button class="btn-login" id="loginBtn">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span>Login</span>
+                </button>
+
+                <!-- Register Button -->
+                <button class="btn-register" id="registerBtn">
+                    <i class="fas fa-user-plus"></i>
+                    <span>Register</span>
+                </button>
+
+                <!-- User Menu (Hidden by default) -->
+                <div class="user-menu" id="userMenu" style="display: none;">
+                    <img src="https://ui-avatars.com/api/?name=User" alt="User Avatar" class="user-avatar" id="userAvatar">
+                    <span class="user-name" id="userName">User</span>
+
+                    <!-- Dropdown Menu -->
+                    <div class="navbar-dropdown">
+                        <a href="profile.html" class="dropdown-item">
+                            <i class="fas fa-user-circle"></i>
+                            <span>Profile</span>
+                        </a>
+                        <a href="my-bookings.html" class="dropdown-item" id="dropdownMyBookings" style="display: none;">
+                            <i class="fas fa-calendar-check"></i>
+                            <span>My Bookings</span>
+                        </a>
+                        <a href="owner-dashboard.html" class="dropdown-item" id="dropdownOwnerDash" style="display: none;">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="admin-dashboard.html" class="dropdown-item" id="dropdownAdminDash" style="display: none;">
+                            <i class="fas fa-cog"></i>
+                            <span>Admin Panel</span>
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item" id="logoutBtn">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hamburger Menu (Mobile) -->
+            <div class="hamburger" id="hamburger">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div class="mobile-menu" id="mobileMenu">
+            <!-- Mobile Menu Header -->
+            <div class="mobile-menu-header">
+                <h3>Menu</h3>
+                <button class="mobile-menu-close" id="mobileMenuClose" aria-label="Close menu">×</button>
+            </div>
+
+            <div class="mobile-menu-content">
+                <a href="index.html" class="mobile-menu-link">
+                    <i class="fas fa-home"></i> Home
+                </a>
+                <a href="turfs.html" class="mobile-menu-link">
+                    <i class="fas fa-search"></i> Browse Turfs
+                </a>
+                <a href="my-bookings.html" class="mobile-menu-link" id="mobileMyBookingsLink" style="display: none;">
+                    <i class="fas fa-calendar-check"></i> My Bookings
+                </a>
+                <a href="owner-dashboard.html" class="mobile-menu-link" id="mobileOwnerDashLink" style="display: none;">
+                    <i class="fas fa-tachometer-alt"></i> My Dashboard
+                </a>
+                <a href="admin-dashboard.html" class="mobile-menu-link" id="mobileAdminDashLink" style="display: none;">
+                    <i class="fas fa-cog"></i> Admin
+                </a>
+                <div class="mobile-menu-divider"></div>
+                <a href="profile.html" class="mobile-menu-link active" id="mobileProfileLink" style="display: none;">
+                    <i class="fas fa-user-circle"></i> Profile
+                </a>
+            </div>
+
+            <!-- Mobile Action Buttons -->
+            <div class="mobile-menu-actions">
+                <button class="btn-login" id="loginBtnMobile" style="width: 100%; justify-content: center;">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+                <button class="btn-register" id="registerBtnMobile" style="width: 100%; justify-content: center;">
+                    <i class="fas fa-user-plus"></i> Register
+                </button>
+                <button class="btn-login" id="logoutBtnMobile" style="display: none; width: 100%; justify-content: center;">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Profile Page -->
+    <div class="profile-page">
+        <div class="profile-container">
+
+
+            <!-- Bento Grid -->
+            <div class="bento-grid">
+                <!-- Profile Hero Card (Spans 2 columns) -->
+                <div class="bento-card profile-hero skeleton-loading" id="profileHeroCard">
+                    <div class="profile-avatar-wrapper">
+                        <div class="profile-avatar skeleton" id="profileAvatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="avatar-badge">
+                            <i class="fas fa-check"></i>
+                        </div>
+                    </div>
+                    <div class="profile-info">
+                        <h2 class="profile-name" id="profileName">
+                            <i class="fas fa-futbol profile-icon"></i>
+                            <span class="skeleton skeleton-text" style="display: inline-block;"></span>
+                        </h2>
+                        <p class="profile-member-since skeleton skeleton-text-small" id="profileMemberSince" style="display: inline-block;"></p>
+                    </div>
+                </div>
+
+                <!-- Email Card -->
+                <div class="bento-card email-card skeleton-loading" id="emailCard">
+                    <div class="card-icon-wrapper">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3 class="card-label">Email</h3>
+                        <p class="card-value skeleton skeleton-text" id="profileEmail" style="display: inline-block;"></p>
+                    </div>
+                </div>
+
+                <!-- Active Bookings Card -->
+                <div class="bento-card bookings-card" id="bookingsCard">
+                    <div class="card-header">
+                        <h3 class="card-title">Active Bookings</h3>
+                        <div class="card-badge" id="bookingsBadge">
+                            <span class="skeleton skeleton-badge" style="display: inline-block;"></span>
+                        </div>
+                    </div>
+                    <div class="bookings-sports" id="bookingsSports">
+                        <div class="skeleton skeleton-tag"></div>
+                        <div class="skeleton skeleton-tag"></div>
+                    </div>
+                </div>
+
+                <!-- Account Status Card -->
+                <div class="bento-card status-card">
+                    <div class="status-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="status-content">
+                        <h3 class="status-title">Account Verified</h3>
+                        <p class="status-description">Your account is secure and verified</p>
+                    </div>
+                    <div class="status-pattern"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3><i class="fas fa-futbol"></i> TurfSpot</h3>
+                    <p>Your one-stop solution for booking sports turfs across India.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="turfs.html">Browse Turfs</a></li>
+                        <li><a href="about.html">About Us</a></li>
+                        <li><a href="contact.html">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Support</h4>
+                    <ul>
+                        <li><a href="#">Help Center</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Connect</h4>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 TurfSpot. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script type="module" src="js/navbar.js"></script>
+    <script type="module" src="js/auth.js"></script>
+    <script type="module" src="js/profile.js"></script>
+</body>
+</html>

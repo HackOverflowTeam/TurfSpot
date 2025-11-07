@@ -99,7 +99,7 @@ const bookingSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'confirmed', 'cancelled', 'completed', 'no_show'],
+    enum: ['pending', 'confirmed', 'cancelled', 'completed', 'no_show', 'pending_refund', 'refund_completed', 'refund_denied'],
     default: 'pending'
   },
   cancellation: {
@@ -109,6 +109,31 @@ const bookingSchema = new mongoose.Schema({
     },
     cancelledAt: Date,
     reason: String,
+    refundAmount: Number
+  },
+  // Refund request with QR verification
+  refundRequest: {
+    qrImage: {
+      url: String,
+      publicId: String
+    },
+    reason: String,
+    requestedAt: Date,
+    requestedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    status: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'pending'
+    },
+    verifiedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    verifiedAt: Date,
+    verificationNote: String,
     refundAmount: Number
   },
   playerDetails: {

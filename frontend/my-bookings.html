@@ -4,29 +4,135 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Bookings - TurfSpot</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="css/navbar.css">
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/my-bookings.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+    <!-- ========================================
+         TURFSPOT PREMIUM NAVBAR
+         Modern, Sporty, Fully Responsive
+         ======================================== -->
     <nav class="navbar">
-        <div class="container">
-            <a href="index.html" class="nav-brand" style="text-decoration: none; color: var(--primary-color);">
-                <i class="fas fa-futbol"></i>
-                <span>TurfSpot</span>
+        <div class="navbar-container">
+            <!-- Brand/Logo -->
+            <a href="index.html" class="navbar-brand">
+                <div class="navbar-brand-icon">
+                    <i class="fas fa-futbol"></i>
+                </div>
+                <span class="navbar-brand-text">TurfSpot</span>
             </a>
-            <div class="nav-menu" id="navMenu">
-                <a href="index.html" class="nav-link">Home</a>
-                <a href="turfs.html" class="nav-link">Browse Turfs</a>
-                <a href="my-bookings.html" class="nav-link active">My Bookings</a>
+
+            <!-- Desktop Navigation Menu -->
+            <div class="navbar-menu">
+                <a href="index.html" class="navbar-link">Home</a>
+                <a href="turfs.html" class="navbar-link">Browse Turfs</a>
+                <a href="my-bookings.html" class="navbar-link active" id="myBookingsLink">My Bookings</a>
+                <a href="owner-dashboard.html" class="navbar-link" id="ownerDashLink">My Dashboard</a>
+                <a href="admin-dashboard.html" class="navbar-link" id="adminDashLink">Admin</a>
             </div>
-            <div class="nav-actions">
-                <div class="user-menu" id="userMenu">
-                    <img src="https://ui-avatars.com/api/?name=User" alt="User" class="user-avatar" id="userAvatar">
-                    <div class="dropdown-menu" id="dropdownMenu">
-                        <a href="profile.html"><i class="fas fa-user"></i> Profile</a>
-                        <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+
+            <!-- Navbar Actions (Login/Register Buttons + User Menu) -->
+            <div class="navbar-actions">
+                <!-- Login Button -->
+                <button class="btn-login" id="loginBtn">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span>Login</span>
+                </button>
+
+                <!-- Register Button -->
+                <button class="btn-register" id="registerBtn">
+                    <i class="fas fa-user-plus"></i>
+                    <span>Register</span>
+                </button>
+
+                <!-- User Menu (Hidden by default) -->
+                <div class="user-menu" id="userMenu" style="display: none;">
+                    <img src="https://ui-avatars.com/api/?name=User" alt="User Avatar" class="user-avatar" id="userAvatar">
+                    <span class="user-name" id="userName">User</span>
+
+                    <!-- Dropdown Menu -->
+                    <div class="navbar-dropdown">
+                        <a href="profile.html" class="dropdown-item">
+                            <i class="fas fa-user-circle"></i>
+                            <span>Profile</span>
+                        </a>
+                        <a href="my-bookings.html" class="dropdown-item" id="dropdownMyBookings" style="display: none;">
+                            <i class="fas fa-calendar-check"></i>
+                            <span>My Bookings</span>
+                        </a>
+                        <a href="owner-dashboard.html" class="dropdown-item" id="dropdownOwnerDash" style="display: none;">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="admin-dashboard.html" class="dropdown-item" id="dropdownAdminDash" style="display: none;">
+                            <i class="fas fa-cog"></i>
+                            <span>Admin Panel</span>
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item" id="logoutBtn">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </a>
                     </div>
                 </div>
+            </div>
+
+            <!-- Hamburger Menu (Mobile) -->
+            <div class="hamburger" id="hamburger">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div class="mobile-menu" id="mobileMenu">
+            <!-- Mobile Menu Header -->
+            <div class="mobile-menu-header">
+                <h3>Menu</h3>
+                <button class="mobile-menu-close" id="mobileMenuClose" aria-label="Close menu">×</button>
+            </div>
+
+            <div class="mobile-menu-content">
+                <a href="index.html" class="mobile-menu-link">
+                    <i class="fas fa-home"></i> Home
+                </a>
+                <a href="turfs.html" class="mobile-menu-link">
+                    <i class="fas fa-search"></i> Browse Turfs
+                </a>
+                <a href="my-bookings.html" class="mobile-menu-link active" id="mobileMyBookingsLink" style="display: none;">
+                    <i class="fas fa-calendar-check"></i> My Bookings
+                </a>
+                <a href="owner-dashboard.html" class="mobile-menu-link" id="mobileOwnerDashLink" style="display: none;">
+                    <i class="fas fa-tachometer-alt"></i> My Dashboard
+                </a>
+                <a href="admin-dashboard.html" class="mobile-menu-link" id="mobileAdminDashLink" style="display: none;">
+                    <i class="fas fa-cog"></i> Admin
+                </a>
+                <div class="mobile-menu-divider"></div>
+                <a href="profile.html" class="mobile-menu-link" id="mobileProfileLink" style="display: none;">
+                    <i class="fas fa-user-circle"></i> Profile
+                </a>
+            </div>
+
+            <!-- Mobile Action Buttons -->
+            <div class="mobile-menu-actions">
+                <button class="btn-login" id="loginBtnMobile" style="width: 100%; justify-content: center;">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+                <button class="btn-register" id="registerBtnMobile" style="width: 100%; justify-content: center;">
+                    <i class="fas fa-user-plus"></i> Register
+                </button>
+                <button class="btn-login" id="logoutBtnMobile" style="display: none; width: 100%; justify-content: center;">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
             </div>
         </div>
     </nav>
@@ -38,47 +144,73 @@
         </div>
     </section>
 
-    <section class="bookings-section">
-        <div class="container">
-            <div class="bookings-filters">
-                <button class="filter-btn active" data-status="all">All</button>
-                <button class="filter-btn" data-status="confirmed">Confirmed</button>
-                <button class="filter-btn" data-status="pending">Pending</button>
-                <button class="filter-btn" data-status="completed">Completed</button>
-                <button class="filter-btn" data-status="cancelled">Cancelled</button>
-            </div>
+    <div class="content-wrap">
+        <section class="bookings-section">
+            <div class="container page-inner">
+                <div class="bookings-filters">
+                    <button class="filter-btn active" data-status="all">All</button>
+                    <button class="filter-btn" data-status="confirmed">Confirmed</button>
+                    <button class="filter-btn" data-status="pending">Pending</button>
+                    <button class="filter-btn" data-status="completed">Completed</button>
+                    <button class="filter-btn" data-status="cancelled">Cancelled</button>
+                </div>
 
-            <div id="bookingsLoader" class="loader">
-                <i class="fas fa-spinner fa-spin"></i> Loading bookings...
-            </div>
+                <div id="bookingsLoader" class="loader">
+                    <i class="fas fa-spinner fa-spin"></i> Loading bookings...
+                </div>
 
-            <div id="bookingsContainer" style="display: none;">
-                <!-- Bookings will be loaded here -->
-            </div>
+                <div id="bookingsContainer" style="display: none;">
+                    <!-- Bookings will be loaded here -->
+                </div>
 
-            <div id="noBookings" style="display: none;" class="empty-state">
-                <i class="fas fa-calendar-times"></i>
-                <h3>No Bookings Found</h3>
-                <p>You haven't made any bookings yet.</p>
-                <a href="turfs.html" class="btn btn-primary">Browse Turfs</a>
+                <div id="noBookings" style="display: none;" class="empty-state">
+                    <i class="fas fa-calendar-times"></i>
+                    <h3>No Bookings Found</h3>
+                    <p>You haven't made any bookings yet.</p>
+                    <a href="turfs.html" class="btn btn-primary">Browse Turfs</a>
+                </div>
             </div>
-        </div>
-    </section>
+        </section>
+    </div>
 
     <!-- Cancel Booking Modal -->
     <div class="modal" id="cancelModal">
         <div class="modal-content">
             <span class="close" id="closeCancelModal">&times;</span>
-            <h2>Cancel Booking</h2>
-            <p>Are you sure you want to cancel this booking?</p>
+            <h2>Cancel Booking & Request Refund</h2>
+            <p>To process your refund, please provide the reason and attach your payment QR code.</p>
             <form id="cancelForm">
                 <div class="form-group">
-                    <label>Reason for cancellation</label>
-                    <textarea id="cancelReason" rows="3" required></textarea>
+                    <label>Reason for Cancellation*</label>
+                    <textarea id="cancelReason" rows="3" placeholder="Please explain why you're cancelling..." required></textarea>
                 </div>
+                
+                <div class="form-group qr-upload-section">
+                    <label>Attach QR for Refund*</label>
+                    <p class="help-text">
+                        <i class="fas fa-info-circle"></i> Upload your payment QR code to verify refund details
+                    </p>
+                    <div class="upload-area" id="qrUploadArea">
+                        <input type="file" id="qrImageFile" accept=".jpg,.jpeg,.png" style="display: none;">
+                        <div class="upload-placeholder" id="uploadPlaceholder">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Click to upload QR code</p>
+                            <small>JPG, PNG, JPEG only • Max 5MB</small>
+                        </div>
+                        <div class="qr-preview" id="qrPreview" style="display: none;">
+                            <img id="qrPreviewImg" src="" alt="QR Preview">
+                            <button type="button" class="btn-remove-qr" id="removeQrBtn">
+                                <i class="fas fa-times"></i> Remove
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="modal-actions">
                     <button type="button" class="btn btn-outline" id="closeCancelBtn">No, Keep It</button>
-                    <button type="submit" class="btn btn-danger">Yes, Cancel Booking</button>
+                    <button type="submit" class="btn btn-danger" id="confirmCancelBtn">
+                        <i class="fas fa-check-circle"></i> Yes, Cancel & Request Refund
+                    </button>
                 </div>
             </form>
         </div>
@@ -86,6 +218,38 @@
 
     <footer class="footer">
         <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3><i class="fas fa-futbol"></i> TurfSpot</h3>
+                    <p>Your one-stop solution for booking sports turfs across India.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="turfs.html">Browse Turfs</a></li>
+                        <li><a href="about.html">About Us</a></li>
+                        <li><a href="contact.html">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Support</h4>
+                    <ul>
+                        <li><a href="#">Help Center</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Connect</h4>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+            </div>
             <div class="footer-bottom">
                 <p>&copy; 2025 TurfSpot. All rights reserved.</p>
             </div>
@@ -107,10 +271,6 @@
                     <input type="password" id="loginPassword" required>
                 </div>
                 <button type="submit" class="btn btn-primary btn-block">Login</button>
-                <div class="divider">OR</div>
-                <button type="button" class="btn btn-google" id="googleLoginBtn">
-                    <i class="fab fa-google"></i> Continue with Google
-                </button>
                 <p class="text-center" style="margin-top: 1rem;">
                     Don't have an account? <a href="#" id="switchToRegister">Register</a>
                 </p>
@@ -148,10 +308,6 @@
                     </select>
                 </div>
                 <button type="submit" class="btn btn-primary btn-block">Register</button>
-                <div class="divider">OR</div>
-                <button type="button" class="btn btn-google" id="googleRegisterBtn">
-                    <i class="fab fa-google"></i> Continue with Google
-                </button>
                 <p class="text-center" style="margin-top: 1rem;">
                     Already have an account? <a href="#" id="switchToLogin">Login</a>
                 </p>
@@ -204,6 +360,7 @@
     </div>
 
     <script type="module" src="js/api.js"></script>
+    <script type="module" src="js/navbar.js"></script>
     <script type="module" src="js/auth.js"></script>
     <script type="module" src="js/my-bookings.js"></script>
 </body>

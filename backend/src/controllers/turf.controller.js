@@ -73,6 +73,7 @@ exports.createTurf = async (req, res) => {
 exports.getTurfs = async (req, res) => {
   try {
     const {
+      search, // Search by turf name
       city,
       sport,
       minPrice,
@@ -89,6 +90,11 @@ exports.getTurfs = async (req, res) => {
 
     // Build query
     const query = { status: 'approved', isActive: true };
+
+    // Search by turf name
+    if (search) {
+      query.name = new RegExp(search, 'i');
+    }
 
     if (city) {
       query['address.city'] = new RegExp(city, 'i');

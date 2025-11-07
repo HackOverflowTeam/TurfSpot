@@ -8,6 +8,26 @@ class AuthManager {
         this.initPromise = null;
     }
 
+    // Get user from localStorage
+    getUserFromStorage() {
+        try {
+            const userData = localStorage.getItem('user');
+            return userData ? JSON.parse(userData) : null;
+        } catch (error) {
+            console.error('Error parsing user data:', error);
+            return null;
+        }
+    }
+
+    // Set user in localStorage
+    setUserInStorage(user) {
+        if (user) {
+            localStorage.setItem('user', JSON.stringify(user));
+        } else {
+            localStorage.removeItem('user');
+        }
+    }
+
     async init() {
         if (this.initPromise) {
             return this.initPromise;
@@ -15,17 +35,31 @@ class AuthManager {
 
         this.initPromise = (async () => {
             const token = api.getToken();
+            const cachedUser = this.getUserFromStorage();
+            
             if (token) {
+                // Use cached user data for immediate UI update
+                if (cachedUser) {
+                    this.user = cachedUser;
+                    this.initialized = true;
+                    this.updateUI();
+                }
+                
                 try {
+                    // Fetch fresh user data from server
                     const response = await api.getCurrentUser();
                     this.user = response.data;
+                    this.setUserInStorage(this.user);
                     this.initialized = true;
                     this.updateUI();
                 } catch (error) {
                     console.error('Failed to get current user:', error);
-                    // Don't logout immediately, token might be invalid
-                    api.removeToken();
-                    this.user = null;
+                    // If we have cached data, keep using it
+                    if (!cachedUser) {
+                        api.removeToken();
+                        this.setUserInStorage(null);
+                        this.user = null;
+                    }
                     this.initialized = true;
                 }
             } else {
@@ -41,6 +75,7 @@ class AuthManager {
             const response = await api.login({ email, password });
             api.setToken(response.data.token);
             this.user = response.data.user;
+            this.setUserInStorage(this.user);
             this.updateUI();
             showToast('Login successful!', 'success');
             return true;
@@ -55,6 +90,7 @@ class AuthManager {
             const response = await api.register(userData);
             api.setToken(response.data.token);
             this.user = response.data.user;
+            this.setUserInStorage(this.user);
             
             // Check if email verification is required
             if (response.data.requiresEmailVerification) {
@@ -87,6 +123,7 @@ class AuthManager {
         try {
             const response = await api.verifyOTP({ otp });
             this.user = response.data.user;
+            this.setUserInStorage(this.user);
             this.updateUI();
             showToast('Email verified successfully!', 'success');
             return true;
@@ -98,6 +135,7 @@ class AuthManager {
 
     logout() {
         api.removeToken();
+        this.setUserInStorage(null);
         this.user = null;
         this.updateUI();
         showToast('Logged out successfully', 'success');
@@ -110,6 +148,7 @@ class AuthManager {
 
     setUser(user) {
         this.user = user;
+        this.setUserInStorage(user);
         this.updateUI();
     }
 
@@ -130,44 +169,90 @@ class AuthManager {
     }
 
     updateUI() {
+        // Update navbar if it exists
+        if (window.turfspotNavbar && typeof window.turfspotNavbar.updateAuthUI === 'function') {
+            window.turfspotNavbar.updateAuthUI(this.user);
+        }
+        
         const loginBtn = document.getElementById('loginBtn');
         const registerBtn = document.getElementById('registerBtn');
         const userMenu = document.getElementById('userMenu');
         const userAvatar = document.getElementById('userAvatar');
+        const userName = document.getElementById('userName');
         const myBookingsLink = document.getElementById('myBookingsLink');
         const ownerDashLink = document.getElementById('ownerDashLink');
         const adminDashLink = document.getElementById('adminDashLink');
+        
+        // Mobile elements
+        const loginBtnMobile = document.getElementById('loginBtnMobile');
+        const registerBtnMobile = document.getElementById('registerBtnMobile');
+        const logoutBtnMobile = document.getElementById('logoutBtnMobile');
+        const mobileMyBookingsLink = document.getElementById('mobileMyBookingsLink');
+        const mobileOwnerDashLink = document.getElementById('mobileOwnerDashLink');
+        const mobileAdminDashLink = document.getElementById('mobileAdminDashLink');
+        const mobileProfileLink = document.getElementById('mobileProfileLink');
 
         if (this.isAuthenticated()) {
             // Hide login/register buttons
             if (loginBtn) loginBtn.style.display = 'none';
             if (registerBtn) registerBtn.style.display = 'none';
+            if (loginBtnMobile) loginBtnMobile.style.display = 'none';
+            if (registerBtnMobile) registerBtnMobile.style.display = 'none';
+
+            // Show logout button (mobile)
+            if (logoutBtnMobile) logoutBtnMobile.style.display = 'block';
+            if (mobileProfileLink) mobileProfileLink.style.display = 'block';
 
             // Show user menu
-            if (userMenu) userMenu.style.display = 'block';
+            if (userMenu) userMenu.style.display = 'flex';
             if (userAvatar) {
                 userAvatar.src = this.user.profileImage || 
                     `https://ui-avatars.com/api/?name=${encodeURIComponent(this.user.name)}&background=10b981&color=fff`;
                 userAvatar.alt = this.user.name;
             }
+            
+            // Update user name
+            if (userName) {
+                userName.textContent = this.user.name.split(' ')[0]; // First name only
+            }
 
             // Show role-specific links
-            if (myBookingsLink && (this.hasRole('user') || this.hasRole('owner'))) {
+            if (myBookingsLink && (this.hasRole('user') || this.hasRole('owner') || this.hasRole('admin'))) {
                 myBookingsLink.style.display = 'block';
                 myBookingsLink.href = 'my-bookings.html';
             }
+            if (mobileMyBookingsLink && (this.hasRole('user') || this.hasRole('owner') || this.hasRole('admin'))) {
+                mobileMyBookingsLink.style.display = 'block';
+                mobileMyBookingsLink.href = 'my-bookings.html';
+            }
+            
             if (ownerDashLink && this.hasRole('owner')) {
                 ownerDashLink.style.display = 'block';
                 ownerDashLink.href = 'owner-dashboard.html';
             }
+            if (mobileOwnerDashLink && this.hasRole('owner')) {
+                mobileOwnerDashLink.style.display = 'block';
+                mobileOwnerDashLink.href = 'owner-dashboard.html';
+            }
+            
             if (adminDashLink && this.hasRole('admin')) {
                 adminDashLink.style.display = 'block';
                 adminDashLink.href = 'admin-dashboard.html';
+            }
+            if (mobileAdminDashLink && this.hasRole('admin')) {
+                mobileAdminDashLink.style.display = 'block';
+                mobileAdminDashLink.href = 'admin-dashboard.html';
             }
         } else {
             // Show login/register buttons
             if (loginBtn) loginBtn.style.display = 'inline-flex';
             if (registerBtn) registerBtn.style.display = 'inline-flex';
+            if (loginBtnMobile) loginBtnMobile.style.display = 'block';
+            if (registerBtnMobile) registerBtnMobile.style.display = 'block';
+
+            // Hide logout button (mobile)
+            if (logoutBtnMobile) logoutBtnMobile.style.display = 'none';
+            if (mobileProfileLink) mobileProfileLink.style.display = 'none';
 
             // Hide user menu
             if (userMenu) userMenu.style.display = 'none';
@@ -176,6 +261,9 @@ class AuthManager {
             if (myBookingsLink) myBookingsLink.style.display = 'none';
             if (ownerDashLink) ownerDashLink.style.display = 'none';
             if (adminDashLink) adminDashLink.style.display = 'none';
+            if (mobileMyBookingsLink) mobileMyBookingsLink.style.display = 'none';
+            if (mobileOwnerDashLink) mobileOwnerDashLink.style.display = 'none';
+            if (mobileAdminDashLink) mobileAdminDashLink.style.display = 'none';
         }
     }
 
@@ -235,6 +323,31 @@ document.addEventListener('DOMContentLoaded', () => {
         logoutBtn.addEventListener('click', (e) => {
             e.preventDefault();
             authManager.logout();
+        });
+    }
+
+    // Mobile logout button
+    const logoutBtnMobile = document.getElementById('logoutBtnMobile');
+    if (logoutBtnMobile) {
+        logoutBtnMobile.addEventListener('click', (e) => {
+            e.preventDefault();
+            authManager.logout();
+        });
+    }
+
+    // Mobile login button
+    const loginBtnMobile = document.getElementById('loginBtnMobile');
+    if (loginBtnMobile) {
+        loginBtnMobile.addEventListener('click', () => {
+            openLoginModal();
+        });
+    }
+
+    // Mobile register button
+    const registerBtnMobile = document.getElementById('registerBtnMobile');
+    if (registerBtnMobile) {
+        registerBtnMobile.addEventListener('click', () => {
+            openRegisterModal();
         });
     }
 
