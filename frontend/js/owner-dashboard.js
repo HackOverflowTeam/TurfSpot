@@ -900,7 +900,8 @@ async function loadPendingRefunds() {
                     </button>
                 </div>
             </div>
-        `).join('');
+        `;
+        }).join('');
     } catch (error) {
         loader.style.display = 'none';
         showToast('Failed to load pending refunds', 'error');
