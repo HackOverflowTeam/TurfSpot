@@ -1,0 +1,127 @@
+<!-- ========================================
+     TURFSPOT NAVBAR - COPY THIS FOR OTHER PAGES
+     Use this template for user-dashboard.html, owner-dashboard.html, admin-dashboard.html
+     ======================================== -->
+
+<nav class="navbar">
+    <div class="navbar-container">
+        <!-- Brand/Logo -->
+        <a href="index.html" class="navbar-brand">
+            <div class="navbar-brand-icon">
+                <i class="fas fa-futbol"></i>
+            </div>
+            <span class="navbar-brand-text">TurfSpot</span>
+        </a>
+
+        <!-- Desktop Navigation Menu -->
+        <div class="navbar-menu">
+            <a href="index.html" class="navbar-link">Home</a>
+            <a href="turfs.html" class="navbar-link">Browse Turfs</a>
+            <a href="my-bookings.html" class="navbar-link" id="myBookingsLink" style="display: none;">My Bookings</a>
+            <a href="owner-dashboard.html" class="navbar-link" id="ownerDashLink" style="display: none;">My Dashboard</a>
+            <a href="admin-dashboard.html" class="navbar-link" id="adminDashLink" style="display: none;">Admin</a>
+        </div>
+
+        <!-- Navbar Actions (Login/Register Buttons + User Menu) -->
+        <div class="navbar-actions">
+            <!-- Login Button -->
+            <button class="btn-login" id="loginBtn">
+                <i class="fas fa-sign-in-alt"></i>
+                <span>Login</span>
+            </button>
+
+            <!-- Register Button -->
+            <button class="btn-register" id="registerBtn">
+                <i class="fas fa-user-plus"></i>
+                <span>Register</span>
+            </button>
+
+            <!-- User Menu (Hidden by default) -->
+            <div class="user-menu" id="userMenu" style="display: none;">
+                <img src="https://ui-avatars.com/api/?name=User" alt="User Avatar" class="user-avatar" id="userAvatar">
+                <span class="user-name" id="userName">User</span>
+
+                <!-- Dropdown Menu -->
+                <div class="navbar-dropdown">
+                    <a href="profile.html" class="dropdown-item">
+                        <i class="fas fa-user-circle"></i>
+                        <span>Profile</span>
+                    </a>
+                    <a href="my-bookings.html" class="dropdown-item" id="dropdownMyBookings" style="display: none;">
+                        <i class="fas fa-calendar-check"></i>
+                        <span>My Bookings</span>
+                    </a>
+                    <a href="owner-dashboard.html" class="dropdown-item" id="dropdownOwnerDash" style="display: none;">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="admin-dashboard.html" class="dropdown-item" id="dropdownAdminDash" style="display: none;">
+                        <i class="fas fa-cog"></i>
+                        <span>Admin Panel</span>
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a href="#" class="dropdown-item" id="logoutBtn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hamburger Menu (Mobile) -->
+        <div class="hamburger" id="hamburger">
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+        </div>
+    </div>
+
+    <!-- Mobile Menu -->
+    <div class="mobile-menu" id="mobileMenu">
+        <div class="mobile-menu-content">
+            <a href="index.html" class="mobile-menu-link">Home</a>
+            <a href="turfs.html" class="mobile-menu-link">Browse Turfs</a>
+            <a href="my-bookings.html" class="mobile-menu-link" id="mobileMyBookingsLink" style="display: none;">My Bookings</a>
+            <a href="owner-dashboard.html" class="mobile-menu-link" id="mobileOwnerDashLink" style="display: none;">My Dashboard</a>
+            <a href="admin-dashboard.html" class="mobile-menu-link" id="mobileAdminDashLink" style="display: none;">Admin</a>
+            <div class="mobile-menu-divider"></div>
+            <a href="profile.html" class="mobile-menu-link" id="mobileProfileLink" style="display: none;">
+                <i class="fas fa-user-circle"></i> Profile
+            </a>
+        </div>
+
+        <!-- Mobile Action Buttons -->
+        <div class="mobile-menu-actions">
+            <button class="btn-login" id="loginBtnMobile" style="width: 100%; justify-content: center;">
+                <i class="fas fa-sign-in-alt"></i> Login
+            </button>
+            <button class="btn-register" id="registerBtnMobile" style="width: 100%; justify-content: center;">
+                <i class="fas fa-user-plus"></i> Register
+            </button>
+            <button class="btn-login" id="logoutBtnMobile" style="display: none; width: 100%; justify-content: center;">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </div>
+</nav>
+
+<!-- ========================================
+     INSTRUCTIONS FOR OTHER PAGES:
+     
+     1. Add this navbar HTML to the beginning of your page (after <body>)
+     2. Make sure these files are linked in <head>:
+        - <link rel="stylesheet" href="css/navbar.css">
+        - <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+     
+     3. Add these scripts before closing </body>:
+        - <script type="module" src="js/navbar.js"></script>
+        - <script type="module" src="js/auth.js"></script>
+        - Other page-specific scripts
+     
+     4. Make sure your page has body padding-top for fixed navbar:
+        - This is automatically applied by navbar.css
+     
+     5. Update the active link in navbar-menu for each page:
+        <a href="my-bookings.html" class="navbar-link active">My Bookings</a>
+     
+     ======================================== -->

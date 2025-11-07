@@ -1,0 +1,883 @@
+/* ========================================
+   TURFSPOT PREMIUM NAVBAR SYSTEM
+   Modern, Sporty, Fully Responsive
+   ======================================== */
+
+/* Reset any default margins/padding */
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
+
+body {
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow-x: hidden;
+}
+
+/* Design System Variables */
+:root {
+    /* TurfSpot Brand Colors */
+    --ts-charcoal: #1A1F1B;
+    --ts-green: #34A87E;
+    --ts-green-hover: #2E9370;
+    --ts-green-light: #3FC490;
+    --ts-white: #FFFFFF;
+    --ts-gray-light: #F5F5F5;
+    --ts-gray-medium: #888888;
+    --ts-border-radius-btn: 999px;
+    --ts-border-radius-dropdown: 8px;
+    --ts-transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --navbar-height: 70px;
+}
+
+/* ========================================
+   NAVBAR STRUCTURE
+   ======================================== */
+
+/* Main Navbar Container */
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background-color: var(--ts-charcoal);
+    height: var(--navbar-height);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.navbar-container {
+    width: 100%;
+    max-width: 1400px;
+    height: 100%;
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+}
+
+/* Add top padding to body to account for fixed navbar */
+body {
+    padding-top: var(--navbar-height);
+    margin: 0;
+}
+
+/* ========================================
+   NAVBAR BRAND/LOGO
+   ======================================== */
+
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+    color: var(--ts-white);
+    font-size: 1.5rem;
+    font-weight: 700;
+    transition: var(--ts-transition-smooth);
+    letter-spacing: -0.5px;
+    flex-shrink: 0;
+    height: 100%;
+}
+
+.navbar-brand:hover {
+    transform: scale(1.05);
+}
+
+.navbar-brand-icon {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, var(--ts-green), var(--ts-green-light));
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    color: var(--ts-white);
+    box-shadow: 0 4px 15px rgba(52, 168, 126, 0.3);
+    animation: brandPulse 3s ease-in-out infinite;
+}
+
+@keyframes brandPulse {
+    0%, 100% {
+        box-shadow: 0 4px 15px rgba(52, 168, 126, 0.3);
+    }
+    50% {
+        box-shadow: 0 4px 25px rgba(52, 168, 126, 0.5);
+    }
+}
+
+.navbar-brand-text {
+    background: linear-gradient(135deg, var(--ts-white), var(--ts-gray-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* ========================================
+   NAVBAR MENU (Desktop Navigation Links)
+   ======================================== */
+
+.navbar-menu {
+    display: flex;
+    align-items: center;
+    gap: 2.5rem;
+    flex: 1;
+    margin: 0 3rem;
+}
+
+.navbar-link {
+    color: var(--ts-white) !important;
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: var(--ts-transition-smooth);
+    position: relative;
+    letter-spacing: 0.3px;
+}
+
+.navbar-link:hover {
+    color: var(--ts-green) !important;
+}
+
+.navbar-link::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--ts-green), var(--ts-green-light));
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.navbar-link:hover::after {
+    width: 100%;
+}
+
+.navbar-link.active {
+    color: var(--ts-green) !important;
+}
+
+.navbar-link.active::after {
+    width: 100%;
+}
+
+/* ========================================
+   NAVBAR ACTIONS (Buttons)
+   ======================================== */
+
+.navbar-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-left: auto;
+    flex-shrink: 0; /* Prevent shrinking on small screens */
+}
+
+/* Login Button - Green Outline with White Background Reversal */
+.btn-login {
+    padding: 0.7rem 1.75rem;
+    background: var(--ts-white);
+    color: var(--ts-charcoal);
+    border: 2.5px solid var(--ts-green);
+    border-radius: var(--ts-border-radius-btn);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--ts-transition-smooth);
+    font-family: 'Inter', sans-serif;
+    letter-spacing: 0.3px;
+    position: relative;
+    overflow: hidden;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    min-width: fit-content;
+    height: 44px;
+    line-height: 1;
+}
+
+.btn-login::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: var(--ts-green);
+    transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: -1;
+}
+
+.btn-login:hover::before {
+    left: 0;
+}
+
+.btn-login:hover {
+    color: var(--ts-white);
+    border-color: var(--ts-green-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(52, 168, 126, 0.35);
+}
+
+.btn-login:active {
+    transform: translateY(0);
+}
+
+/* Register Button - Solid Green with Elevation */
+.btn-register {
+    padding: 0.7rem 1.75rem;
+    background: linear-gradient(135deg, var(--ts-green), var(--ts-green-light));
+    color: var(--ts-white);
+    border: none;
+    border-radius: var(--ts-border-radius-btn);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--ts-transition-smooth);
+    font-family: 'Inter', sans-serif;
+    letter-spacing: 0.3px;
+    position: relative;
+    overflow: hidden;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 15px rgba(52, 168, 126, 0.25);
+    white-space: nowrap;
+    flex-shrink: 0;
+    min-width: fit-content;
+    height: 44px;
+    line-height: 1;
+}
+
+.btn-register::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.btn-register:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+.btn-register:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px rgba(52, 168, 126, 0.45);
+    background: linear-gradient(135deg, var(--ts-green-light), var(--ts-green));
+}
+
+.btn-register:active {
+    transform: translateY(-1px);
+}
+
+/* ========================================
+   USER MENU / PROFILE
+   ======================================== */
+
+.user-menu {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: relative;
+}
+
+.user-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: var(--ts-transition-smooth);
+    border: 2px solid var(--ts-green);
+    object-fit: cover;
+}
+
+.user-avatar:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(52, 168, 126, 0.4);
+}
+
+.user-name {
+    color: var(--ts-white);
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+/* Dropdown Menu */
+.navbar-dropdown {
+    position: absolute;
+    top: calc(100% + 1rem);
+    right: 0;
+    background: var(--ts-white);
+    border-radius: var(--ts-border-radius-dropdown);
+    min-width: 200px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: var(--ts-transition-smooth);
+    z-index: 1001;
+    overflow: hidden;
+}
+
+.user-menu.active .navbar-dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.85rem 1.25rem;
+    color: var(--ts-charcoal);
+    text-decoration: none;
+    transition: var(--ts-transition-smooth);
+    font-weight: 500;
+    border-left: 3px solid transparent;
+}
+
+.dropdown-item:first-child {
+    border-top: 1px solid var(--ts-gray-light);
+}
+
+.dropdown-item:hover {
+    background: var(--ts-gray-light);
+    color: var(--ts-green);
+    border-left-color: var(--ts-green);
+    padding-left: 1.5rem;
+}
+
+.dropdown-item i {
+    width: 18px;
+    text-align: center;
+}
+
+.dropdown-divider {
+    height: 1px;
+    background: var(--ts-gray-light);
+    margin: 0.5rem 0;
+}
+
+/* ========================================
+/* ========================================
+   HAMBURGER MENU (Mobile)
+   ======================================== */
+
+.hamburger {
+    display: none;
+    flex-direction: column;
+    cursor: pointer;
+    gap: 6px;
+    width: 30px;
+    height: 24px;
+    z-index: 1001;
+    flex-shrink: 0; /* Prevent hamburger from shrinking */
+    margin-left: 12px; /* Consistent spacing from buttons */
+    background: transparent;
+    border: none;
+    padding: 0;
+    position: relative;
+}
+
+.hamburger-line {
+    width: 100%;
+    height: 2.5px;
+    background: var(--ts-white);
+    border-radius: 2px;
+    transition: var(--ts-transition-smooth);
+    transform-origin: center;
+    display: block;
+}
+
+.hamburger.active .hamburger-line:nth-child(1) {
+    transform: translateY(8.5px) rotate(45deg);
+    background: var(--ts-white);
+}
+
+.hamburger.active .hamburger-line:nth-child(2) {
+    opacity: 0;
+    transform: translateX(-20px);
+}
+
+.hamburger.active .hamburger-line:nth-child(3) {
+    transform: translateY(-8.5px) rotate(-45deg);
+    background: var(--ts-white);
+}
+
+/* ========================================
+   MOBILE MENU (Slide-out Animation)
+   ======================================== */
+
+.mobile-menu {
+    position: fixed;
+    top: 70px;
+    left: 0;
+    width: 100%;
+    max-height: calc(100vh - 70px);
+    background: var(--ts-charcoal);
+    display: none;
+    flex-direction: column;
+    transform: translateX(-100%);
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 999;
+    overflow-y: auto;
+    border-top: 2px solid var(--ts-green);
+}
+
+.mobile-menu.active {
+    display: flex;
+    transform: translateX(0);
+}
+
+.mobile-menu-content {
+    padding: 1.5rem 0;
+}
+
+.mobile-menu-link {
+    display: block;
+    padding: 1rem 2rem;
+    color: var(--ts-white);
+    text-decoration: none;
+    font-weight: 500;
+    transition: var(--ts-transition-smooth);
+    border-left: 3px solid transparent;
+    font-size: 0.95rem;
+}
+
+.mobile-menu-link:hover {
+    background: rgba(52, 168, 126, 0.1);
+    color: var(--ts-green);
+    border-left-color: var(--ts-green);
+    padding-left: 2.25rem;
+}
+
+.mobile-menu-link.active {
+    background: rgba(52, 168, 126, 0.15);
+    color: var(--ts-green);
+    border-left-color: var(--ts-green);
+}
+
+.mobile-menu-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 1rem 0;
+}
+
+.mobile-menu-actions {
+    padding: 1.5rem 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mobile-menu-actions .btn-login,
+.mobile-menu-actions .btn-register {
+    width: 100%;
+    justify-content: center;
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
+
+/* Tablet (768px - 1024px) */
+@media (max-width: 1024px) {
+    .navbar-container {
+        padding: 0 1.5rem;
+        gap: 1.25rem;
+    }
+
+    .navbar-menu {
+        margin: 0 1.5rem;
+        gap: 1.5rem;
+    }
+
+    .navbar-link {
+        font-size: 0.9rem;
+    }
+
+    .navbar-actions {
+        gap: 12px;
+    }
+
+    .btn-login,
+    .btn-register {
+        padding: 0.65rem 1.5rem;
+        font-size: 0.9rem;
+    }
+}
+
+/* Mobile (max-width: 768px) */
+@media (max-width: 768px) {
+    :root {
+        --navbar-height: 70px; /* Keep consistent height */
+    }
+
+    .navbar-container {
+        padding: 0 1rem;
+        gap: 1rem;
+    }
+
+    .navbar-brand {
+        gap: 0.6rem;
+        font-size: 1.3rem;
+    }
+
+    .navbar-brand-icon {
+        width: 38px;
+        height: 38px;
+        font-size: 1.15rem;
+    }
+
+    /* Hide desktop menu */
+    .navbar-menu {
+        display: none;
+    }
+
+    /* Show hamburger */
+    .hamburger {
+        display: flex;
+    }
+
+    /* Keep auth buttons visible and properly spaced */
+    .navbar-actions {
+        gap: 10px;
+        margin-right: 0;
+    }
+
+    .btn-login,
+    .btn-register {
+        padding: 0.6rem 1.4rem;
+        font-size: 0.88rem;
+        height: 42px;
+    }
+
+    /* Ensure user menu fits nicely */
+    .user-menu {
+        gap: 8px;
+    }
+
+    .user-avatar {
+        width: 38px;
+        height: 38px;
+    }
+
+    .user-name {
+        font-size: 0.88rem;
+    }
+}
+
+/* Small Mobile (max-width: 520px) - Stack buttons if needed */
+@media (max-width: 520px) {
+    .navbar-container {
+        padding: 0 0.875rem;
+        gap: 0.875rem;
+    }
+
+    .navbar-brand {
+        font-size: 1.2rem;
+    }
+
+    .navbar-brand-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 1.1rem;
+    }
+
+    .navbar-actions {
+        gap: 8px;
+    }
+
+    .btn-login,
+    .btn-register {
+        padding: 0.55rem 1.2rem;
+        font-size: 0.85rem;
+        height: 40px;
+        gap: 6px;
+    }
+
+    .btn-login i,
+    .btn-register i {
+        font-size: 0.85rem;
+    }
+
+    .hamburger {
+        width: 28px;
+        margin-left: 10px;
+    }
+}
+
+/* Extra Small Mobile (max-width: 400px) */
+@media (max-width: 400px) {
+    .navbar-container {
+        padding: 0 0.75rem;
+        gap: 0.75rem;
+    }
+
+    .navbar-brand-text {
+        display: none; /* Hide text, keep icon only */
+    }
+
+    .navbar-brand-icon {
+        width: 34px;
+        height: 34px;
+        font-size: 1rem;
+    }
+
+    .navbar-actions {
+        gap: 7px;
+    }
+
+    .btn-login,
+    .btn-register {
+        padding: 0.5rem 1.1rem;
+        font-size: 0.82rem;
+        height: 38px;
+        gap: 5px;
+    }
+
+    .btn-login i,
+    .btn-register i {
+        font-size: 0.82rem;
+    }
+
+    .user-avatar {
+        width: 36px;
+        height: 36px;
+    }
+
+    .hamburger {
+        width: 26px;
+        margin-left: 8px;
+    }
+
+    .hamburger-line {
+        height: 2.5px;
+    }
+}
+
+/* Ultra Small Mobile (max-width: 360px) - Very tight spacing */
+@media (max-width: 360px) {
+    .navbar-container {
+        padding: 0 0.625rem;
+        gap: 0.625rem;
+    }
+
+    .navbar-brand-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 0.95rem;
+    }
+
+    .navbar-actions {
+        gap: 6px;
+    }
+
+    .btn-login,
+    .btn-register {
+        padding: 0.45rem 1rem;
+        font-size: 0.78rem;
+        height: 36px;
+        gap: 4px;
+    }
+
+    .btn-login i,
+    .btn-register i {
+        font-size: 0.78rem;
+    }
+
+    .hamburger {
+        width: 24px;
+        margin-left: 6px;
+    }
+
+    .hamburger-line {
+        height: 2px;
+    }
+}
+
+/* Critical Small Screens - Maintain quality without overflow */
+@media (max-width: 340px) {
+    .navbar-container {
+        padding: 0 0.5rem;
+        gap: 0.5rem;
+    }
+
+    .navbar-brand-icon {
+        width: 30px;
+        height: 30px;
+        font-size: 0.9rem;
+    }
+
+    .navbar-actions {
+        gap: 5px;
+    }
+
+    .btn-login,
+    .btn-register {
+        padding: 0.4rem 0.9rem;
+        font-size: 0.75rem;
+        height: 34px;
+        gap: 3px;
+    }
+
+    .btn-login i,
+    .btn-register i {
+        font-size: 0.75rem;
+    }
+
+    .hamburger {
+        width: 22px;
+        margin-left: 5px;
+    }
+}
+
+/* ========================================
+   ACCESSIBILITY & ANIMATIONS
+   ======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Focus states for keyboard navigation */
+.navbar-link:focus,
+.btn-login:focus,
+.btn-register:focus,
+.dropdown-item:focus,
+.mobile-menu-link:focus {
+    outline: 2px solid var(--ts-green);
+    outline-offset: 2px;
+}
+
+/* ========================================
+   UTILITY CLASSES
+   ======================================== */
+
+.navbar-hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.navbar-visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Prevent button text from wrapping */
+.btn-login span,
+.btn-register span {
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+}
+
+/* Ensure icons don't shrink */
+.btn-login i,
+.btn-register i {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1em;
+    height: 1em;
+}
+
+/* Smooth scrollbar for mobile menu */
+.mobile-menu::-webkit-scrollbar {
+    width: 6px;
+}
+
+.mobile-menu::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.mobile-menu::-webkit-scrollbar-thumb {
+    background: var(--ts-green);
+    border-radius: 3px;
+}
+
+.mobile-menu::-webkit-scrollbar-thumb:hover {
+    background: var(--ts-green-hover);
+}
+
+/* ========================================
+   DROPDOWN & PROFILE MENU STYLING
+   ======================================== */
+
+.navbar-dropdown-trigger {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: var(--ts-transition-smooth);
+}
+
+.navbar-dropdown-trigger:hover {
+    color: var(--ts-green);
+}
+
+.navbar-dropdown-icon {
+    font-size: 0.8rem;
+    transition: transform 0.3s ease;
+}
+
+.user-menu.active .navbar-dropdown-icon {
+    transform: rotate(180deg);
+}
+
+/* ========================================
+   FUTURE-PROOF THEME CONSISTENCY
+   ======================================== */
+
+/* Ensure all future dropdowns follow theme */
+.navbar-dropdown,
+[class*="dropdown"],
+[class*="menu"] {
+    /* Inherit TurfSpot theme */
+    --dropdown-bg: var(--ts-white);
+    --dropdown-text: var(--ts-charcoal);
+    --dropdown-hover-bg: var(--ts-gray-light);
+    --dropdown-hover-text: var(--ts-green);
+    --dropdown-border-radius: var(--ts-border-radius-dropdown);
+}
+
+/* Theme consistency for buttons */
+[class*="btn-"] {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-weight: 600;
+}

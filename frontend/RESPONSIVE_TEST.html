@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TurfSpot Navbar - Responsive Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #1A1F1B;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #34A87E;
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+        }
+
+        .test-section {
+            margin-bottom: 40px;
+        }
+
+        .test-section h2 {
+            color: #1A1F1B;
+            margin-bottom: 15px;
+            border-left: 4px solid #34A87E;
+            padding-left: 15px;
+        }
+
+        .device-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .device-card {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 3px solid #34A87E;
+        }
+
+        .device-card h3 {
+            color: #1A1F1B;
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+        }
+
+        .device-card p {
+            color: #666;
+            margin: 5px 0;
+            font-size: 0.9rem;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .status.ready {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+
+        .checklist li {
+            padding: 12px 15px;
+            margin: 8px 0;
+            background: #f9f9f9;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+        }
+
+        .checklist li:before {
+            content: "☐";
+            font-size: 1.5rem;
+            color: #34A87E;
+            margin-right: 12px;
+            font-weight: bold;
+        }
+
+        .checklist li:hover {
+            background: #e8f5e9;
+        }
+
+        .button-demo {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: #1A1F1B;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .btn-login-demo {
+            padding: 0.65rem 1.5rem;
+            background: white;
+            color: #1A1F1B;
+            border: 2.5px solid #34A87E;
+            border-radius: 999px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .btn-register-demo {
+            padding: 0.65rem 1.5rem;
+            background: linear-gradient(135deg, #34A87E, #3FC490);
+            color: white;
+            border: none;
+            border-radius: 999px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(52, 168, 126, 0.25);
+        }
+
+        .breakpoint-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .breakpoint-table th,
+        .breakpoint-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .breakpoint-table th {
+            background: #1A1F1B;
+            color: white;
+            font-weight: 600;
+        }
+
+        .breakpoint-table tr:hover {
+            background: #f5f5f5;
+        }
+
+        .instructions {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+
+        .instructions h3 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .instructions ol {
+            margin-left: 20px;
+        }
+
+        .instructions li {
+            margin: 8px 0;
+            color: #856404;
+        }
+
+        .test-link {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #34A87E;
+            color: white;
+            text-decoration: none;
+            border-radius: 999px;
+            font-weight: 600;
+            margin: 10px 10px 10px 0;
+            transition: all 0.3s ease;
+        }
+
+        .test-link:hover {
+            background: #2E9370;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52, 168, 126, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🎯 TurfSpot Navbar - Responsive Testing Guide</h1>
+        <p class="subtitle">Comprehensive testing checklist for all screen sizes</p>
+
+        <!-- Quick Actions -->
+        <div class="test-section">
+            <h2>🚀 Quick Test Links</h2>
+            <a href="index.html" class="test-link" target="_blank">Open Homepage</a>
+            <a href="index.html" class="test-link" target="_blank">Open in New Window</a>
+        </div>
+
+        <!-- Responsive Breakpoints -->
+        <div class="test-section">
+            <h2>📱 Responsive Breakpoints</h2>
+            <table class="breakpoint-table">
+                <thead>
+                    <tr>
+                        <th>Screen Size</th>
+                        <th>Width Range</th>
+                        <th>Navbar Height</th>
+                        <th>Button Size</th>
+                        <th>Features</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Desktop</strong></td>
+                        <td>1024px+</td>
+                        <td>70px</td>
+                        <td>0.95rem</td>
+                        <td>Full menu, all buttons visible</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Tablet</strong></td>
+                        <td>768px - 1024px</td>
+                        <td>70px</td>
+                        <td>0.9rem</td>
+                        <td>Full menu, reduced spacing</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Mobile</strong></td>
+                        <td>480px - 768px</td>
+                        <td>65px</td>
+                        <td>0.85rem</td>
+                        <td>Hamburger menu, buttons visible</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Small Mobile</strong></td>
+                        <td>360px - 480px</td>
+                        <td>60px</td>
+                        <td>0.8rem</td>
+                        <td>Logo icon only, compact buttons</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Extra Small</strong></td>
+                        <td>320px - 360px</td>
+                        <td>60px</td>
+                        <td>0.75rem</td>
+                        <td>Maximum compression</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Ultra Small</strong></td>
+                        <td>Below 320px</td>
+                        <td>60px</td>
+                        <td>0.7rem</td>
+                        <td>Safety net for oldest devices</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Device Testing -->
+        <div class="test-section">
+            <h2>📱 Test on These Devices</h2>
+            <div class="device-list">
+                <div class="device-card">
+                    <h3>iPhone SE</h3>
+                    <p><strong>Size:</strong> 375 x 667px</p>
+                    <p><strong>Test:</strong> Buttons centered, no overlap</p>
+                    <span class="status ready">✓ Ready</span>
+                </div>
+                <div class="device-card">
+                    <h3>iPhone 12/13/14</h3>
+                    <p><strong>Size:</strong> 390 x 844px</p>
+                    <p><strong>Test:</strong> Perfect spacing</p>
+                    <span class="status ready">✓ Ready</span>
+                </div>
+                <div class="device-card">
+                    <h3>iPhone Pro Max</h3>
+                    <p><strong>Size:</strong> 428 x 926px</p>
+                    <p><strong>Test:</strong> Full layout visible</p>
+                    <span class="status ready">✓ Ready</span>
+                </div>
+                <div class="device-card">
+                    <h3>Samsung Galaxy S20</h3>
+                    <p><strong>Size:</strong> 360 x 800px</p>
+                    <p><strong>Test:</strong> Compact but readable</p>
+                    <span class="status ready">✓ Ready</span>
+                </div>
+                <div class="device-card">
+                    <h3>iPad Mini</h3>
+                    <p><strong>Size:</strong> 768 x 1024px</p>
+                    <p><strong>Test:</strong> Tablet layout</p>
+                    <span class="status ready">✓ Ready</span>
+                </div>
+                <div class="device-card">
+                    <h3>Desktop</h3>
+                    <p><strong>Size:</strong> 1920 x 1080px</p>
+                    <p><strong>Test:</strong> Full featured</p>
+                    <span class="status ready">✓ Ready</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Testing Instructions -->
+        <div class="test-section">
+            <h2>📋 Testing Instructions</h2>
+            <div class="instructions">
+                <h3>How to Test:</h3>
+                <ol>
+                    <li>Open <strong>index.html</strong> in your browser</li>
+                    <li>Open <strong>Chrome DevTools</strong> (F12 or Cmd+Option+I)</li>
+                    <li>Click the <strong>Device Toolbar</strong> icon (📱 icon or Cmd+Shift+M)</li>
+                    <li>Select different devices from the dropdown</li>
+                    <li>Or manually resize the browser window</li>
+                    <li>Check each item in the checklist below</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- Button Demo -->
+        <div class="test-section">
+            <h2>🎨 Button Reference</h2>
+            <p style="margin-bottom: 15px;">This is how the buttons should look:</p>
+            <div class="button-demo">
+                <button class="btn-login-demo">
+                    <span>🔓</span>
+                    <span>Login</span>
+                </button>
+                <button class="btn-register-demo">
+                    <span>👤</span>
+                    <span>Register</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Visual Checklist -->
+        <div class="test-section">
+            <h2>✅ Visual Testing Checklist</h2>
+            <ul class="checklist">
+                <li>Logo never overlaps with buttons</li>
+                <li>Login and Register buttons are centered horizontally</li>
+                <li>Buttons have consistent spacing (gap visible between them)</li>
+                <li>Buttons never touch the screen edges</li>
+                <li>Button text never wraps to second line</li>
+                <li>Icons inside buttons are always visible</li>
+                <li>Icons maintain proper size (not squished)</li>
+                <li>Hamburger menu aligns perfectly to the right</li>
+                <li>Hamburger doesn't shift logo position</li>
+                <li>No horizontal scrollbar appears on any screen size</li>
+                <li>All elements fit on one line</li>
+                <li>Text remains readable on smallest screen (320px)</li>
+            </ul>
+        </div>
+
+        <!-- Interaction Checklist -->
+        <div class="test-section">
+            <h2>🖱️ Interaction Testing Checklist</h2>
+            <ul class="checklist">
+                <li>Login button opens login modal</li>
+                <li>Register button opens register modal</li>
+                <li>Hamburger menu opens mobile menu</li>
+                <li>Mobile menu slides in smoothly</li>
+                <li>Clicking outside closes mobile menu</li>
+                <li>All buttons have hover effects (desktop)</li>
+                <li>Touch feedback works on mobile</li>
+                <li>User dropdown appears after login</li>
+                <li>Navbar stays fixed at top while scrolling</li>
+                <li>Smooth transitions on all interactions</li>
+            </ul>
+        </div>
+
+        <!-- Spacing Test -->
+        <div class="test-section">
+            <h2>📏 Spacing Verification</h2>
+            <div class="instructions">
+                <h3>Check These Spacing Rules:</h3>
+                <ol>
+                    <li><strong>Container Padding:</strong> Never less than 0.4rem on smallest screens</li>
+                    <li><strong>Button Gap:</strong> Always visible space between Login and Register</li>
+                    <li><strong>Icon Gap:</strong> Space between icon and text in buttons</li>
+                    <li><strong>Hamburger Spacing:</strong> 12px → 8px → 6px as screen shrinks</li>
+                    <li><strong>Edge Clearance:</strong> Minimum 0.4rem from screen edges</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- Common Issues -->
+        <div class="test-section">
+            <h2>🐛 Common Issues to Check</h2>
+            <ul class="checklist">
+                <li>Buttons squished or text cut off</li>
+                <li>Horizontal scrollbar appearing</li>
+                <li>Logo overlapping buttons</li>
+                <li>Hamburger shifting logo position</li>
+                <li>Buttons touching screen edges</li>
+                <li>Text wrapping inside buttons</li>
+                <li>Icons shrinking or disappearing</li>
+                <li>Uneven spacing between elements</li>
+                <li>Navbar height changing unexpectedly</li>
+                <li>Elements jumping during resize</li>
+            </ul>
+        </div>
+
+        <!-- Browser Testing -->
+        <div class="test-section">
+            <h2>🌐 Browser Compatibility Test</h2>
+            <div class="device-list">
+                <div class="device-card">
+                    <h3>Chrome</h3>
+                    <p>Version 88+</p>
+                    <span class="status ready">✓ Supported</span>
+                </div>
+                <div class="device-card">
+                    <h3>Safari</h3>
+                    <p>Version 14+</p>
+                    <span class="status ready">✓ Supported</span>
+                </div>
+                <div class="device-card">
+                    <h3>Firefox</h3>
+                    <p>Version 85+</p>
+                    <span class="status ready">✓ Supported</span>
+                </div>
+                <div class="device-card">
+                    <h3>Edge</h3>
+                    <p>Version 88+</p>
+                    <span class="status ready">✓ Supported</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Final Notes -->
+        <div class="test-section">
+            <div class="instructions">
+                <h3>✨ Testing Complete?</h3>
+                <p style="margin-top: 10px;">If all items in the checklists pass, your navbar is production-ready! 🎉</p>
+                <p style="margin-top: 10px;">For any issues, refer to:</p>
+                <ul style="margin-left: 20px; margin-top: 10px;">
+                    <li><strong>MOBILE_RESPONSIVE_GUIDE.md</strong> - Detailed responsive documentation</li>
+                    <li><strong>DESIGN_SYSTEM.md</strong> - Design specifications</li>
+                    <li><strong>NAVBAR_IMPLEMENTATION.md</strong> - Implementation guide</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

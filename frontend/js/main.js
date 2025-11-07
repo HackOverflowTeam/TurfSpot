@@ -1,5 +1,6 @@
 import api, { showToast } from './api.js';
 import authManager from './auth.js';
+import TurfSpotNavbar from './navbar.js';
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
@@ -10,8 +11,11 @@ async function initializeApp() {
     // Initialize auth first
     await authManager.init();
     
+    // Initialize navbar
+    const navbar = window.turfspotNavbar || new TurfSpotNavbar();
+    
     // Check authentication and update UI
-    updateAuthUI();
+    updateAuthUI(navbar);
     
     // Load popular turfs on homepage
     if (document.getElementById('popularTurfs')) {
@@ -24,34 +28,57 @@ async function initializeApp() {
 }
 
 // Update UI based on auth status
-function updateAuthUI() {
-    const navButtons = document.getElementById('navButtons');
+function updateAuthUI(navbar) {
     const user = authManager.getUser();
     
-    if (user && navButtons) {
-        // User is logged in
-        let dashboardLink = '';
-        let dashboardText = 'Dashboard';
-        
-        if (user.role === 'admin') {
-            dashboardLink = 'admin-dashboard.html';
-            dashboardText = 'Admin Panel';
-        } else if (user.role === 'owner') {
-            dashboardLink = 'owner-dashboard.html';
-            dashboardText = 'My Dashboard';
-        } else {
-            dashboardLink = 'my-bookings.html';
-            dashboardText = 'My Bookings';
-        }
-        
-        navButtons.innerHTML = `
-            <a href="${dashboardLink}" class="btn-secondary">
-                <i class="fas fa-user"></i> ${dashboardText}
-            </a>
-            <button class="btn-primary" onclick="handleLogout()">
-                <i class="fas fa-sign-out-alt"></i> Logout
-            </button>
-        `;
+    // Update navbar UI
+    if (navbar) {
+        navbar.updateAuthUI(user);
+    }
+    
+    // Sync auth buttons
+    const loginBtn = document.getElementById('loginBtn');
+    const registerBtn = document.getElementById('registerBtn');
+    const loginBtnMobile = document.getElementById('loginBtnMobile');
+    const registerBtnMobile = document.getElementById('registerBtnMobile');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const logoutBtnMobile = document.getElementById('logoutBtnMobile');
+    
+    // Setup login/register button clicks
+    if (loginBtn) {
+        loginBtn.addEventListener('click', () => {
+            showLoginModal();
+        });
+    }
+    if (loginBtnMobile) {
+        loginBtnMobile.addEventListener('click', () => {
+            showLoginModal();
+        });
+    }
+    
+    if (registerBtn) {
+        registerBtn.addEventListener('click', () => {
+            showRegisterModal();
+        });
+    }
+    if (registerBtnMobile) {
+        registerBtnMobile.addEventListener('click', () => {
+            showRegisterModal();
+        });
+    }
+    
+    // Setup logout button
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            handleLogout();
+        });
+    }
+    if (logoutBtnMobile) {
+        logoutBtnMobile.addEventListener('click', (e) => {
+            e.preventDefault();
+            handleLogout();
+        });
     }
 }
 
@@ -67,17 +94,7 @@ function setupEventListeners() {
     const becomeOwnerBtn = document.getElementById('becomeOwnerBtn');
     if (becomeOwnerBtn) {
         becomeOwnerBtn.addEventListener('click', () => {
-            showOwnerSignup();
-        });
-    }
-    
-    // Hamburger menu
-    const hamburger = document.querySelector('.hamburger');
-    const navMenu = document.querySelector('.nav-menu');
-    if (hamburger && navMenu) {
-        hamburger.addEventListener('click', () => {
-            navMenu.classList.toggle('active');
-            hamburger.classList.toggle('active');
+            showRegisterModal();
         });
     }
 }
@@ -222,32 +239,18 @@ window.showLoginModal = function() {
     }
 };
 
-window.showSignupModal = function() {
-    const modal = document.getElementById('signupModal');
+window.showRegisterModal = function() {
+    const modal = document.getElementById('registerModal');
     if (modal) {
         modal.classList.add('active');
     }
 };
+
+window.showLoginModal = showLoginModal;
+window.showRegisterModal = showRegisterModal;
 
 window.showOwnerSignup = function() {
-    const modal = document.getElementById('ownerSignupModal');
-    if (modal) {
-        modal.classList.add('active');
-    }
-};
-
-window.openOtpModal = function() {
-    const modal = document.getElementById('otpModal');
-    if (modal) {
-        modal.classList.add('active');
-    }
-};
-
-window.closeModal = function(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.classList.remove('active');
-    }
+    showRegisterModal();
 };
 
 // Close modal when clicking outside

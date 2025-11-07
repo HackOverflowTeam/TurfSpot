@@ -4,39 +4,126 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TurfSpot - Book Your Perfect Turf</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="css/navbar.css">
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Critical CSS - Ensure no white space at top */
+        html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow-x: hidden;
+        }
+    </style>
 </head>
-<body>
-    <!-- Navigation -->
+<body style="margin: 0; padding: 0;">
+    <!-- ========================================
+         TURFSPOT PREMIUM NAVBAR
+         Modern, Sporty, Fully Responsive
+         ======================================== -->
     <nav class="navbar">
-        <div class="container">
-            <a href="index.html" class="nav-brand" style="text-decoration: none; color: var(--primary-color);">
-                <i class="fas fa-futbol"></i>
-                <span>TurfSpot</span>
+        <div class="navbar-container">
+            <!-- Brand/Logo -->
+            <a href="index.html" class="navbar-brand">
+                <div class="navbar-brand-icon">
+                    <i class="fas fa-futbol"></i>
+                </div>
+                <span class="navbar-brand-text">TurfSpot</span>
             </a>
-            <div class="nav-menu" id="navMenu">
-                <a href="index.html" class="nav-link active">Home</a>
-                <a href="turfs.html" class="nav-link">Browse Turfs</a>
-                <a href="my-bookings.html" class="nav-link" id="myBookingsLink" style="display: none;">My Bookings</a>
-                <a href="owner-dashboard.html" class="nav-link" id="ownerDashLink" style="display: none;">My Dashboard</a>
-                <a href="admin-dashboard.html" class="nav-link" id="adminDashLink" style="display: none;">Admin</a>
+
+            <!-- Desktop Navigation Menu -->
+            <div class="navbar-menu">
+                <a href="index.html" class="navbar-link active">Home</a>
+                <a href="turfs.html" class="navbar-link">Browse Turfs</a>
+                <a href="my-bookings.html" class="navbar-link" id="myBookingsLink" style="display: none;">My Bookings</a>
+                <a href="owner-dashboard.html" class="navbar-link" id="ownerDashLink" style="display: none;">My Dashboard</a>
+                <a href="admin-dashboard.html" class="navbar-link" id="adminDashLink" style="display: none;">Admin</a>
             </div>
-            <div class="nav-actions">
-                <button class="btn btn-outline" id="loginBtn">Login</button>
-                <button class="btn btn-primary" id="registerBtn">Register</button>
+
+            <!-- Navbar Actions (Login/Register Buttons + User Menu) -->
+            <div class="navbar-actions">
+                <!-- Login Button -->
+                <button class="btn-login" id="loginBtn">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span>Login</span>
+                </button>
+
+                <!-- Register Button -->
+                <button class="btn-register" id="registerBtn">
+                    <i class="fas fa-user-plus"></i>
+                    <span>Register</span>
+                </button>
+
+                <!-- User Menu (Hidden by default) -->
                 <div class="user-menu" id="userMenu" style="display: none;">
-                    <img src="https://ui-avatars.com/api/?name=User" alt="User" class="user-avatar" id="userAvatar">
-                    <div class="dropdown-menu" id="dropdownMenu">
-                        <a href="profile.html"><i class="fas fa-user"></i> Profile</a>
-                        <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    <img src="https://ui-avatars.com/api/?name=User" alt="User Avatar" class="user-avatar" id="userAvatar">
+                    <span class="user-name" id="userName">User</span>
+
+                    <!-- Dropdown Menu -->
+                    <div class="navbar-dropdown">
+                        <a href="profile.html" class="dropdown-item">
+                            <i class="fas fa-user-circle"></i>
+                            <span>Profile</span>
+                        </a>
+                        <a href="my-bookings.html" class="dropdown-item" id="dropdownMyBookings" style="display: none;">
+                            <i class="fas fa-calendar-check"></i>
+                            <span>My Bookings</span>
+                        </a>
+                        <a href="owner-dashboard.html" class="dropdown-item" id="dropdownOwnerDash" style="display: none;">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="admin-dashboard.html" class="dropdown-item" id="dropdownAdminDash" style="display: none;">
+                            <i class="fas fa-cog"></i>
+                            <span>Admin Panel</span>
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item" id="logoutBtn">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </a>
                     </div>
                 </div>
             </div>
+
+            <!-- Hamburger Menu (Mobile) -->
             <div class="hamburger" id="hamburger">
-                <span></span>
-                <span></span>
-                <span></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div class="mobile-menu" id="mobileMenu">
+            <div class="mobile-menu-content">
+                <a href="index.html" class="mobile-menu-link active">Home</a>
+                <a href="turfs.html" class="mobile-menu-link">Browse Turfs</a>
+                <a href="my-bookings.html" class="mobile-menu-link" id="mobileMyBookingsLink" style="display: none;">My Bookings</a>
+                <a href="owner-dashboard.html" class="mobile-menu-link" id="mobileOwnerDashLink" style="display: none;">My Dashboard</a>
+                <a href="admin-dashboard.html" class="mobile-menu-link" id="mobileAdminDashLink" style="display: none;">Admin</a>
+                <div class="mobile-menu-divider"></div>
+                <a href="profile.html" class="mobile-menu-link" id="mobileProfileLink" style="display: none;">
+                    <i class="fas fa-user-circle"></i> Profile
+                </a>
+            </div>
+
+            <!-- Mobile Action Buttons -->
+            <div class="mobile-menu-actions">
+                <button class="btn-login" id="loginBtnMobile" style="width: 100%; justify-content: center;">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+                <button class="btn-register" id="registerBtnMobile" style="width: 100%; justify-content: center;">
+                    <i class="fas fa-user-plus"></i> Register
+                </button>
+                <button class="btn-login" id="logoutBtnMobile" style="display: none; width: 100%; justify-content: center;">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
             </div>
         </div>
     </nav>
@@ -345,6 +432,7 @@
 
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script type="module" src="js/api.js"></script>
+    <script type="module" src="js/navbar.js"></script>
     <script type="module" src="js/auth.js"></script>
     <script type="module" src="js/main.js"></script>
 </body>
