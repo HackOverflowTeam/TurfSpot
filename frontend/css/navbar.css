@@ -1,6 +1,7 @@
 /* ========================================
    TURFSPOT PREMIUM NAVBAR SYSTEM
    Modern, Sporty, Fully Responsive
+   Version: 2.1 - Fixed Navigation Link Visibility
    ======================================== */
 
 /* Reset any default margins/padding */
@@ -140,18 +141,28 @@ body {
     margin: 0 3rem;
 }
 
+/* Navigation Links - High Specificity */
+.navbar .navbar-menu .navbar-link,
 .navbar-link {
-    color: var(--ts-white) !important;
-    text-decoration: none;
+    color: #FFFFFF !important;
+    text-decoration: none !important;
     font-size: 0.95rem;
     font-weight: 500;
     transition: var(--ts-transition-smooth);
     position: relative;
     letter-spacing: 0.3px;
+    background: none !important;
+    background-color: transparent !important;
 }
 
+.navbar .navbar-menu .navbar-link:hover,
 .navbar-link:hover {
-    color: var(--ts-green) !important;
+    color: #34A87E !important;
+}
+
+.navbar .navbar-menu .navbar-link:visited,
+.navbar-link:visited {
+    color: #FFFFFF !important;
 }
 
 .navbar-link::after {
@@ -169,8 +180,9 @@ body {
     width: 100%;
 }
 
+.navbar .navbar-menu .navbar-link.active,
 .navbar-link.active {
-    color: var(--ts-green) !important;
+    color: #34A87E !important;
 }
 
 .navbar-link.active::after {
