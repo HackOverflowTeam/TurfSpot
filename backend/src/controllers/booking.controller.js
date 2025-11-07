@@ -428,8 +428,13 @@ exports.cancelBooking = async (req, res) => {
       });
     }
 
-    // Calculate refund (90% refund for cancellations)
-    const refundAmount = booking.pricing.totalAmount * 0.9;
+    // Calculate refund amount based on payment method
+    // For tier-based (subscription): Full refund (100%)
+    // For commission-based: 90% refund (10% cancellation fee)
+    const isTierBased = booking.turf.paymentMethod === 'tier';
+    const refundAmount = isTierBased 
+      ? booking.pricing.totalAmount 
+      : booking.pricing.totalAmount * 0.9;
 
     // Update booking with refund request
     booking.status = 'pending_refund';

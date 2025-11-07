@@ -815,7 +815,13 @@ async function loadPendingRefunds() {
         badge.textContent = response.data.length;
         badge.style.display = 'inline-block';
         
-        list.innerHTML = response.data.map(booking => `
+        list.innerHTML = response.data.map(booking => {
+            // Determine refund percentage based on payment method
+            const isTierBased = booking.turf.paymentMethod === 'tier';
+            const refundPercentage = isTierBased ? 100 : 90;
+            const refundLabel = isTierBased ? 'Full Refund' : 'Refund Amount (90%)';
+            
+            return `
             <div class="refund-card" style="background: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 4px solid #FFC107;">
                 <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
                     <div style="flex: 1;">
@@ -844,10 +850,15 @@ async function loadPendingRefunds() {
                         <div style="font-size: 1.75rem; font-weight: bold; color: var(--primary); margin-bottom: 0.25rem;">
                             ${formatCurrency(booking.refundRequest.refundAmount)}
                         </div>
-                        <small style="color: var(--text-secondary); font-weight: 600;">Refund Amount (90%)</small>
+                        <small style="color: var(--text-secondary); font-weight: 600;">${refundLabel}</small>
                         <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.5rem;">
                             <i class="fas fa-receipt"></i> Total: ${formatCurrency(booking.pricing.totalAmount)}
                         </p>
+                        ${isTierBased ? `
+                        <p style="color: #10b981; font-size: 0.8rem; margin-top: 0.25rem; font-weight: 600;">
+                            <i class="fas fa-crown"></i> Subscription Plan
+                        </p>
+                        ` : ''}
                     </div>
                 </div>
                 
@@ -914,7 +925,7 @@ window.processRefund = async function(bookingId, approved) {
     
     try {
         await api.processRefundDecision(bookingId, approved, verificationNote);
-        showToast(approved ? 'Refund confirmed successfully! 💸' : 'Refund request rejected', approved ? 'success' : 'info');
+        showToast(approved ? 'Refund confirmed successfully!' : 'Refund request rejected', approved ? 'success' : 'info');
         loadPendingRefunds();
         loadOwnerBookings(); // Refresh bookings list
     } catch (error) {

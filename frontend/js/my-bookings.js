@@ -123,7 +123,9 @@ function createBookingCard(booking) {
     } else if (booking.status === 'refund_completed' && booking.refundRequest) {
         const refundDate = new Date(booking.refundRequest.verifiedAt).toLocaleDateString('en-IN');
         const verifierName = booking.refundRequest.verifiedBy?.name || 'Owner';
-        statusMessage = `💸 Refund Successful! Confirmed on ${refundDate} by ${verifierName}. Amount: ${formatCurrency(booking.refundRequest.refundAmount)}`;
+        const isTierBased = booking.turf?.paymentMethod === 'tier';
+        const refundType = isTierBased ? 'Full refund' : '90% refund';
+        statusMessage = `💸 Refund Successful! Confirmed on ${refundDate} by ${verifierName}. ${refundType}: ${formatCurrency(booking.refundRequest.refundAmount)}`;
         statusMessageClass = 'refund-success';
     } else if (booking.status === 'refund_denied' && booking.refundRequest) {
         const reason = booking.refundRequest.verificationNote || 'No reason provided';
