@@ -277,24 +277,10 @@ if (loginForm) {
         const email = e.target.email.value;
         const password = e.target.password.value;
         
-        try {
-            const response = await api.login({ email, password });
-            authManager.setToken(response.token);
-            authManager.setUser(response.data.user);
-            showToast('Login successful!', 'success');
+        const success = await authManager.login(email, password);
+        if (success) {
             closeModal('loginModal');
-            setTimeout(() => {
-                const user = authManager.getUser();
-                if (user.role === 'admin') {
-                    window.location.href = 'admin-dashboard.html';
-                } else if (user.role === 'owner') {
-                    window.location.href = 'owner-dashboard.html';
-                } else {
-                    window.location.href = 'turfs.html';
-                }
-            }, 1000);
-        } catch (error) {
-            showToast(error.message || 'Login failed', 'error');
+            // Redirection is handled by authManager.redirectBasedOnRole()
         }
     });
 }
@@ -325,20 +311,19 @@ if (signupForm) {
             isSubmitting = true;
             const submitBtn = document.getElementById('registerSubmitBtn');
             submitBtn.disabled = true;
-            submitBtn.textContent = 'Sending OTP...';
+            submitBtn.textContent = 'Registering...';
             
-            const response = await api.register(formData);
+            const result = await authManager.register(formData);
             
-            console.log('Registration response:', response);
+            console.log('Registration result:', result);
             
             submitBtn.disabled = false;
             submitBtn.textContent = 'Register';
             isSubmitting = false;
             
             // Check if email verification is required
-            if (response.data && response.data.requiresEmailVerification) {
+            if (result.success && result.requiresVerification) {
                 console.log('OTP verification required, showing OTP field');
-                showToast('OTP sent! Please check your email.', 'success');
                 
                 // Store email for OTP verification
                 sessionStorage.setItem('pendingVerificationEmail', formData.email);
@@ -366,15 +351,9 @@ if (signupForm) {
                 document.getElementById('registerPassword').disabled = true;
                 document.getElementById('registerRole').disabled = true;
                 submitBtn.style.display = 'none';
-            } else if (response.data && response.data.token) {
-                // Old flow - if token is returned
-                authManager.setToken(response.data.token);
-                authManager.setUser(response.data.user);
-                showToast('Registration successful!', 'success');
+            } else if (result.success && !result.requiresVerification) {
+                // Registration successful without OTP - modal closed and redirect handled by authManager
                 closeModal('registerModal');
-                setTimeout(() => {
-                    window.location.href = 'turfs.html';
-                }, 1000);
             }
         } catch (error) {
             isSubmitting = false;

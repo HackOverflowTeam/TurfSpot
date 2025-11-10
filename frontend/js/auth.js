@@ -43,6 +43,7 @@ class AuthManager {
                     this.user = cachedUser;
                     this.initialized = true;
                     this.updateUI();
+                    this.checkPageAccess(); // Check if user should access this page
                 }
                 
                 try {
@@ -52,6 +53,7 @@ class AuthManager {
                     this.setUserInStorage(this.user);
                     this.initialized = true;
                     this.updateUI();
+                    this.checkPageAccess(); // Check again with fresh data
                 } catch (error) {
                     console.error('Failed to get current user:', error);
                     // If we have cached data, keep using it
@@ -64,10 +66,63 @@ class AuthManager {
                 }
             } else {
                 this.initialized = true;
+                this.checkPageAccess(); // Check for unauthenticated access
             }
         })();
 
         return this.initPromise;
+    }
+
+    // Check if current user has access to the current page
+    checkPageAccess() {
+        const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+        
+        // Define page access rules
+        const ownerOnlyPages = ['owner-dashboard.html', 'owner-subscription.html'];
+        const adminOnlyPages = ['admin-dashboard.html'];
+        const userOnlyPages = ['my-bookings.html'];
+        const authRequiredPages = [...ownerOnlyPages, ...adminOnlyPages, ...userOnlyPages, 'profile.html'];
+        
+        // Define restricted pages for owners (they shouldn't access these)
+        const ownerRestrictedPages = ['discover.html', 'turfs.html', 'turf-details.html', 'my-bookings.html'];
+        
+        // If not authenticated and trying to access auth-required page
+        if (!this.isAuthenticated() && authRequiredPages.includes(currentPage)) {
+            showToast('Please login to continue', 'error');
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 1000);
+            return;
+        }
+        
+        // If authenticated, check role-based access
+        if (this.isAuthenticated()) {
+            if (this.hasRole('owner')) {
+                // Owners can't access user-only pages or admin pages
+                if (ownerRestrictedPages.includes(currentPage) || adminOnlyPages.includes(currentPage)) {
+                    showToast('Access denied. Redirecting to your dashboard...', 'error');
+                    setTimeout(() => {
+                        window.location.href = 'owner-dashboard.html';
+                    }, 1000);
+                }
+            } else if (this.hasRole('admin')) {
+                // Admins can't access owner-only pages
+                if (ownerOnlyPages.includes(currentPage)) {
+                    showToast('Access denied. Redirecting to admin dashboard...', 'error');
+                    setTimeout(() => {
+                        window.location.href = 'admin-dashboard.html';
+                    }, 1000);
+                }
+            } else if (this.hasRole('user')) {
+                // Users can't access owner or admin pages
+                if (ownerOnlyPages.includes(currentPage) || adminOnlyPages.includes(currentPage)) {
+                    showToast('Access denied. Redirecting to home...', 'error');
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1000);
+                }
+            }
+        }
     }
 
     async login(email, password) {
@@ -78,10 +133,51 @@ class AuthManager {
             this.setUserInStorage(this.user);
             this.updateUI();
             showToast('Login successful!', 'success');
+            
+            // Role-based redirection
+            this.redirectBasedOnRole();
+            
             return true;
         } catch (error) {
             showToast(error.message || 'Login failed', 'error');
             return false;
+        }
+    }
+
+    // Redirect user based on their role
+    redirectBasedOnRole() {
+        if (!this.user) return;
+        
+        const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+        
+        // Define role-based home pages
+        const roleHomePages = {
+            'owner': 'owner-dashboard.html',
+            'admin': 'admin-dashboard.html',
+            'user': 'index.html'
+        };
+        
+        // Define restricted pages for owners (they shouldn't access these)
+        const ownerRestrictedPages = ['discover.html', 'turfs.html', 'turf-details.html', 'my-bookings.html'];
+        
+        // Define restricted pages for users (they shouldn't access these)
+        const userRestrictedPages = ['owner-dashboard.html', 'owner-subscription.html', 'admin-dashboard.html'];
+        
+        if (this.hasRole('owner')) {
+            // Redirect owners away from user pages to their dashboard
+            if (ownerRestrictedPages.includes(currentPage) || currentPage === 'index.html') {
+                window.location.href = 'owner-dashboard.html';
+            }
+        } else if (this.hasRole('admin')) {
+            // Redirect admins to admin dashboard
+            if (currentPage === 'index.html' || userRestrictedPages.includes(currentPage)) {
+                window.location.href = 'admin-dashboard.html';
+            }
+        } else if (this.hasRole('user')) {
+            // Redirect users away from owner/admin pages
+            if (userRestrictedPages.includes(currentPage)) {
+                window.location.href = 'index.html';
+            }
         }
     }
 
@@ -100,6 +196,10 @@ class AuthManager {
             } else {
                 this.updateUI();
                 showToast('Registration successful!', 'success');
+                
+                // Role-based redirection after registration
+                this.redirectBasedOnRole();
+                
                 return { success: true, requiresVerification: false };
             }
         } catch (error) {
@@ -126,6 +226,10 @@ class AuthManager {
             this.setUserInStorage(this.user);
             this.updateUI();
             showToast('Email verified successfully!', 'success');
+            
+            // Role-based redirection after verification
+            this.redirectBasedOnRole();
+            
             return true;
         } catch (error) {
             showToast(error.message || 'Invalid or expired OTP', 'error');
@@ -134,11 +238,16 @@ class AuthManager {
     }
 
     logout() {
+        const wasOwner = this.hasRole('owner');
+        const wasAdmin = this.hasRole('admin');
+        
         api.removeToken();
         this.setUserInStorage(null);
         this.user = null;
         this.updateUI();
         showToast('Logged out successfully', 'success');
+        
+        // Redirect to home page (public landing)
         window.location.href = 'index.html';
     }
 
@@ -168,6 +277,54 @@ class AuthManager {
         return this.user && this.user.role === role;
     }
 
+    // Get home page based on user role
+    getHomePage() {
+        if (!this.user) return 'index.html';
+        
+        switch (this.user.role) {
+            case 'owner':
+                return 'owner-dashboard.html';
+            case 'admin':
+                return 'admin-dashboard.html';
+            case 'user':
+            default:
+                return 'index.html';
+        }
+    }
+
+    // Check if a page is accessible for current user
+    canAccessPage(pageName) {
+        if (!pageName) return true;
+        
+        const ownerOnlyPages = ['owner-dashboard.html', 'owner-subscription.html'];
+        const adminOnlyPages = ['admin-dashboard.html'];
+        const userOnlyPages = ['my-bookings.html'];
+        const ownerRestrictedPages = ['discover.html', 'turfs.html', 'turf-details.html'];
+        
+        // Not authenticated
+        if (!this.isAuthenticated()) {
+            const authRequiredPages = [...ownerOnlyPages, ...adminOnlyPages, ...userOnlyPages, 'profile.html'];
+            return !authRequiredPages.includes(pageName);
+        }
+        
+        // Owner restrictions
+        if (this.hasRole('owner')) {
+            return !ownerRestrictedPages.includes(pageName) && !adminOnlyPages.includes(pageName);
+        }
+        
+        // Admin restrictions
+        if (this.hasRole('admin')) {
+            return !ownerOnlyPages.includes(pageName);
+        }
+        
+        // User restrictions
+        if (this.hasRole('user')) {
+            return !ownerOnlyPages.includes(pageName) && !adminOnlyPages.includes(pageName);
+        }
+        
+        return true;
+    }
+
     updateUI() {
         // Update navbar if it exists
         if (window.turfspotNavbar && typeof window.turfspotNavbar.updateAuthUI === 'function') {
@@ -191,6 +348,10 @@ class AuthManager {
         const mobileOwnerDashLink = document.getElementById('mobileOwnerDashLink');
         const mobileAdminDashLink = document.getElementById('mobileAdminDashLink');
         const mobileProfileLink = document.getElementById('mobileProfileLink');
+        
+        // Public navigation links (to be hidden for owners)
+        const navbarLinks = document.querySelectorAll('.navbar-link[href="discover.html"], .navbar-link[href="turfs.html"]');
+        const mobileNavLinks = document.querySelectorAll('.mobile-menu-link[href="discover.html"], .mobile-menu-link[href="turfs.html"]');
 
         if (this.isAuthenticated()) {
             // Hide login/register buttons
@@ -216,33 +377,57 @@ class AuthManager {
                 userName.textContent = this.user.name.split(' ')[0]; // First name only
             }
 
-            // Show role-specific links
-            if (myBookingsLink && (this.hasRole('user') || this.hasRole('owner') || this.hasRole('admin'))) {
-                myBookingsLink.style.display = 'block';
-                myBookingsLink.href = 'my-bookings.html';
-            }
-            if (mobileMyBookingsLink && (this.hasRole('user') || this.hasRole('owner') || this.hasRole('admin'))) {
-                mobileMyBookingsLink.style.display = 'block';
-                mobileMyBookingsLink.href = 'my-bookings.html';
+            // Role-specific UI updates
+            if (this.hasRole('owner')) {
+                // Hide public navigation for owners
+                navbarLinks.forEach(link => link.style.display = 'none');
+                mobileNavLinks.forEach(link => link.style.display = 'none');
+                
+                // Show owner dashboard link
+                if (ownerDashLink) {
+                    ownerDashLink.style.display = 'block';
+                    ownerDashLink.href = 'owner-dashboard.html';
+                }
+                if (mobileOwnerDashLink) {
+                    mobileOwnerDashLink.style.display = 'block';
+                    mobileOwnerDashLink.href = 'owner-dashboard.html';
+                }
+                
+                // Hide user-specific links
+                if (myBookingsLink) myBookingsLink.style.display = 'none';
+                if (mobileMyBookingsLink) mobileMyBookingsLink.style.display = 'none';
+                
+            } else if (this.hasRole('admin')) {
+                // Show admin dashboard link
+                if (adminDashLink) {
+                    adminDashLink.style.display = 'block';
+                    adminDashLink.href = 'admin-dashboard.html';
+                }
+                if (mobileAdminDashLink) {
+                    mobileAdminDashLink.style.display = 'block';
+                    mobileAdminDashLink.href = 'admin-dashboard.html';
+                }
+                
+                // Show public navigation
+                navbarLinks.forEach(link => link.style.display = 'block');
+                mobileNavLinks.forEach(link => link.style.display = 'block');
+                
+            } else if (this.hasRole('user')) {
+                // Show public navigation for regular users
+                navbarLinks.forEach(link => link.style.display = 'block');
+                mobileNavLinks.forEach(link => link.style.display = 'block');
+                
+                // Show my bookings link for users
+                if (myBookingsLink) {
+                    myBookingsLink.style.display = 'block';
+                    myBookingsLink.href = 'my-bookings.html';
+                }
+                if (mobileMyBookingsLink) {
+                    mobileMyBookingsLink.style.display = 'block';
+                    mobileMyBookingsLink.href = 'my-bookings.html';
+                }
             }
             
-            if (ownerDashLink && this.hasRole('owner')) {
-                ownerDashLink.style.display = 'block';
-                ownerDashLink.href = 'owner-dashboard.html';
-            }
-            if (mobileOwnerDashLink && this.hasRole('owner')) {
-                mobileOwnerDashLink.style.display = 'block';
-                mobileOwnerDashLink.href = 'owner-dashboard.html';
-            }
-            
-            if (adminDashLink && this.hasRole('admin')) {
-                adminDashLink.style.display = 'block';
-                adminDashLink.href = 'admin-dashboard.html';
-            }
-            if (mobileAdminDashLink && this.hasRole('admin')) {
-                mobileAdminDashLink.style.display = 'block';
-                mobileAdminDashLink.href = 'admin-dashboard.html';
-            }
         } else {
             // Show login/register buttons
             if (loginBtn) loginBtn.style.display = 'inline-flex';
@@ -264,6 +449,10 @@ class AuthManager {
             if (mobileMyBookingsLink) mobileMyBookingsLink.style.display = 'none';
             if (mobileOwnerDashLink) mobileOwnerDashLink.style.display = 'none';
             if (mobileAdminDashLink) mobileAdminDashLink.style.display = 'none';
+            
+            // Show public navigation for non-authenticated users
+            navbarLinks.forEach(link => link.style.display = 'block');
+            mobileNavLinks.forEach(link => link.style.display = 'block');
         }
     }
 
