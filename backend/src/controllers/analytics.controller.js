@@ -279,7 +279,7 @@ exports.getOwnerAnalytics = async (req, res) => {
     }));
 
     // Turf-wise performance for insights table
-    const turfPerformance = await Booking.aggregate([
+    const turfPerformanceRaw = await Booking.aggregate([
       { 
         $match: { 
           turf: { $in: turfIds },
@@ -303,25 +303,31 @@ exports.getOwnerAnalytics = async (req, res) => {
         }
       },
       {
-        $lookup: {
-          from: 'turfs',
-          localField: '_id',
-          foreignField: '_id',
-          as: 'turfInfo'
-        }
-      },
-      {
         $project: {
           _id: 1,
-          name: { $arrayElemAt: ['$turfInfo.name', 0] },
           totalBookings: 1,
           earnings: 1,
           uniqueCustomers: { $size: '$uniqueCustomers' },
-          monthlyAvg: { $divide: ['$totalBookings', parseInt(period) / 30] }
+          monthlyAvg: { $divide: ['$totalBookings', { $divide: [parseInt(period), 30] }] }
         }
       },
       { $sort: { earnings: -1 } }
     ]);
+
+    // Populate turf names
+    const turfPerformance = await Promise.all(
+      turfPerformanceRaw.map(async (item) => {
+        const turf = await Turf.findById(item._id).select('name');
+        return {
+          _id: item._id,
+          name: turf ? turf.name : 'Unknown Turf',
+          totalBookings: item.totalBookings,
+          earnings: Math.round(item.earnings),
+          uniqueCustomers: item.uniqueCustomers,
+          monthlyAvg: Math.round(item.monthlyAvg * 10) / 10 // Round to 1 decimal
+        };
+      })
+    );
 
     res.status(200).json({
       success: true,
