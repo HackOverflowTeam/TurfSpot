@@ -135,6 +135,78 @@ exports.getOwnerAnalytics = async (req, res) => {
       }
     ]);
 
+    // Unique customers
+    const uniqueCustomersData = await Booking.aggregate([
+      { $match: query },
+      {
+        $group: {
+          _id: '$user'
+        }
+      },
+      {
+        $count: 'total'
+      }
+    ]);
+    const uniqueCustomers = uniqueCustomersData[0]?.total || 0;
+
+    // Calculate yearly revenue (last 365 days)
+    const yearStartDate = new Date();
+    yearStartDate.setDate(yearStartDate.getDate() - 365);
+    
+    const yearlyQuery = {
+      turf: { $in: turfIds },
+      'payment.status': 'completed',
+      createdAt: { $gte: yearStartDate }
+    };
+    
+    const yearlyRevenueData = await Booking.aggregate([
+      { $match: yearlyQuery },
+      {
+        $group: {
+          _id: null,
+          yearlyRevenue: { 
+            $sum: { 
+              $ifNull: [
+                '$pricing.ownerEarnings', 
+                { $subtract: ['$pricing.totalAmount', '$pricing.platformFee'] }
+              ] 
+            } 
+          }
+        }
+      }
+    ]);
+    const yearlyRevenue = yearlyRevenueData[0]?.yearlyRevenue || 0;
+
+    // Calculate previous month earnings for growth comparison
+    const prevMonthStartDate = new Date();
+    prevMonthStartDate.setDate(prevMonthStartDate.getDate() - parseInt(period) - 30);
+    const prevMonthEndDate = new Date();
+    prevMonthEndDate.setDate(prevMonthEndDate.getDate() - parseInt(period));
+    
+    const prevMonthQuery = {
+      turf: { $in: turfIds },
+      'payment.status': 'completed',
+      createdAt: { $gte: prevMonthStartDate, $lt: prevMonthEndDate }
+    };
+    
+    const prevMonthData = await Booking.aggregate([
+      { $match: prevMonthQuery },
+      {
+        $group: {
+          _id: null,
+          previousMonthEarnings: { 
+            $sum: { 
+              $ifNull: [
+                '$pricing.ownerEarnings', 
+                { $subtract: ['$pricing.totalAmount', '$pricing.platformFee'] }
+              ] 
+            } 
+          }
+        }
+      }
+    ]);
+    const previousMonthEarnings = prevMonthData[0]?.previousMonthEarnings || 0;
+
     res.status(200).json({
       success: true,
       data: {
@@ -143,7 +215,11 @@ exports.getOwnerAnalytics = async (req, res) => {
           completedBookings,
           totalRevenue: revenue.totalRevenue,
           platformFees: revenue.platformFees,
-          ownerEarnings: revenue.ownerEarnings
+          ownerEarnings: revenue.ownerEarnings,
+          uniqueCustomers,
+          yearlyRevenue,
+          previousMonthEarnings,
+          previousYearRevenue: 0 // Can be calculated if needed
         },
         dailyBookings,
         popularSlots,

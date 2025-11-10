@@ -200,8 +200,33 @@ async function loadOwnerData() {
 
     await Promise.all([
         loadMyTurfs(),
-        loadAnalytics()
+        loadOwnerStats()
     ]);
+}
+
+// Load and update top stats cards
+async function loadOwnerStats() {
+    try {
+        // Get owner analytics for overall stats
+        const response = await api.getOwnerAnalytics({ period: 365 }); // Last year data
+        const analytics = response.data;
+        const overview = analytics.overview || {};
+
+        // Update top stats cards
+        document.getElementById('totalTurfs').textContent = myTurfs.length || 0;
+        document.getElementById('totalBookings').textContent = overview.totalBookings || 0;
+        document.getElementById('totalRevenue').textContent = formatCurrency(overview.totalRevenue || 0);
+        document.getElementById('ownerEarnings').textContent = formatCurrency(overview.ownerEarnings || 0);
+        document.getElementById('platformFee').textContent = formatCurrency(overview.platformFees || 0);
+    } catch (error) {
+        console.error('Error loading owner stats:', error);
+        // Set default values
+        document.getElementById('totalTurfs').textContent = myTurfs.length || 0;
+        document.getElementById('totalBookings').textContent = '0';
+        document.getElementById('totalRevenue').textContent = '₹0';
+        document.getElementById('ownerEarnings').textContent = '₹0';
+        document.getElementById('platformFee').textContent = '₹0';
+    }
 }
 
 // Load my turfs
