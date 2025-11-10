@@ -207,6 +207,122 @@ exports.getOwnerAnalytics = async (req, res) => {
     ]);
     const previousMonthEarnings = prevMonthData[0]?.previousMonthEarnings || 0;
 
+    // Monthly earnings breakdown (last 12 months)
+    const monthlyEarnings = await Booking.aggregate([
+      { 
+        $match: { 
+          turf: { $in: turfIds },
+          'payment.status': 'completed',
+          createdAt: { $gte: yearStartDate }
+        } 
+      },
+      {
+        $group: {
+          _id: {
+            month: { $month: '$createdAt' },
+            year: { $year: '$createdAt' }
+          },
+          earnings: { 
+            $sum: { 
+              $ifNull: [
+                '$pricing.ownerEarnings', 
+                { $subtract: ['$pricing.totalAmount', '$pricing.platformFee'] }
+              ] 
+            } 
+          }
+        }
+      },
+      { $sort: { '_id.year': 1, '_id.month': 1 } }
+    ]);
+
+    // Transform monthly earnings to frontend format
+    const monthlyEarningsFormatted = monthlyEarnings.map(item => ({
+      month: item._id.month,
+      year: item._id.year,
+      earnings: item.earnings
+    }));
+
+    // Monthly customers breakdown (last 12 months)
+    const monthlyCustomers = await Booking.aggregate([
+      { 
+        $match: { 
+          turf: { $in: turfIds },
+          createdAt: { $gte: yearStartDate }
+        } 
+      },
+      {
+        $group: {
+          _id: {
+            month: { $month: '$createdAt' },
+            year: { $year: '$createdAt' },
+            user: '$user'
+          }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            month: '$_id.month',
+            year: '$_id.year'
+          },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { '_id.year': 1, '_id.month': 1 } }
+    ]);
+
+    // Transform monthly customers to frontend format
+    const monthlyCustomersFormatted = monthlyCustomers.map(item => ({
+      month: item._id.month,
+      year: item._id.year,
+      count: item.count
+    }));
+
+    // Turf-wise performance for insights table
+    const turfPerformance = await Booking.aggregate([
+      { 
+        $match: { 
+          turf: { $in: turfIds },
+          'payment.status': 'completed',
+          createdAt: { $gte: startDate }
+        } 
+      },
+      {
+        $group: {
+          _id: '$turf',
+          totalBookings: { $sum: 1 },
+          earnings: { 
+            $sum: { 
+              $ifNull: [
+                '$pricing.ownerEarnings', 
+                { $subtract: ['$pricing.totalAmount', '$pricing.platformFee'] }
+              ] 
+            } 
+          },
+          uniqueCustomers: { $addToSet: '$user' }
+        }
+      },
+      {
+        $lookup: {
+          from: 'turfs',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'turfInfo'
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          name: { $arrayElemAt: ['$turfInfo.name', 0] },
+          totalBookings: 1,
+          earnings: 1,
+          uniqueCustomers: { $size: '$uniqueCustomers' },
+          monthlyAvg: { $divide: ['$totalBookings', parseInt(period) / 30] }
+        }
+      },
+      { $sort: { earnings: -1 } }
+    ]);
+
     res.status(200).json({
       success: true,
       data: {
@@ -224,7 +340,10 @@ exports.getOwnerAnalytics = async (req, res) => {
         dailyBookings,
         popularSlots,
         sportBreakdown,
-        statusBreakdown
+        statusBreakdown,
+        monthlyEarnings: monthlyEarningsFormatted,
+        monthlyCustomers: monthlyCustomersFormatted,
+        turfPerformance
       }
     });
   } catch (error) {
