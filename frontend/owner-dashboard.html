@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Owner Dashboard - TurfSpot</title>
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/owner-dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .badge {
@@ -62,48 +63,62 @@
                 <div class="stat-card">
                     <div class="stat-icon"><i class="fas fa-building"></i></div>
                     <div class="stat-info">
-                        <h3 id="totalTurfs">0</h3>
                         <p>Total Turfs</p>
+                        <h3 id="totalTurfs">0</h3>
                     </div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
                     <div class="stat-info">
-                        <h3 id="totalBookings">0</h3>
                         <p>Total Bookings</p>
+                        <h3 id="totalBookings">0</h3>
                     </div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon"><i class="fas fa-rupee-sign"></i></div>
                     <div class="stat-info">
-                        <h3 id="totalRevenue">₹0</h3>
                         <p>Total Revenue</p>
+                        <h3 id="totalRevenue">₹0</h3>
                     </div>
                 </div>
-                <div class="stat-card" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
-                    <div class="stat-icon" style="background: rgba(255,255,255,0.2);"><i class="fas fa-hand-holding-usd"></i></div>
-                    <div class="stat-info" style="color: white;">
-                        <h3 id="ownerEarnings" style="color: white;">₹0</h3>
-                        <p style="color: rgba(255,255,255,0.9);">Your Earnings (90%)</p>
+                <div class="stat-card earnings-card">
+                    <div class="stat-icon"><i class="fas fa-hand-holding-usd"></i></div>
+                    <div class="stat-info">
+                        <p>Your Earnings (90%)</p>
+                        <h3 id="ownerEarnings">₹0</h3>
                     </div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon"><i class="fas fa-percentage"></i></div>
                     <div class="stat-info">
-                        <h3 id="platformFee">₹0</h3>
                         <p>Platform Fee (10%)</p>
+                        <h3 id="platformFee">₹0</h3>
                     </div>
                 </div>
             </div>
 
             <!-- Tabs -->
             <div class="tabs">
-                <button class="tab-btn active" data-tab="turfs">My Turfs</button>
-                <button class="tab-btn" data-tab="bookings">Bookings</button>
-                <button class="tab-btn" data-tab="verifications">Pending Verifications <span id="pendingCount" class="badge" style="display: none;">0</span></button>
-                <button class="tab-btn" data-tab="refunds">Pending Refunds <span id="refundsCount" class="badge" style="display: none;">0</span></button>
-                <button class="tab-btn" data-tab="subscription">Subscription</button>
-                <button class="tab-btn" data-tab="analytics">Analytics</button>
+                <button class="tab-btn active" data-tab="turfs">
+                    <i class="fas fa-building"></i> My Turfs
+                </button>
+                <button class="tab-btn" data-tab="bookings">
+                    <i class="fas fa-calendar-alt"></i> Bookings
+                </button>
+                <button class="tab-btn" data-tab="verifications">
+                    <i class="fas fa-check-circle"></i> Verifications 
+                    <span id="pendingCount" class="badge" style="display: none;">0</span>
+                </button>
+                <button class="tab-btn" data-tab="refunds">
+                    <i class="fas fa-money-bill-wave"></i> Refunds 
+                    <span id="refundsCount" class="badge" style="display: none;">0</span>
+                </button>
+                <button class="tab-btn" data-tab="subscription">
+                    <i class="fas fa-crown"></i> Subscription
+                </button>
+                <button class="tab-btn" data-tab="analytics">
+                    <i class="fas fa-chart-line"></i> Analytics
+                </button>
             </div>
 
             <!-- My Turfs Tab -->
@@ -175,17 +190,156 @@
 
             <!-- Analytics Tab -->
             <div class="tab-content" id="analyticsTab">
-                <div class="analytics-filters">
-                    <select id="analyticsTurf">
-                        <option value="">All Turfs</option>
-                    </select>
-                    <select id="analyticsPeriod">
-                        <option value="7">Last 7 Days</option>
-                        <option value="30" selected>Last 30 Days</option>
-                        <option value="90">Last 90 Days</option>
-                    </select>
+                <!-- Analytics Header with Filters -->
+                <div class="analytics-header">
+                    <div class="analytics-title-section">
+                        <h3>📊 Business Analytics</h3>
+                        <p>Track your performance and revenue insights</p>
+                    </div>
+                    <div class="analytics-filters">
+                        <select id="analyticsTurf" class="analytics-filter-select">
+                            <option value="">All Turfs</option>
+                        </select>
+                        <select id="analyticsPeriod" class="analytics-filter-select">
+                            <option value="30">Last 30 Days</option>
+                            <option value="180">Last 6 Months</option>
+                            <option value="365">This Year</option>
+                        </select>
+                    </div>
                 </div>
-                <div id="analyticsContent"></div>
+
+                <!-- Key Metrics Summary Cards -->
+                <div class="analytics-metrics-grid">
+                    <!-- Monthly Earnings Card -->
+                    <div class="metric-card" id="monthlyEarningsCard">
+                        <div class="metric-icon-badge">💰</div>
+                        <div class="metric-content">
+                            <p class="metric-label">Total Earnings (This Month)</p>
+                            <h2 class="metric-value" id="monthlyEarnings">₹0</h2>
+                            <div class="metric-growth" id="monthlyGrowth">
+                                <span class="growth-indicator"></span>
+                            </div>
+                        </div>
+                        <div class="metric-mini-chart" id="earningsMiniChart"></div>
+                    </div>
+
+                    <!-- Unique Customers Card -->
+                    <div class="metric-card" id="customersCard">
+                        <div class="metric-icon-badge">👥</div>
+                        <div class="metric-content">
+                            <p class="metric-label">Unique Customers</p>
+                            <h2 class="metric-value" id="uniqueCustomers">0</h2>
+                            <div class="metric-sublabel">This Year</div>
+                        </div>
+                        <div class="pulse-animation"></div>
+                    </div>
+
+                    <!-- Avg Bookings per Turf Card -->
+                    <div class="metric-card" id="avgBookingsCard">
+                        <div class="metric-icon-badge">🏟️</div>
+                        <div class="metric-content">
+                            <p class="metric-label">Bookings per Turf</p>
+                            <h2 class="metric-value" id="avgBookings">0</h2>
+                            <div class="metric-sublabel">Monthly Average</div>
+                        </div>
+                        <div class="metric-bar-indicator" id="bookingsBar"></div>
+                    </div>
+
+                    <!-- Yearly Revenue Card -->
+                    <div class="metric-card" id="yearlyRevenueCard">
+                        <div class="metric-icon-badge">📈</div>
+                        <div class="metric-content">
+                            <p class="metric-label">Yearly Revenue</p>
+                            <h2 class="metric-value" id="yearlyRevenue">₹0</h2>
+                            <div class="metric-growth" id="yearlyGrowth">
+                                <span class="growth-indicator"></span>
+                            </div>
+                        </div>
+                        <div class="metric-donut-chart" id="yearlyDonut"></div>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="analytics-charts-section">
+                    <!-- Monthly Earnings Trend -->
+                    <div class="chart-card chart-card-large">
+                        <div class="chart-header">
+                            <div>
+                                <h4>Monthly Earnings Overview</h4>
+                                <p class="chart-subtitle">Track your revenue growth over time</p>
+                            </div>
+                            <div class="chart-toggle">
+                                <button class="toggle-btn active" data-period="current">This Year</button>
+                                <button class="toggle-btn" data-period="last">Last Year</button>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="earningsLineChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Customer Growth & Revenue Distribution -->
+                    <div class="charts-row">
+                        <!-- Customer Growth Bar Chart -->
+                        <div class="chart-card chart-card-half">
+                            <div class="chart-header">
+                                <div>
+                                    <h4>New Customers per Month</h4>
+                                    <p class="chart-subtitle">Customer acquisition trends</p>
+                                </div>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="customersBarChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Revenue Distribution Donut Chart -->
+                        <div class="chart-card chart-card-half">
+                            <div class="chart-header">
+                                <div>
+                                    <h4>Revenue Distribution by Turf</h4>
+                                    <p class="chart-subtitle">Performance breakdown</p>
+                                </div>
+                            </div>
+                            <div class="chart-container chart-container-donut">
+                                <canvas id="revenueDonutChart"></canvas>
+                                <div class="donut-center-text">
+                                    <p class="donut-label">Total</p>
+                                    <p class="donut-value" id="donutTotalValue">₹0</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Turf-wise Insights Table -->
+                <div class="analytics-table-section">
+                    <div class="table-header">
+                        <h4>🏆 Turf-wise Performance Insights</h4>
+                        <p>Detailed breakdown of bookings and earnings per turf</p>
+                    </div>
+                    <div class="insights-table-wrapper">
+                        <table class="insights-table">
+                            <thead>
+                                <tr>
+                                    <th>Turf Name</th>
+                                    <th>Total Bookings</th>
+                                    <th>Monthly Avg</th>
+                                    <th>Earnings</th>
+                                    <th>Unique Customers</th>
+                                    <th>Trend</th>
+                                </tr>
+                            </thead>
+                            <tbody id="insightsTableBody">
+                                <tr>
+                                    <td colspan="6" class="table-loading">
+                                        <i class="fas fa-spinner fa-spin"></i> Loading insights...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -373,6 +527,219 @@
         </div>
     </div>
 
+    <!-- Payment Verification Detail Modal -->
+    <div class="modal" id="verificationDetailModal" style="display: none;">
+        <div class="verification-detail-container">
+            <button class="verification-detail-close" id="closeVerificationDetail">&times;</button>
+            
+            <div class="verification-detail-card">
+                <!-- Header with Turf Info -->
+                <div class="verification-detail-header">
+                    <div class="turf-info-left">
+                        <span class="turf-icon">🏟️</span>
+                        <span class="turf-name-text">Turf: <strong id="detailTurfName"></strong></span>
+                    </div>
+                    <div class="amount-display" id="detailAmount"></div>
+                </div>
+                
+                <div class="detail-divider"></div>
+                
+                <!-- Customer Details Grid -->
+                <div class="customer-details-grid">
+                    <div class="detail-field">
+                        <label class="detail-field-label"><span class="field-icon">👤</span> Name</label>
+                        <p class="detail-field-value" id="detailUserName"></p>
+                    </div>
+                    
+                    <div class="detail-field">
+                        <label class="detail-field-label"><span class="field-icon">🏆</span> Sport</label>
+                        <p class="detail-field-value" id="detailSport"></p>
+                    </div>
+                    
+                    <div class="detail-field">
+                        <label class="detail-field-label"><span class="field-icon">📧</span> Email</label>
+                        <p class="detail-field-value" id="detailEmail"></p>
+                    </div>
+                    
+                    <div class="detail-field">
+                        <label class="detail-field-label"><span class="field-icon">💰</span> Amount</label>
+                        <p class="detail-field-value" id="detailAmountText"></p>
+                    </div>
+                    
+                    <div class="detail-field">
+                        <label class="detail-field-label"><span class="field-icon">📞</span> Phone</label>
+                        <p class="detail-field-value" id="detailPhone"></p>
+                    </div>
+                    
+                    <div class="detail-field">
+                        <label class="detail-field-label"><span class="field-icon">📅</span> Date</label>
+                        <p class="detail-field-value" id="detailDate"></p>
+                    </div>
+                    
+                    <div class="detail-field detail-field-full">
+                        <label class="detail-field-label"><span class="field-icon">⏰</span> Time Slot</label>
+                        <p class="detail-field-value" id="detailTimeSlot"></p>
+                    </div>
+                </div>
+                
+                <!-- Payment Proof Section -->
+                <div class="payment-proof-section" id="paymentProofSection" style="display: none;">
+                    <label class="proof-section-label">Attached Payment Proof</label>
+                    <div class="proof-thumbnail-container">
+                        <img id="proofThumbnail" src="" alt="Payment Proof" class="proof-thumbnail">
+                    </div>
+                    <button class="btn-view-full" id="viewFullImageBtn">
+                        <i class="fas fa-search-plus"></i> View Full Image
+                    </button>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="verification-action-buttons">
+                    <button class="btn-approve" id="approvePaymentBtn">
+                        <i class="fas fa-check"></i>
+                        <span>Approve Payment</span>
+                    </button>
+                    <button class="btn-reject" id="rejectPaymentBtn">
+                        <i class="fas fa-times"></i>
+                        <span>Reject</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Preview Modal -->
+        <!-- Refund Approval Detail Modal -->
+    <div class="modal" id="refundDetailModal" style="display: none;">
+        <div class="refund-detail-container">
+            <button class="refund-detail-close" id="closeRefundDetail">&times;</button>
+            
+            <div class="refund-detail-card">
+                <!-- Header - Turf & Refund Summary -->
+                <div class="refund-detail-header">
+                    <div class="refund-turf-info">
+                        <span class="turf-icon">🏟️</span>
+                        <span class="refund-turf-text">Turf: <strong id="refundTurfName"></strong></span>
+                    </div>
+                    <div class="refund-amount-section">
+                        <div class="refund-amount-display" id="refundAmount"></div>
+                        <div class="refund-sublabel" id="refundSublabel"></div>
+                    </div>
+                </div>
+                
+                <div class="detail-divider"></div>
+                
+                <!-- Customer Details Grid -->
+                <div class="refund-details-grid">
+                    <div class="detail-field">
+                        <label class="detail-field-label"><span class="field-icon">👤</span> User</label>
+                        <p class="detail-field-value" id="refundUserName"></p>
+                    </div>
+                    
+                    <div class="detail-field">
+                        <label class="detail-field-label"><span class="field-icon">📅</span> Booking Date</label>
+                        <p class="detail-field-value" id="refundBookingDate"></p>
+                    </div>
+                    
+                    <div class="detail-field">
+                        <label class="detail-field-label"><span class="field-icon">📧</span> Email</label>
+                        <p class="detail-field-value" id="refundEmail"></p>
+                    </div>
+                    
+                    <div class="detail-field">
+                        <label class="detail-field-label"><span class="field-icon">🕒</span> Time Slot</label>
+                        <p class="detail-field-value" id="refundTimeSlot"></p>
+                    </div>
+                    
+                    <div class="detail-field">
+                        <label class="detail-field-label"><span class="field-icon">📞</span> Phone</label>
+                        <p class="detail-field-value" id="refundPhone"></p>
+                    </div>
+                    
+                    <div class="detail-field">
+                        <label class="detail-field-label"><span class="field-icon">🏆</span> Sport</label>
+                        <p class="detail-field-value" id="refundSport"></p>
+                    </div>
+                </div>
+                
+                <!-- Cancellation Reason -->
+                <div class="cancellation-reason-section" id="cancellationReasonSection" style="display: none;">
+                    <div class="reason-box">
+                        <div class="reason-header">
+                            <span class="reason-icon">💬</span>
+                            <span class="reason-title">Cancellation Reason:</span>
+                        </div>
+                        <p class="reason-text" id="cancellationReasonText"></p>
+                    </div>
+                </div>
+                
+                <!-- Refund QR Section -->
+                <div class="refund-qr-section" id="refundQrSection" style="display: none;">
+                    <label class="qr-section-label">📷 User's Refund QR Code</label>
+                    <div class="qr-preview-container">
+                        <img id="refundQrThumbnail" src="" alt="Refund QR Code" class="qr-thumbnail">
+                    </div>
+                    <div class="qr-info-footer">
+                        <p class="qr-upload-time" id="qrUploadTime">
+                            <i class="fas fa-clock"></i> <span id="qrUploadTimeText"></span>
+                        </p>
+                        <button class="btn-view-qr-full" id="viewFullQrBtn">
+                            <i class="fas fa-expand-alt"></i> Click to view full size
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="refund-action-buttons">
+                    <button class="btn-confirm-refund" id="confirmRefundBtn">
+                        <i class="fas fa-check"></i>
+                        <span>Confirm Refund</span>
+                    </button>
+                    <button class="btn-reject-refund" id="rejectRefundBtn">
+                        <i class="fas fa-times"></i>
+                        <span>Reject Request</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Preview Modal -->
+    <div class="modal" id="imagePreviewModal" style="display: none;">
+        <div class="modal-content" style="max-width: 90vw; max-height: 90vh; padding: 0; border-radius: 20px; overflow: hidden;">
+            <span class="close" id="closeImageModal" style="position: absolute; top: 1rem; right: 1rem; z-index: 10; background: rgba(0,0,0,0.5); width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; color: white; font-size: 1.5rem; cursor: pointer;">&times;</span>
+            <div style="display: flex; flex-direction: column; height: 100%;">
+                <div style="flex: 1; display: flex; align-items: center; justify-content: center; background: #f9fcfb; padding: 2rem;">
+                    <img id="modalPreviewImage" src="" alt="Payment Screenshot" style="max-width: 100%; max-height: 70vh; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.2);">
+                </div>
+                <div style="padding: 1.5rem 2rem; background: white; border-top: 1px solid rgba(44, 201, 151, 0.1);">
+                    <h3 id="modalBookingInfo" style="margin: 0 0 0.5rem 0; color: #1A2E22; font-size: 1.125rem; font-weight: 600;"></h3>
+                    <p id="modalUserInfo" style="margin: 0; color: #6B7280; font-size: 0.9375rem;"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rejection Reason Modal -->
+    <div class="modal" id="rejectionReasonModal" style="display: none;">
+        <div class="modal-content" style="max-width: 500px; padding: 2rem; border-radius: 20px;">
+```
+
+    <!-- Rejection Reason Modal -->
+    <div class="modal" id="rejectionReasonModal" style="display: none;">
+        <div class="modal-content" style="max-width: 500px; padding: 2rem; border-radius: 20px;">
+            <h3 style="margin-bottom: 1rem; color: #1A2E22;">Reject Payment Verification</h3>
+            <p style="color: #6B7280; margin-bottom: 1.5rem;">Please provide a reason for rejecting this payment:</p>
+            <textarea id="rejectionReason" rows="4" placeholder="Enter rejection reason..." style="width: 100%; padding: 0.75rem; border: 1px solid #E5E7EB; border-radius: 8px; font-family: inherit; resize: vertical;"></textarea>
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem; justify-content: flex-end;">
+                <button class="btn btn-outline" id="cancelRejectionBtn">Cancel</button>
+                <button class="btn-reject" id="confirmRejectionBtn" style="padding: 0.75rem 1.5rem;">
+                    <i class="fas fa-times"></i> Confirm Rejection
+                </button>
+            </div>
+        </div>
+    </div>
+
     <footer class="footer">
         <div class="container">
             <div class="footer-bottom">
@@ -381,6 +748,8 @@
         </div>
     </footer>
 
+    <!-- Chart.js Library for Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBRlfL0E9kadx7PYmejv1XN5BTK-yEIUAc&libraries=places&loading=async" async defer></script>
     <script type="module" src="js/api.js"></script>
     <script type="module" src="js/auth.js"></script>

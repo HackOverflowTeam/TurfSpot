@@ -5,6 +5,20 @@ let currentBillingCycle = 'monthly';
 let selectedPlan = null;
 let uploadedImageFile = null;
 
+// Calculate end date based on billing cycle
+function calculateEndDate(startDate, billingCycle) {
+    const start = new Date(startDate);
+    const endDate = new Date(start);
+    
+    if (billingCycle === 'monthly') {
+        endDate.setDate(endDate.getDate() + 30);
+    } else {
+        endDate.setDate(endDate.getDate() + 365);
+    }
+    
+    return endDate;
+}
+
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
     // Wait for auth to initialize
@@ -46,6 +60,16 @@ function displayCurrentSubscription(subscription, turfCount, canAddMore) {
                        subscription.status === 'pending' ? 'pending' : 
                        subscription.status === 'cancelled' ? 'expired' : 'expired';
 
+    // Calculate end date dynamically if startDate exists
+    let displayEndDate = subscription.endDate;
+    if (subscription.startDate && subscription.billingCycle) {
+        const calculatedEndDate = calculateEndDate(subscription.startDate, subscription.billingCycle);
+        displayEndDate = calculatedEndDate.toISOString();
+    }
+
+    // Format billing cycle for display
+    const billingDisplay = subscription.billingCycle === 'annual' ? 'year' : 'month';
+
     details.innerHTML = `
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-top: 1rem;">
             <div>
@@ -62,16 +86,16 @@ function displayCurrentSubscription(subscription, turfCount, canAddMore) {
             </div>
             <div>
                 <strong>Billing:</strong>
-                <p style="margin-top: 0.5rem;">${formatCurrency(subscription.price)}/${subscription.billingCycle}</p>
+                <p style="margin-top: 0.5rem;">${formatCurrency(subscription.price)}/${billingDisplay}</p>
             </div>
             <div>
                 <strong>Turfs:</strong>
                 <p style="margin-top: 0.5rem;">${turfCount} / ${subscription.maxTurfs === -1 ? 'Unlimited' : subscription.maxTurfs}</p>
             </div>
-            ${subscription.endDate ? `
+            ${displayEndDate ? `
             <div>
                 <strong>Expires:</strong>
-                <p style="margin-top: 0.5rem;">${new Date(subscription.endDate).toLocaleDateString()}</p>
+                <p style="margin-top: 0.5rem;">${new Date(displayEndDate).toLocaleDateString()}</p>
             </div>
             ` : ''}
         </div>
@@ -98,13 +122,20 @@ window.toggleBilling = function(cycle) {
     document.getElementById('monthlyBtn').classList.toggle('active', cycle === 'monthly');
     document.getElementById('annualBtn').classList.toggle('active', cycle === 'annual');
     
-    // Update prices
+    // Update prices and period text
+    const basicPeriodEl = document.getElementById('basicPeriod');
+    const proPeriodEl = document.getElementById('proPeriod');
+    
     if (cycle === 'monthly') {
         document.getElementById('basicPrice').textContent = '699';
         document.getElementById('proPrice').textContent = '1999';
+        if (basicPeriodEl) basicPeriodEl.textContent = '/month';
+        if (proPeriodEl) proPeriodEl.textContent = '/month';
     } else {
         document.getElementById('basicPrice').textContent = '600';
         document.getElementById('proPrice').textContent = '1500';
+        if (basicPeriodEl) basicPeriodEl.textContent = '/year';
+        if (proPeriodEl) proPeriodEl.textContent = '/year';
     }
 };
 

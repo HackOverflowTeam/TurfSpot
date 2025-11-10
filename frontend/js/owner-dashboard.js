@@ -293,20 +293,435 @@ function createTurfManagementCard(turf) {
 }
 
 // Load analytics
+let analyticsCharts = {
+    earningsLine: null,
+    customersBar: null,
+    revenueDonut: null
+};
+
 async function loadAnalytics() {
     try {
-        const response = await api.getOwnerAnalytics({ period: 30 });
+        const period = document.getElementById('analyticsPeriod').value;
+        const turfId = document.getElementById('analyticsTurf').value;
+        
+        const params = { period: parseInt(period) };
+        if (turfId) params.turfId = turfId;
+        
+        const response = await api.getOwnerAnalytics(params);
         const analytics = response.data;
 
-        // Update stats
-        document.getElementById('totalTurfs').textContent = myTurfs.length;
-        document.getElementById('totalBookings').textContent = analytics.overview.totalBookings || 0;
-        document.getElementById('totalRevenue').textContent = formatCurrency(analytics.overview.totalRevenue || 0);
-        document.getElementById('ownerEarnings').textContent = formatCurrency(analytics.overview.ownerEarnings || 0);
-        document.getElementById('platformFee').textContent = formatCurrency(analytics.overview.platformFees || 0);
+        // Update Key Metrics Cards
+        updateMetricsCards(analytics);
+        
+        // Generate Charts
+        generateEarningsLineChart(analytics);
+        generateCustomersBarChart(analytics);
+        generateRevenueDonutChart(analytics);
+        
+        // Populate Insights Table
+        populateInsightsTable(analytics);
+        
+        showToast('Analytics updated successfully', 'success');
     } catch (error) {
         console.error('Error loading analytics:', error);
+        showToast('Failed to load analytics', 'error');
     }
+}
+
+// Update Metrics Cards with Animation
+function updateMetricsCards(analytics) {
+    const overview = analytics.overview || {};
+    
+    // Monthly Earnings
+    const monthlyEarnings = overview.ownerEarnings || 0;
+    const monthlyGrowth = calculateGrowth(monthlyEarnings, overview.previousMonthEarnings || 0);
+    
+    animateValue('monthlyEarnings', 0, monthlyEarnings, 1500, true);
+    updateGrowthIndicator('monthlyGrowth', monthlyGrowth);
+    
+    // Unique Customers
+    const uniqueCustomers = overview.uniqueCustomers || 0;
+    animateValue('uniqueCustomers', 0, uniqueCustomers, 1500);
+    
+    // Avg Bookings per Turf
+    const avgBookings = myTurfs.length > 0 
+        ? Math.round(overview.totalBookings / myTurfs.length) 
+        : 0;
+    animateValue('avgBookings', 0, avgBookings, 1500);
+    
+    // Set bar width for visual indicator
+    const barWidth = Math.min((avgBookings / 50) * 100, 100); // Max 50 bookings = 100%
+    document.documentElement.style.setProperty('--bar-width', `${barWidth}%`);
+    
+    // Yearly Revenue
+    const yearlyRevenue = overview.yearlyRevenue || 0;
+    const yearlyGrowth = calculateGrowth(yearlyRevenue, overview.previousYearRevenue || 0);
+    
+    animateValue('yearlyRevenue', 0, yearlyRevenue, 1500, true);
+    updateGrowthIndicator('yearlyGrowth', yearlyGrowth);
+}
+
+// Animate number counter
+function animateValue(id, start, end, duration, isCurrency = false) {
+    const element = document.getElementById(id);
+    if (!element) return;
+    
+    const range = end - start;
+    const increment = range / (duration / 16);
+    let current = start;
+    
+    const timer = setInterval(() => {
+        current += increment;
+        if ((increment > 0 && current >= end) || (increment < 0 && current <= end)) {
+            current = end;
+            clearInterval(timer);
+        }
+        element.textContent = isCurrency 
+            ? formatCurrency(Math.round(current))
+            : Math.round(current);
+    }, 16);
+}
+
+// Update growth indicator
+function updateGrowthIndicator(id, growth) {
+    const element = document.getElementById(id);
+    if (!element) return;
+    
+    element.className = 'metric-growth';
+    
+    if (growth > 0) {
+        element.classList.add('positive');
+        element.innerHTML = `<span class="growth-indicator">+${growth}%</span>`;
+    } else if (growth < 0) {
+        element.classList.add('negative');
+        element.innerHTML = `<span class="growth-indicator">${growth}%</span>`;
+    } else {
+        element.innerHTML = `<span class="growth-indicator" style="color: var(--text-secondary);">0%</span>`;
+    }
+}
+
+// Calculate growth percentage
+function calculateGrowth(current, previous) {
+    if (previous === 0) return current > 0 ? 100 : 0;
+    return Math.round(((current - previous) / previous) * 100);
+}
+
+// Generate Monthly Earnings Line Chart
+function generateEarningsLineChart(analytics) {
+    const ctx = document.getElementById('earningsLineChart');
+    if (!ctx) return;
+    
+    // Destroy existing chart
+    if (analyticsCharts.earningsLine) {
+        analyticsCharts.earningsLine.destroy();
+    }
+    
+    // Generate monthly data for the year
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthlyData = analytics.monthlyEarnings || [];
+    
+    // Fill missing months with 0
+    const earnings = months.map((month, index) => {
+        const data = monthlyData.find(m => m.month === index + 1);
+        return data ? data.earnings : 0;
+    });
+    
+    analyticsCharts.earningsLine = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: months,
+            datasets: [{
+                label: 'Monthly Earnings (₹)',
+                data: earnings,
+                borderColor: '#2CC997',
+                backgroundColor: 'rgba(44, 201, 151, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                pointBackgroundColor: '#2CC997',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 12,
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    borderColor: '#2CC997',
+                    borderWidth: 1,
+                    displayColors: false,
+                    callbacks: {
+                        label: function(context) {
+                            return 'Earnings: ' + formatCurrency(context.parsed.y);
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '₹' + (value / 1000) + 'k';
+                        },
+                        color: '#6B7280'
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                },
+                x: {
+                    ticks: {
+                        color: '#6B7280'
+                    },
+                    grid: {
+                        display: false
+                    }
+                }
+            },
+            animation: {
+                duration: 1500,
+                easing: 'easeInOutQuart'
+            }
+        }
+    });
+}
+
+// Generate Customer Growth Bar Chart
+function generateCustomersBarChart(analytics) {
+    const ctx = document.getElementById('customersBarChart');
+    if (!ctx) return;
+    
+    // Destroy existing chart
+    if (analyticsCharts.customersBar) {
+        analyticsCharts.customersBar.destroy();
+    }
+    
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const customerData = analytics.monthlyCustomers || [];
+    
+    // Fill missing months with 0
+    const customers = months.map((month, index) => {
+        const data = customerData.find(m => m.month === index + 1);
+        return data ? data.count : 0;
+    });
+    
+    analyticsCharts.customersBar = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: months,
+            datasets: [{
+                label: 'New Customers',
+                data: customers,
+                backgroundColor: (context) => {
+                    const ctx = context.chart.ctx;
+                    const gradient = ctx.createLinearGradient(0, 0, 0, 250);
+                    gradient.addColorStop(0, '#27AE60');
+                    gradient.addColorStop(1, '#2CC997');
+                    return gradient;
+                },
+                borderRadius: 8,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 12,
+                    borderColor: '#2CC997',
+                    borderWidth: 1,
+                    displayColors: false,
+                    callbacks: {
+                        label: function(context) {
+                            return context.parsed.y + ' new customers';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 5,
+                        color: '#6B7280'
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                },
+                x: {
+                    ticks: {
+                        color: '#6B7280'
+                    },
+                    grid: {
+                        display: false
+                    }
+                }
+            },
+            animation: {
+                duration: 1500,
+                easing: 'easeOutBounce'
+            }
+        }
+    });
+}
+
+// Generate Revenue Distribution Donut Chart
+function generateRevenueDonutChart(analytics) {
+    const ctx = document.getElementById('revenueDonutChart');
+    if (!ctx) return;
+    
+    // Destroy existing chart
+    if (analyticsCharts.revenueDonut) {
+        analyticsCharts.revenueDonut.destroy();
+    }
+    
+    const turfRevenue = analytics.turfRevenue || [];
+    
+    if (turfRevenue.length === 0) {
+        // Show "No Data" message
+        document.getElementById('donutTotalValue').textContent = '₹0';
+        return;
+    }
+    
+    const labels = turfRevenue.map(t => t.turfName);
+    const data = turfRevenue.map(t => t.revenue);
+    const totalRevenue = data.reduce((a, b) => a + b, 0);
+    
+    // Update center text
+    document.getElementById('donutTotalValue').textContent = formatCurrency(totalRevenue);
+    
+    // Generate color palette (shades of green and blue)
+    const colors = [
+        '#2CC997', '#27AE60', '#16A085', '#1ABC9C', '#48C9B0',
+        '#3498DB', '#5DADE2', '#85C1E9', '#AED6F1', '#D6EAF8'
+    ];
+    
+    analyticsCharts.revenueDonut = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: colors.slice(0, data.length),
+                borderWidth: 3,
+                borderColor: '#fff',
+                hoverOffset: 10
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '70%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 15,
+                        font: {
+                            size: 12,
+                            weight: '500'
+                        },
+                        color: '#1A2E22',
+                        usePointStyle: true,
+                        pointStyle: 'circle'
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 12,
+                    borderColor: '#2CC997',
+                    borderWidth: 1,
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = formatCurrency(context.parsed);
+                            const percentage = ((context.parsed / totalRevenue) * 100).toFixed(1);
+                            return `${label}: ${value} (${percentage}%)`;
+                        }
+                    }
+                }
+            },
+            animation: {
+                animateRotate: true,
+                animateScale: true,
+                duration: 1500
+            }
+        }
+    });
+}
+
+// Populate Turf-wise Insights Table
+function populateInsightsTable(analytics) {
+    const tbody = document.getElementById('insightsTableBody');
+    if (!tbody) return;
+    
+    const turfInsights = analytics.turfInsights || [];
+    
+    if (turfInsights.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="table-loading">
+                    No turf data available
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = turfInsights.map(turf => {
+        const sportIcon = getSportIcon(turf.sport);
+        const trendClass = turf.trend > 0 ? 'table-trend-up' : 'table-trend-down';
+        const trendIcon = turf.trend > 0 ? '📈' : '📉';
+        
+        return `
+            <tr>
+                <td>
+                    <div class="turf-name-cell">
+                        <span class="turf-sport-badge">${sportIcon}</span>
+                        <strong>${turf.turfName}</strong>
+                    </div>
+                </td>
+                <td><strong>${turf.totalBookings || 0}</strong></td>
+                <td>${turf.monthlyAvg || 0}</td>
+                <td class="table-earnings">${formatCurrency(turf.earnings || 0)}</td>
+                <td>${turf.uniqueCustomers || 0}</td>
+                <td class="${trendClass}">
+                    <span>${trendIcon} ${turf.trend > 0 ? '+' : ''}${turf.trend || 0}%</span>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// Get sport icon emoji
+function getSportIcon(sport) {
+    const icons = {
+        'cricket': '🏏',
+        'football': '⚽',
+        'badminton': '🏸',
+        'tennis': '🎾',
+        'basketball': '🏀',
+        'volleyball': '🏐',
+        'hockey': '🏑'
+    };
+    return icons[sport?.toLowerCase()] || '🏟️';
 }
 
 // Load bookings
@@ -737,52 +1152,104 @@ async function loadPendingVerifications() {
         badge.style.display = 'inline-block';
         
         list.innerHTML = response.data.map(booking => `
-            <div class="verification-card" style="background: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
-                    <div>
-                        <h4 style="margin-bottom: 0.5rem;">${booking.turf.name}</h4>
-                        <p style="color: var(--text-secondary); margin-bottom: 0.25rem;">
-                            <i class="fas fa-user"></i> ${booking.user.name}
-                        </p>
-                        <p style="color: var(--text-secondary); margin-bottom: 0.25rem;">
-                            <i class="fas fa-phone"></i> ${booking.user.phone}
-                        </p>
-                        <p style="color: var(--text-secondary);">
-                            <i class="fas fa-calendar"></i> ${new Date(booking.bookingDate).toLocaleDateString()} | 
-                            <i class="fas fa-clock"></i> ${formatTimeSlot(booking.timeSlots[0].startTime, booking.timeSlots[booking.timeSlots.length - 1].endTime)}
-                        </p>
-                    </div>
-                    <div style="text-align: right;">
-                        <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary);">
+            <div class="verification-card" onclick="openVerificationDetail('${booking._id}')" style="cursor: pointer;">
+                <div class="verification-header">
+                    <div class="verification-turf-info">
+                        <div class="turf-name-badge">
+                            <span class="icon-badge">🏟️</span>
+                            <h3>${booking.turf.name}</h3>
+                        </div>
+                        <div class="verification-amount">
                             ${formatCurrency(booking.pricing.totalAmount)}
                         </div>
-                        <small style="color: var(--text-secondary);">Total Amount</small>
+                    </div>
+                </div>
+                
+                <div class="verification-details-grid">
+                    <div class="detail-item">
+                        <span class="detail-icon">👤</span>
+                        <div class="detail-content">
+                            <span class="detail-label">Customer</span>
+                            <span class="detail-value">${booking.user.name}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <span class="detail-icon">📧</span>
+                        <div class="detail-content">
+                            <span class="detail-label">Email</span>
+                            <span class="detail-value">${booking.user.email || 'N/A'}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <span class="detail-icon">📞</span>
+                        <div class="detail-content">
+                            <span class="detail-label">Phone</span>
+                            <span class="detail-value">${booking.user.phone}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <span class="detail-icon">📅</span>
+                        <div class="detail-content">
+                            <span class="detail-label">Booking Date</span>
+                            <span class="detail-value">${new Date(booking.bookingDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <span class="detail-icon">⏰</span>
+                        <div class="detail-content">
+                            <span class="detail-label">Time Slot</span>
+                            <span class="detail-value">${formatTimeSlot(booking.timeSlots[0].startTime, booking.timeSlots[booking.timeSlots.length - 1].endTime)}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <span class="detail-icon">🏆</span>
+                        <div class="detail-content">
+                            <span class="detail-label">Sport</span>
+                            <span class="detail-value">${booking.turf.sport}</span>
+                        </div>
                     </div>
                 </div>
                 
                 ${booking.tierPayment && booking.tierPayment.screenshot ? `
-                    <div style="margin: 1rem 0;">
-                        <strong style="display: block; margin-bottom: 0.5rem;">Payment Screenshot:</strong>
-                        <img src="${booking.tierPayment.screenshot.url}" 
-                             alt="Payment Screenshot" 
-                             style="max-width: 100%; max-height: 300px; border-radius: 8px; cursor: pointer;"
-                             onclick="window.open('${booking.tierPayment.screenshot.url}', '_blank')">
-                        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.5rem;">
-                            <i class="fas fa-clock"></i> Uploaded ${new Date(booking.tierPayment.uploadedAt).toLocaleString()}
+                    <div class="payment-screenshot-section">
+                        <div class="screenshot-label">
+                            <span class="detail-icon">💳</span>
+                            <span>Payment Screenshot</span>
+                        </div>
+                        <div class="screenshot-preview">
+                            <img src="${booking.tierPayment.screenshot.url}" alt="Payment Screenshot">
+                            <div class="screenshot-overlay">
+                                <i class="fas fa-expand"></i>
+                                <span>Click to view details</span>
+                            </div>
+                        </div>
+                        <p class="upload-time">
+                            <i class="fas fa-clock"></i> 
+                            Uploaded ${new Date(booking.tierPayment.uploadedAt).toLocaleString('en-IN', {
+                                day: 'numeric',
+                                month: 'short',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            })}
                         </p>
                     </div>
                 ` : ''}
                 
-                <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-                    <button class="btn btn-primary" onclick="verifyPayment('${booking._id}', true)" style="flex: 1;">
-                        <i class="fas fa-check"></i> Approve
-                    </button>
-                    <button class="btn btn-outline" onclick="verifyPayment('${booking._id}', false)" style="flex: 1; color: #ef4444; border-color: #ef4444;">
-                        <i class="fas fa-times"></i> Reject
-                    </button>
+                <div class="verification-quick-preview">
+                    <small style="color: var(--text-secondary); font-size: 0.875rem;">
+                        <i class="fas fa-hand-pointer"></i> Click to view full details and take action
+                    </small>
                 </div>
             </div>
         `).join('');
+        
+        // Store verifications data for detail view
+        window.verificationsData = response.data;
     } catch (error) {
         loader.style.display = 'none';
         showToast('Failed to load pending verifications', 'error');
@@ -822,7 +1289,7 @@ async function loadPendingRefunds() {
             const refundLabel = isTierBased ? 'Full Refund' : 'Refund Amount (90%)';
             
             return `
-            <div class="refund-card" style="background: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 4px solid #FFC107;">
+            <div class="refund-card" onclick="openRefundDetail('${booking._id}')" style="background: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 4px solid #FFC107;">
                 <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
                     <div style="flex: 1;">
                         <h4 style="margin-bottom: 0.5rem; color: var(--text-primary);">
@@ -833,13 +1300,7 @@ async function loadPendingRefunds() {
                                 <i class="fas fa-user"></i> <strong>User:</strong> ${booking.user.name}
                             </p>
                             <p style="color: var(--text-secondary); margin: 0;">
-                                <i class="fas fa-phone"></i> <strong>Phone:</strong> ${booking.user.phone}
-                            </p>
-                            <p style="color: var(--text-secondary); margin: 0;">
-                                <i class="fas fa-envelope"></i> <strong>Email:</strong> ${booking.user.email}
-                            </p>
-                            <p style="color: var(--text-secondary); margin: 0;">
-                                <i class="fas fa-calendar"></i> <strong>Booking Date:</strong> ${new Date(booking.bookingDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                <i class="fas fa-calendar"></i> <strong>Date:</strong> ${new Date(booking.bookingDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                             </p>
                             <p style="color: var(--text-secondary); margin: 0;">
                                 <i class="fas fa-clock"></i> <strong>Time:</strong> ${formatTimeSlot(booking.timeSlots[0].startTime, booking.timeSlots[booking.timeSlots.length - 1].endTime)}
@@ -847,13 +1308,10 @@ async function loadPendingRefunds() {
                         </div>
                     </div>
                     <div style="text-align: right;">
-                        <div style="font-size: 1.75rem; font-weight: bold; color: var(--primary); margin-bottom: 0.25rem;">
+                        <div style="font-size: 1.75rem; font-weight: bold; color: #FFC107; margin-bottom: 0.25rem;">
                             ${formatCurrency(booking.refundRequest.refundAmount)}
                         </div>
                         <small style="color: var(--text-secondary); font-weight: 600;">${refundLabel}</small>
-                        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.5rem;">
-                            <i class="fas fa-receipt"></i> Total: ${formatCurrency(booking.pricing.totalAmount)}
-                        </p>
                         ${isTierBased ? `
                         <p style="color: #10b981; font-size: 0.8rem; margin-top: 0.25rem; font-weight: 600;">
                             <i class="fas fa-crown"></i> Subscription Plan
@@ -863,45 +1321,33 @@ async function loadPendingRefunds() {
                 </div>
                 
                 ${booking.refundRequest.reason ? `
-                    <div style="background: #FFF8E1; padding: 1rem; border-radius: 8px; margin: 1rem 0; border-left: 3px solid #FFC107;">
-                        <strong style="display: block; margin-bottom: 0.5rem; color: #8B6914;">
-                            <i class="fas fa-comment-alt"></i> Cancellation Reason:
-                        </strong>
-                        <p style="color: #8B6914; margin: 0; line-height: 1.5;">${booking.refundRequest.reason}</p>
+                    <div style="background: #FFF8E1; padding: 0.75rem; border-radius: 8px; margin: 0.75rem 0; border-left: 3px solid #FFC107;">
+                        <p style="color: #8B6914; margin: 0; font-size: 0.9rem; line-height: 1.5;">
+                            <i class="fas fa-comment-alt" style="margin-right: 6px;"></i>
+                            <strong>Reason:</strong> ${booking.refundRequest.reason}
+                        </p>
                     </div>
                 ` : ''}
                 
                 ${booking.refundRequest.qrImage && booking.refundRequest.qrImage.url ? `
-                    <div style="margin: 1rem 0;">
-                        <strong style="display: block; margin-bottom: 0.75rem; color: var(--text-primary);">
-                            <i class="fas fa-qrcode"></i> User's Refund QR Code:
-                        </strong>
-                        <div style="text-align: center; background: var(--bg-soft); padding: 1rem; border-radius: 8px;">
-                            <img src="${booking.refundRequest.qrImage.url}" 
-                                 alt="Refund QR Code" 
-                                 style="max-width: 300px; max-height: 300px; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 2px solid #e5e7eb;"
-                                 onclick="window.open('${booking.refundRequest.qrImage.url}', '_blank')">
-                            <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.75rem;">
-                                <i class="fas fa-clock"></i> Uploaded ${new Date(booking.refundRequest.requestedAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                            </p>
-                            <small style="color: var(--text-secondary); display: block; margin-top: 0.25rem;">
-                                Click to view full size
-                            </small>
-                        </div>
+                    <div style="margin: 0.75rem 0; text-align: center;">
+                        <small style="color: var(--text-secondary); display: block; margin-bottom: 0.5rem;">
+                            <i class="fas fa-qrcode"></i> QR Code attached
+                        </small>
                     </div>
                 ` : ''}
                 
-                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
-                    <button class="btn btn-primary" onclick="processRefund('${booking._id}', true)" style="flex: 1; font-weight: 600;">
-                        <i class="fas fa-check-circle"></i> Confirm Refund
-                    </button>
-                    <button class="btn btn-outline" onclick="processRefund('${booking._id}', false)" style="flex: 1; color: #ef4444; border-color: #ef4444; font-weight: 600;">
-                        <i class="fas fa-times-circle"></i> Reject Request
-                    </button>
+                <div class="refund-quick-hint">
+                    <small>
+                        <i class="fas fa-hand-pointer"></i> Click to view details and process refund
+                    </small>
                 </div>
             </div>
         `;
         }).join('');
+        
+        // Store refunds data for detail view
+        window.refundsData = response.data;
     } catch (error) {
         loader.style.display = 'none';
         showToast('Failed to load pending refunds', 'error');
@@ -935,25 +1381,33 @@ window.processRefund = async function(bookingId, approved) {
 };
 
 // Verify tier payment
-window.verifyPayment = async function(bookingId, approved) {
-    let reason = '';
-    
-    if (!approved) {
+window.verifyPayment = async function(bookingId, approved, reason = '') {
+    // If called from new modal, skip prompts (reason already provided)
+    if (!reason && !approved) {
         reason = prompt('Please provide a reason for rejection:');
         if (!reason) return;
     }
     
-    if (!confirm(`Are you sure you want to ${approved ? 'approve' : 'reject'} this payment?`)) {
-        return;
+    // Skip confirmation if called from new modal (already has explicit approve/reject buttons)
+    const isFromModal = currentVerificationId === bookingId;
+    if (!isFromModal) {
+        if (!confirm(`Are you sure you want to ${approved ? 'approve' : 'reject'} this payment?`)) {
+            return;
+        }
     }
     
     try {
         await api.verifyTierPayment(bookingId, approved, reason);
-        showToast(approved ? 'Payment approved successfully' : 'Payment rejected', approved ? 'success' : 'info');
+        
+        // Only show toast if not from modal (modal has its own success toast)
+        if (!isFromModal) {
+            showToast(approved ? 'Payment approved successfully' : 'Payment rejected', approved ? 'success' : 'info');
+        }
+        
         loadPendingVerifications();
         loadOwnerBookings(); // Refresh bookings list
     } catch (error) {
-        showToast(error.message || 'Failed to verify payment', 'error');
+        throw error; // Re-throw for modal to handle
     }
 };
 
@@ -1135,4 +1589,418 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('turfFilter').addEventListener('change', loadOwnerBookings);
     document.getElementById('statusFilter').addEventListener('change', loadOwnerBookings);
     document.getElementById('analyticsPeriod').addEventListener('change', loadAnalytics);
+    
+    // Image Preview Modal
+    const modal = document.getElementById('imagePreviewModal');
+    const closeModalBtn = document.getElementById('closeImageModal');
+    
+    // Close modal when clicking the close button
+    if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', closeImageModal);
+    }
+    
+    // Close modal when clicking outside the image
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeImageModal();
+            }
+        });
+    }
+    
+    // Close modal with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeImageModal();
+            closeVerificationDetailModal();
+            closeRejectionModal();
+            closeRefundDetailModal();
+        }
+    });
+    
+    // Verification Detail Modal
+    const verificationDetailModal = document.getElementById('verificationDetailModal');
+    const closeVerificationDetailBtn = document.getElementById('closeVerificationDetail');
+    
+    if (closeVerificationDetailBtn) {
+        closeVerificationDetailBtn.addEventListener('click', closeVerificationDetailModal);
+    }
+    
+    if (verificationDetailModal) {
+        verificationDetailModal.addEventListener('click', function(e) {
+            if (e.target === verificationDetailModal) {
+                closeVerificationDetailModal();
+            }
+        });
+    }
+    
+    // View Full Image button in detail modal
+    const viewFullImageBtn = document.getElementById('viewFullImageBtn');
+    if (viewFullImageBtn) {
+        viewFullImageBtn.addEventListener('click', function() {
+            const imageUrl = document.getElementById('proofThumbnail').src;
+            const bookingInfo = {
+                turfName: document.getElementById('detailTurfName').textContent,
+                amount: document.getElementById('detailAmount').textContent,
+                date: document.getElementById('detailDate').textContent
+            };
+            openImageModal(imageUrl, bookingInfo);
+        });
+    }
+    
+    // Rejection Modal
+    const cancelRejectionBtn = document.getElementById('cancelRejectionBtn');
+    if (cancelRejectionBtn) {
+        cancelRejectionBtn.addEventListener('click', closeRejectionModal);
+    }
+    
+    // Refund Detail Modal
+    const refundDetailModal = document.getElementById('refundDetailModal');
+    const closeRefundDetailBtn = document.getElementById('closeRefundDetail');
+    
+    if (closeRefundDetailBtn) {
+        closeRefundDetailBtn.addEventListener('click', closeRefundDetailModal);
+    }
+    
+    if (refundDetailModal) {
+        refundDetailModal.addEventListener('click', function(e) {
+            if (e.target === refundDetailModal) {
+                closeRefundDetailModal();
+            }
+        });
+    }
+    
+    // View Full QR button in refund modal
+    const viewFullQrBtn = document.getElementById('viewFullQrBtn');
+    if (viewFullQrBtn) {
+        viewFullQrBtn.addEventListener('click', function() {
+            const qrUrl = document.getElementById('refundQrThumbnail').src;
+            window.open(qrUrl, '_blank');
+        });
+    }
 });
+
+// Image Modal Functions
+function openImageModal(imageUrl, bookingInfo) {
+    const modal = document.getElementById('imagePreviewModal');
+    const modalImage = document.getElementById('modalImage');
+    const modalBookingInfo = document.getElementById('modalBookingInfo');
+    
+    if (modal && modalImage) {
+        modalImage.src = imageUrl;
+        
+        if (modalBookingInfo && bookingInfo) {
+            modalBookingInfo.innerHTML = `
+                <p><strong>Turf:</strong> ${bookingInfo.turfName}</p>
+                <p><strong>Amount:</strong> ${bookingInfo.amount}</p>
+                <p><strong>Date:</strong> ${bookingInfo.date}</p>
+            `;
+        }
+        
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden'; // Prevent scrolling
+    }
+}
+
+function closeImageModal() {
+    const modal = document.getElementById('imagePreviewModal');
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = ''; // Restore scrolling
+    }
+}
+
+// Make functions global
+window.openImageModal = openImageModal;
+window.closeImageModal = closeImageModal;
+
+// Verification Detail Modal Functions
+let currentVerificationId = null;
+
+function openVerificationDetail(bookingId) {
+    if (!window.verificationsData) {
+        showToast('Verification data not available', 'error');
+        return;
+    }
+    
+    const booking = window.verificationsData.find(b => b._id === bookingId);
+    if (!booking) {
+        showToast('Booking not found', 'error');
+        return;
+    }
+    
+    currentVerificationId = bookingId;
+    
+    // Populate modal with booking data
+    document.getElementById('detailTurfName').textContent = booking.turf.name;
+    document.getElementById('detailAmount').textContent = formatCurrency(booking.pricing.totalAmount);
+    document.getElementById('detailUserName').textContent = booking.user.name;
+    document.getElementById('detailSport').textContent = booking.turf.sport;
+    document.getElementById('detailEmail').textContent = booking.user.email || 'N/A';
+    document.getElementById('detailAmountText').textContent = formatCurrency(booking.pricing.totalAmount);
+    document.getElementById('detailPhone').textContent = booking.user.phone;
+    document.getElementById('detailDate').textContent = new Date(booking.bookingDate).toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+    });
+    document.getElementById('detailTimeSlot').textContent = formatTimeSlot(
+        booking.timeSlots[0].startTime,
+        booking.timeSlots[booking.timeSlots.length - 1].endTime
+    );
+    
+    // Handle payment proof
+    const paymentProofSection = document.getElementById('paymentProofSection');
+    const proofThumbnail = document.getElementById('proofThumbnail');
+    
+    if (booking.tierPayment && booking.tierPayment.screenshot) {
+        proofThumbnail.src = booking.tierPayment.screenshot.url;
+        paymentProofSection.style.display = 'block';
+    } else {
+        paymentProofSection.style.display = 'none';
+    }
+    
+    // Setup action buttons
+    const approveBtn = document.getElementById('approvePaymentBtn');
+    const rejectBtn = document.getElementById('rejectPaymentBtn');
+    
+    approveBtn.onclick = () => handleVerificationAction(bookingId, true);
+    rejectBtn.onclick = () => openRejectionModal(bookingId);
+    
+    // Show modal
+    const modal = document.getElementById('verificationDetailModal');
+    modal.classList.add('active');
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeVerificationDetailModal() {
+    const modal = document.getElementById('verificationDetailModal');
+    if (modal) {
+        modal.classList.remove('active');
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+        currentVerificationId = null;
+    }
+}
+
+function openRejectionModal(bookingId) {
+    currentVerificationId = bookingId;
+    const rejectionModal = document.getElementById('rejectionReasonModal');
+    const rejectionReason = document.getElementById('rejectionReason');
+    
+    rejectionReason.value = '';
+    rejectionModal.style.display = 'flex';
+    
+    // Setup confirm button
+    const confirmBtn = document.getElementById('confirmRejectionBtn');
+    confirmBtn.onclick = () => {
+        const reason = rejectionReason.value.trim();
+        if (!reason) {
+            showToast('Please provide a rejection reason', 'error');
+            return;
+        }
+        closeRejectionModal();
+        handleVerificationAction(bookingId, false, reason);
+    };
+}
+
+function closeRejectionModal() {
+    const rejectionModal = document.getElementById('rejectionReasonModal');
+    if (rejectionModal) {
+        rejectionModal.style.display = 'none';
+    }
+}
+
+async function handleVerificationAction(bookingId, isApproved, reason = '') {
+    const approveBtn = document.getElementById('approvePaymentBtn');
+    const rejectBtn = document.getElementById('rejectPaymentBtn');
+    
+    // Disable buttons to prevent double-click
+    if (approveBtn) approveBtn.disabled = true;
+    if (rejectBtn) rejectBtn.disabled = true;
+    
+    try {
+        await verifyPayment(bookingId, isApproved, reason);
+        
+        // Show success toast
+        showSuccessToast(isApproved ? '✅ Payment approved successfully!' : '❌ Payment rejected');
+        
+        // Close detail modal
+        closeVerificationDetailModal();
+        
+        // Reload verifications list
+        await loadPendingVerifications();
+    } catch (error) {
+        console.error('Error handling verification:', error);
+        showToast(error.message || 'Failed to process verification', 'error');
+        
+        // Re-enable buttons
+        if (approveBtn) approveBtn.disabled = false;
+        if (rejectBtn) rejectBtn.disabled = false;
+    }
+}
+
+function showSuccessToast(message) {
+    // Create toast element
+    const toast = document.createElement('div');
+    toast.className = 'toast-success';
+    toast.innerHTML = `
+        <i class="fas fa-check-circle" style="font-size: 1.25rem;"></i>
+        <span style="font-weight: 600;">${message}</span>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        toast.style.animation = 'slideOutRight 0.4s ease-out';
+        setTimeout(() => {
+            document.body.removeChild(toast);
+        }, 400);
+    }, 3000);
+}
+
+// Make functions global
+window.openVerificationDetail = openVerificationDetail;
+window.closeVerificationDetailModal = closeVerificationDetailModal;
+window.openRejectionModal = openRejectionModal;
+window.closeRejectionModal = closeRejectionModal;
+
+// Refund Detail Modal Functions
+let currentRefundBookingId = null;
+
+function openRefundDetail(bookingId) {
+    if (!window.refundsData) {
+        showToast('Refund data not available', 'error');
+        return;
+    }
+    
+    const booking = window.refundsData.find(b => b._id === bookingId);
+    if (!booking) {
+        showToast('Booking not found', 'error');
+        return;
+    }
+    
+    currentRefundBookingId = bookingId;
+    
+    // Determine refund details
+    const isTierBased = booking.turf.paymentMethod === 'tier';
+    const refundLabel = isTierBased ? 'Full Refund (100%)' : `Refund Amount (90%) | Total: ${formatCurrency(booking.pricing.totalAmount)}`;
+    
+    // Populate modal with booking data
+    document.getElementById('refundTurfName').textContent = booking.turf.name;
+    document.getElementById('refundAmount').textContent = formatCurrency(booking.refundRequest.refundAmount);
+    document.getElementById('refundSublabel').textContent = refundLabel;
+    document.getElementById('refundUserName').textContent = booking.user.name;
+    document.getElementById('refundEmail').textContent = booking.user.email;
+    document.getElementById('refundPhone').textContent = booking.user.phone;
+    document.getElementById('refundBookingDate').textContent = new Date(booking.bookingDate).toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+    });
+    document.getElementById('refundTimeSlot').textContent = formatTimeSlot(
+        booking.timeSlots[0].startTime,
+        booking.timeSlots[booking.timeSlots.length - 1].endTime
+    );
+    document.getElementById('refundSport').textContent = booking.turf.sport || 'N/A';
+    
+    // Handle cancellation reason
+    const reasonSection = document.getElementById('cancellationReasonSection');
+    const reasonText = document.getElementById('cancellationReasonText');
+    
+    if (booking.refundRequest.reason) {
+        reasonText.textContent = booking.refundRequest.reason;
+        reasonSection.style.display = 'block';
+    } else {
+        reasonSection.style.display = 'none';
+    }
+    
+    // Handle QR code
+    const qrSection = document.getElementById('refundQrSection');
+    const qrThumbnail = document.getElementById('refundQrThumbnail');
+    const qrUploadTimeText = document.getElementById('qrUploadTimeText');
+    
+    if (booking.refundRequest.qrImage && booking.refundRequest.qrImage.url) {
+        qrThumbnail.src = booking.refundRequest.qrImage.url;
+        qrUploadTimeText.textContent = `Uploaded on ${new Date(booking.refundRequest.requestedAt).toLocaleString('en-IN', {
+            day: 'numeric',
+            month: 'short',
+            hour: '2-digit',
+            minute: '2-digit'
+        })}`;
+        qrSection.style.display = 'block';
+    } else {
+        qrSection.style.display = 'none';
+    }
+    
+    // Setup action buttons
+    const confirmBtn = document.getElementById('confirmRefundBtn');
+    const rejectBtn = document.getElementById('rejectRefundBtn');
+    
+    confirmBtn.onclick = () => handleRefundAction(bookingId, true);
+    rejectBtn.onclick = () => handleRefundAction(bookingId, false);
+    
+    // Show modal
+    const modal = document.getElementById('refundDetailModal');
+    modal.classList.add('active');
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeRefundDetailModal() {
+    const modal = document.getElementById('refundDetailModal');
+    if (modal) {
+        modal.classList.remove('active');
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+        currentRefundBookingId = null;
+    }
+}
+
+async function handleRefundAction(bookingId, approved) {
+    const confirmBtn = document.getElementById('confirmRefundBtn');
+    const rejectBtn = document.getElementById('rejectRefundBtn');
+    
+    // Disable buttons to prevent double-click
+    if (confirmBtn) confirmBtn.disabled = true;
+    if (rejectBtn) rejectBtn.disabled = true;
+    
+    const action = approved ? 'confirm' : 'reject';
+    
+    if (!confirm(`Are you sure you want to ${action} this refund request?`)) {
+        // Re-enable buttons if cancelled
+        if (confirmBtn) confirmBtn.disabled = false;
+        if (rejectBtn) rejectBtn.disabled = false;
+        return;
+    }
+    
+    try {
+        await processRefund(bookingId, approved);
+        
+        // Show success toast
+        const message = approved 
+            ? '✅ Refund confirmed successfully!' 
+            : '❌ Refund request rejected';
+        showSuccessToast(message);
+        
+        // Close detail modal
+        closeRefundDetailModal();
+        
+        // Reload refunds list
+        await loadPendingRefunds();
+    } catch (error) {
+        console.error('Error handling refund:', error);
+        showToast(error.message || 'Failed to process refund', 'error');
+        
+        // Re-enable buttons
+        if (confirmBtn) confirmBtn.disabled = false;
+        if (rejectBtn) rejectBtn.disabled = false;
+    }
+}
+
+// Make functions global
+window.openRefundDetail = openRefundDetail;
+window.closeRefundDetailModal = closeRefundDetailModal;
+

@@ -437,7 +437,7 @@
                 </div>
 
                 <div class="plan-price" data-plan="basic" data-cycle="annual">₹600</div>
-                <div class="price-period">/month (Billed Annually)</div>
+                <div class="price-period" id="basicPeriod">/month</div>
 
                 <ul class="plan-features">
                     <li>List 1 turf</li>
@@ -466,7 +466,7 @@
                 </div>
 
                 <div class="plan-price" data-plan="pro" data-cycle="annual">₹3,000</div>
-                <div class="price-period">/month (Billed Annually)</div>
+                <div class="price-period" id="proPeriod">/month</div>
 
                 <ul class="plan-features">
                     <li>List up to 5 turfs</li>
@@ -712,8 +712,8 @@
                     // Update period text
                     const periodElement = priceElement.nextElementSibling;
                     periodElement.textContent = cycle === 'annual' 
-                        ? '/month (Billed Annually)' 
-                        : '/month (Billed Monthly)';
+                        ? '/year' 
+                        : '/month';
 
                     // Update button onclick
                     const button = this.closest('.plan-card').querySelector('.plan-button');
