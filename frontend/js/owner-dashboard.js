@@ -754,20 +754,6 @@ function populateInsightsTable(analytics) {
     }).join('');
 }
 
-// Get sport icon emoji
-function getSportIcon(sport) {
-    const icons = {
-        'cricket': '🏏',
-        'football': '⚽',
-        'badminton': '🏸',
-        'tennis': '🎾',
-        'basketball': '🏀',
-        'volleyball': '🏐',
-        'hockey': '🏑'
-    };
-    return icons[sport?.toLowerCase()] || '🏟️';
-}
-
 // Load bookings
 async function loadOwnerBookings() {
     const loader = document.getElementById('bookingsLoader');
@@ -1514,7 +1500,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             btn.classList.add('active');
             
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            document.getElementById(tabName + 'Tab').classList.add('active');
+            // Convert kebab-case to camelCase for tab ID (e.g., 'cash-payments' -> 'cashPayments')
+            const tabId = tabName.replace(/-([a-z])/g, (g) => g[1].toUpperCase()) + 'Tab';
+            const tabElement = document.getElementById(tabId);
+            if (tabElement) {
+                tabElement.classList.add('active');
+            }
 
             if (tabName === 'bookings') {
                 loadOwnerBookings();
