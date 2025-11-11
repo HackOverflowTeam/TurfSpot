@@ -14,8 +14,15 @@ const subscriptionSchema = new mongoose.Schema({
   },
   billingCycle: {
     type: String,
-    enum: ['monthly', 'annual'],
+    enum: ['1_month', '3_months'],
     required: true
+  },
+  durationDays: {
+    type: Number,
+    required: true,
+    default: function() {
+      return this.billingCycle === '3_months' ? 90 : 30;
+    }
   },
   price: {
     type: Number,
@@ -87,6 +94,22 @@ subscriptionSchema.methods.isActive = function() {
   return this.status === 'active' && this.endDate > new Date();
 };
 
+// Method to check if subscription is expiring soon (within 5 days)
+subscriptionSchema.methods.isExpiringSoon = function() {
+  if (this.status !== 'active') return false;
+  
+  const daysUntilExpiry = Math.ceil((this.endDate - new Date()) / (1000 * 60 * 60 * 24));
+  return daysUntilExpiry > 0 && daysUntilExpiry <= 5;
+};
+
+// Method to get days until expiry
+subscriptionSchema.methods.getDaysUntilExpiry = function() {
+  if (this.status !== 'active') return 0;
+  
+  const daysUntilExpiry = Math.ceil((this.endDate - new Date()) / (1000 * 60 * 60 * 24));
+  return Math.max(0, daysUntilExpiry);
+};
+
 // Method to check if owner can add more turfs
 subscriptionSchema.methods.canAddTurf = async function() {
   if (this.plan === 'enterprise') return true;
@@ -104,17 +127,20 @@ subscriptionSchema.methods.canAddTurf = async function() {
 subscriptionSchema.statics.getPlans = function() {
   return {
     basic: {
-      monthly: { price: 699, maxTurfs: 1, name: 'Basic Plan (Launch Offer)' },
-      annual: { price: 600, maxTurfs: 1, name: 'Basic Plan (Launch Offer)' }
+      '1_month': { price: 700, maxTurfs: 1, name: 'Basic Plan - 1 Month', durationDays: 30 },
+      '3_months': { price: 2000, maxTurfs: 1, name: 'Basic Plan - 3 Months', durationDays: 90 }
     },
     pro: {
-      monthly: { price: 1999, maxTurfs: 5, name: 'Pro Plan (Best Value)' },
-      annual: { price: 3000, maxTurfs: 5, name: 'Pro Plan (Best Value)' }
+      '1_month': { price: 3000, maxTurfs: 5, name: 'Pro Plan - 1 Month', durationDays: 30 },
+      '3_months': { price: 6000, maxTurfs: 5, name: 'Pro Plan - 3 Months', durationDays: 90 }
     },
     enterprise: {
       custom: true,
       maxTurfs: -1, // unlimited
-      name: 'Enterprise Plan'
+      name: 'Enterprise Plan',
+      contactEmail: 'enterprise@turfspot.com',
+      contactPhone: '+91-1234567890',
+      features: ['Unlimited turfs', 'White-label options', 'Custom integrations', 'Priority support', 'Dedicated account manager']
     }
   };
 };

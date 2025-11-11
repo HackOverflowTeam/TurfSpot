@@ -424,19 +424,21 @@
         <div class="plans-container">
             <!-- Basic Plan -->
             <div class="plan-card">
-                <div class="plan-badge">LAUNCH OFFER</div>
+                <div class="plan-badge">STARTER PLAN</div>
                 <h3 class="plan-name">Basic Plan</h3>
                 <p class="plan-description">Perfect for single-turf owners starting out</p>
                 
                 <div class="billing-toggle" data-plan="basic">
-                    <div class="billing-option active" data-cycle="annual">
-                        <div>Annual</div>
-                        <div style="font-size: 0.8em; color: #059669;">Save ₹1,188/year</div>
+                    <div class="billing-option active" data-cycle="1_month">
+                        <div>1 Month</div>
                     </div>
-                    <div class="billing-option" data-cycle="monthly">Monthly</div>
+                    <div class="billing-option" data-cycle="3_months">
+                        <div>3 Months</div>
+                        <div style="font-size: 0.8em; color: #059669;">Save ₹100</div>
+                    </div>
                 </div>
 
-                <div class="plan-price" data-plan="basic" data-cycle="annual">₹600</div>
+                <div class="plan-price" data-plan="basic" data-cycle="1_month">₹700</div>
                 <div class="price-period" id="basicPeriod">/month</div>
 
                 <ul class="plan-features">
@@ -448,24 +450,26 @@
                     <li>No commission on bookings</li>
                 </ul>
 
-                <button class="plan-button" onclick="selectPlan('basic', 'annual')">Get Started</button>
+                <button class="plan-button" onclick="selectPlan('basic', '1_month')">Get Started</button>
             </div>
 
             <!-- Pro Plan -->
             <div class="plan-card pro">
                 <div class="plan-badge">BEST VALUE</div>
                 <h3 class="plan-name">Pro Plan</h3>
-                <p class="plan-description">Ideal for established single-location businesses</p>
+                <p class="plan-description">Ideal for multi-location turf businesses</p>
                 
                 <div class="billing-toggle" data-plan="pro">
-                    <div class="billing-option active" data-cycle="annual">
-                        <div>Annual</div>
-                        <div style="font-size: 0.8em; color: #d97706;">Save ₹12,000/year</div>
+                    <div class="billing-option active" data-cycle="1_month">
+                        <div>1 Month</div>
                     </div>
-                    <div class="billing-option" data-cycle="monthly">Monthly</div>
+                    <div class="billing-option" data-cycle="3_months">
+                        <div>3 Months</div>
+                        <div style="font-size: 0.8em; color: #d97706;">Save ₹3,000</div>
+                    </div>
                 </div>
 
-                <div class="plan-price" data-plan="pro" data-cycle="annual">₹3,000</div>
+                <div class="plan-price" data-plan="pro" data-cycle="1_month">₹3,000</div>
                 <div class="price-period" id="proPeriod">/month</div>
 
                 <ul class="plan-features">
@@ -478,7 +482,7 @@
                     <li>No commission on bookings</li>
                 </ul>
 
-                <button class="plan-button" onclick="selectPlan('pro', 'annual')">Upgrade to Pro</button>
+                <button class="plan-button" onclick="selectPlan('pro', '1_month')">Upgrade to Pro</button>
             </div>
 
             <!-- Enterprise Plan -->
@@ -493,11 +497,12 @@
                 <ul class="plan-features">
                     <li>Unlimited turfs</li>
                     <li>All Pro features</li>
+                    <li>White-label options</li>
+                    <li>Custom integrations</li>
                     <li>Dedicated Account Manager</li>
-                    <li>API Access for integrations</li>
+                    <li>API Access</li>
                     <li>Custom analytics & reports</li>
                     <li>24/7 Premium Support</li>
-                    <li>White-label options</li>
                 </ul>
 
                 <button class="plan-button" onclick="contactUs()">Contact Sales</button>
@@ -517,7 +522,7 @@
                 <h3>💳 Payment Details</h3>
                 <div class="payment-details">
                     <p><strong>Amount:</strong> ₹<span id="paymentAmount"></span></p>
-                    <p><strong>Billing Cycle:</strong> <span id="billingCycle"></span></p>
+                    <p><strong>Duration:</strong> <span id="billingCycle"></span></p>
                     <p><strong>UPI ID:</strong> turfspot@paytm</p>
                     <p><strong>Account:</strong> TurfSpot Business (SBI)</p>
                     <p><strong>Account Number:</strong> 1234567890</p>
@@ -566,21 +571,37 @@
                 const response = await api.getMySubscription();
                 if (response.success && response.data && response.data.subscription) {
                     const sub = response.data.subscription;
-                    const turfCount = response.data.currentTurfCount || 0;
+                    const currentTurfCount = response.data.currentTurfCount || 0;
                     const canAddMore = response.data.canAddMoreTurfs;
+                    const expiryInfo = response.data.expiryInfo;
                     
                     if (sub.status === 'active' || sub.status === 'pending') {
                         document.getElementById('currentSubscription').style.display = 'block';
+                        
+                        const durationText = sub.billingCycle === '1_month' ? '1 Month' : '3 Months';
+                        const daysText = sub.durationDays || (sub.billingCycle === '3_months' ? 90 : 30);
+                        
                         document.getElementById('subscriptionInfo').innerHTML = `
-                            <p><strong>Plan:</strong> ${sub.plan.toUpperCase()} - ${sub.billingCycle}</p>
+                            <p><strong>Plan:</strong> ${sub.plan.toUpperCase()} - ${durationText}</p>
                             <p><strong>Status:</strong> <span class="subscription-status ${sub.status}">${sub.status.toUpperCase()}</span></p>
-                            <p><strong>Price:</strong> ₹${sub.price}/${sub.billingCycle}</p>
-                            <p><strong>Turfs:</strong> ${turfCount} / ${sub.maxTurfs === -1 ? 'Unlimited' : sub.maxTurfs}</p>
+                            <p><strong>Price:</strong> ₹${sub.price} (${daysText} days)</p>
+                            <p><strong>Turfs:</strong> ${currentTurfCount} / ${sub.maxTurfs === -1 ? 'Unlimited' : sub.maxTurfs}</p>
                             ${sub.startDate ? `<p><strong>Start Date:</strong> ${new Date(sub.startDate).toLocaleDateString()}</p>` : ''}
-                            ${sub.endDate ? `<p><strong>End Date:</strong> ${new Date(sub.endDate).toLocaleDateString()}</p>` : ''}
+                            ${sub.endDate ? `
+                                <p><strong>End Date:</strong> ${new Date(sub.endDate).toLocaleDateString()}</p>
+                                ${expiryInfo && expiryInfo.isActive ? `
+                                    <p><strong>Days Remaining:</strong> ${expiryInfo.daysUntilExpiry} days</p>
+                                ` : ''}
+                            ` : ''}
                             ${sub.status === 'pending' ? `
                                 <div style="margin-top: 15px; padding: 15px; background: #fed7aa; color: #92400e; border-radius: 10px;">
                                     ⏳ Your subscription is pending admin verification
+                                </div>
+                            ` : ''}
+                            ${expiryInfo && expiryInfo.isExpiringSoon ? `
+                                <div style="margin-top: 15px; padding: 15px; background: #fef3c7; color: #92400e; border-radius: 10px; font-weight: 600;">
+                                    ⚠️ Your subscription expires in ${expiryInfo.daysUntilExpiry} days! 
+                                    <br>Please renew to continue enjoying premium features.
                                 </div>
                             ` : ''}
                             ${!canAddMore && sub.status === 'active' ? `
@@ -603,8 +624,13 @@
             window.selectedPlan = { plan, cycle };
             
             const prices = {
-                basic: { monthly: 699, annual: 600 },
-                pro: { monthly: 1999, annual: 3000 }
+                basic: { '1_month': 700, '3_months': 2000 },
+                pro: { '1_month': 3000, '3_months': 6000 }
+            };
+
+            const durations = {
+                '1_month': '1 Month (30 days)',
+                '3_months': '3 Months (90 days)'
             };
 
             const planNames = {
@@ -613,10 +639,9 @@
             };
 
             document.getElementById('selectedPlanName').textContent = 
-                `${planNames[plan]} (${cycle === 'annual' ? 'Annual' : 'Monthly'})`;
+                `${planNames[plan]} - ${durations[cycle]}`;
             document.getElementById('paymentAmount').textContent = prices[plan][cycle];
-            document.getElementById('billingCycle').textContent = 
-                cycle === 'annual' ? 'Annual (12 months)' : 'Monthly (1 month)';
+            document.getElementById('billingCycle').textContent = durations[cycle];
 
             document.getElementById('paymentModal').classList.add('active');
         };
@@ -702,8 +727,8 @@
                     // Update price
                     const priceElement = document.querySelector(`[data-plan="${plan}"][data-cycle]`);
                     const prices = {
-                        basic: { monthly: 699, annual: 600 },
-                        pro: { monthly: 1999, annual: 3000 }
+                        basic: { '1_month': 700, '3_months': 2000 },
+                        pro: { '1_month': 3000, '3_months': 6000 }
                     };
                     
                     priceElement.dataset.cycle = cycle;
@@ -711,9 +736,11 @@
 
                     // Update period text
                     const periodElement = priceElement.nextElementSibling;
-                    periodElement.textContent = cycle === 'annual' 
-                        ? '/year' 
-                        : '/month';
+                    if (cycle === '1_month') {
+                        periodElement.textContent = '/month';
+                    } else {
+                        periodElement.textContent = '/3 months';
+                    }
 
                     // Update button onclick
                     const button = this.closest('.plan-card').querySelector('.plan-button');

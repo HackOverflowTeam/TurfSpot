@@ -57,7 +57,7 @@ app.use(cors({
     'http://localhost:5501', 
     'http://127.0.0.1:5501', 
     'https://turfspot-1.onrender.com', 
-    'https://impressive-beads-mounts-puts.trycloudflare.com'
+    'https://emerald-concerts-pas-startup.trycloudflare.com'
   ],
   credentials: true
 }));

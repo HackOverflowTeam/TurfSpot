@@ -1214,11 +1214,14 @@ async function loadSubscription() {
             return;
         }
         
-        const { subscription, currentTurfCount, canAddMoreTurfs } = response.data;
+        const { subscription, currentTurfCount, canAddMoreTurfs, expiryInfo } = response.data;
         const statusClass = subscription.status === 'active' ? 'success' : 
                            subscription.status === 'pending' ? 'warning' : 'danger';
         const statusColor = subscription.status === 'active' ? '#10b981' : 
                            subscription.status === 'pending' ? '#f59e0b' : '#ef4444';
+        
+        const durationText = subscription.billingCycle === '1_month' ? '1 Month' : '3 Months';
+        const daysTotal = subscription.durationDays || (subscription.billingCycle === '3_months' ? 90 : 30);
         
         subscriptionInfo.innerHTML = `
             <div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
@@ -1236,7 +1239,7 @@ async function loadSubscription() {
                             ${formatCurrency(subscription.price)}
                         </div>
                         <div style="color: var(--text-secondary); font-size: 0.9rem;">
-                            per ${subscription.billingCycle}
+                            ${durationText} (${daysTotal} days)
                         </div>
                     </div>
                 </div>
@@ -1258,7 +1261,22 @@ async function loadSubscription() {
                         <div style="font-size: 1rem; font-weight: bold;">${new Date(subscription.endDate).toLocaleDateString()}</div>
                     </div>
                     ` : ''}
+                    ${expiryInfo && expiryInfo.isActive ? `
+                    <div style="padding: 1rem; background: ${expiryInfo.isExpiringSoon ? '#fef3c7' : 'var(--light-bg, #f3f4f6)'}; border-radius: 8px;">
+                        <div style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.25rem;">Days Remaining</div>
+                        <div style="font-size: 1.25rem; font-weight: bold; color: ${expiryInfo.isExpiringSoon ? '#f59e0b' : 'inherit'};">
+                            ${expiryInfo.daysUntilExpiry} days
+                        </div>
+                    </div>
+                    ` : ''}
                 </div>
+                
+                ${expiryInfo && expiryInfo.isExpiringSoon ? `
+                <div style="margin-bottom: 1rem; padding: 1rem; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px;">
+                    <i class="fas fa-exclamation-triangle" style="color: #f59e0b;"></i>
+                    <strong>Renewal Required:</strong> Your subscription expires in ${expiryInfo.daysUntilExpiry} days! <a href="owner-subscription.html" style="color: #f59e0b; text-decoration: underline;">Renew now</a> to continue enjoying zero commission benefits.
+                </div>
+                ` : ''}
                 
                 <div style="padding: 1rem; background: #ecfdf5; border-left: 4px solid #10b981; border-radius: 4px;">
                     <i class="fas fa-check-circle" style="color: #10b981;"></i>

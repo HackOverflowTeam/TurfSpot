@@ -63,7 +63,7 @@ exports.createSubscription = async (req, res, next) => {
       return next(new AppError('Invalid billing cycle for selected plan', 400));
     }
 
-    const { price, maxTurfs } = plans[plan][billingCycle];
+    const { price, maxTurfs, durationDays } = plans[plan][billingCycle];
 
     // Set features based on plan
     const features = {
@@ -79,6 +79,7 @@ exports.createSubscription = async (req, res, next) => {
       ownerId,
       plan,
       billingCycle,
+      durationDays,
       price,
       maxTurfs,
       features,
@@ -156,12 +157,20 @@ exports.getMySubscription = async (req, res, next) => {
       status: { $ne: 'deleted' }
     });
 
+    // Check expiry status
+    const expiryInfo = subscription ? {
+      isExpiringSoon: subscription.isExpiringSoon(),
+      daysUntilExpiry: subscription.getDaysUntilExpiry(),
+      isActive: subscription.isActive()
+    } : null;
+
     res.status(200).json({
       success: true,
       data: {
         subscription,
         currentTurfCount: turfCount,
-        canAddMoreTurfs: await subscription.canAddTurf()
+        canAddMoreTurfs: subscription ? await subscription.canAddTurf() : false,
+        expiryInfo
       }
     });
   } catch (error) {
@@ -219,15 +228,12 @@ exports.verifySubscriptionPayment = async (req, res, next) => {
     }
 
     if (approved) {
-      // Calculate end date based on billing cycle
+      // Calculate end date based on duration in days
       const startDate = new Date();
       const endDate = new Date(startDate);
       
-      if (subscription.billingCycle === 'annual') {
-        endDate.setFullYear(endDate.getFullYear() + 1);
-      } else {
-        endDate.setMonth(endDate.getMonth() + 1);
-      }
+      // Add duration days to start date
+      endDate.setDate(endDate.getDate() + subscription.durationDays);
 
       subscription.status = 'active';
       subscription.startDate = startDate;
