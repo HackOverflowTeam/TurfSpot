@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction Management - TurfSpot Admin</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/owner-dashboard.css">
+    <style>
+        .transactions-dashboard {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .summary-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .summary-card h3 {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 0.5rem;
+        }
+
+        .summary-card .amount {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1f2937;
+        }
+
+        .summary-card .subtext {
+            font-size: 0.875rem;
+            color: #9ca3af;
+            margin-top: 0.5rem;
+        }
+
+        .filters-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .filter-group label {
+            display: block;
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 0.5rem;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+        }
+
+        .tabs-container {
+            margin-bottom: 2rem;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 1rem;
+            border-bottom: 2px solid #e5e7eb;
+            margin-bottom: 1.5rem;
+        }
+
+        .tab-button {
+            padding: 0.75rem 1.5rem;
+            background: none;
+            border: none;
+            color: #6b7280;
+            font-weight: 500;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab-button.active {
+            color: #10b981;
+            border-bottom-color: #10b981;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .transactions-table {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .transactions-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .transactions-table th {
+            background: #f9fafb;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .transactions-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .transactions-table tr:hover {
+            background: #f9fafb;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-verified {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-rejected {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-completed {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-view {
+            padding: 0.5rem 1rem;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+
+        .btn-approve {
+            padding: 0.5rem 1rem;
+            background: #10b981;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+
+        .btn-reject {
+            padding: 0.5rem 1rem;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+
+        .btn-payout {
+            padding: 0.5rem 1rem;
+            background: #8b5cf6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6b7280;
+        }
+
+        .payment-proof-img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .detail-label {
+            font-weight: 500;
+            color: #6b7280;
+        }
+
+        .detail-value {
+            color: #1f2937;
+        }
+
+        .payout-group {
+            background: #f9fafb;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .payout-group h3 {
+            margin-bottom: 1rem;
+        }
+
+        .owner-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+        }
+
+        .turf-selector {
+            margin-bottom: 1.5rem;
+        }
+
+        .turf-selector select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .loader {
+            text-align: center;
+            padding: 3rem;
+            color: #6b7280;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #9ca3af;
+        }
+
+        .btn-upload-qr {
+            padding: 0.75rem 1.5rem;
+            background: #10b981;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .qr-display {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .qr-display img {
+            max-width: 300px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="transactions-dashboard">
+        <div class="dashboard-header">
+            <div>
+                <h1>Transaction Management</h1>
+                <p style="color: #6b7280; margin-top: 0.5rem;">Manage platform payments and owner payouts</p>
+            </div>
+            <button class="btn-upload-qr" onclick="openQRModal()">
+                <i class="fas fa-qrcode"></i> Manage Platform QR
+            </button>
+        </div>
+
+        <!-- Platform QR Display -->
+        <div class="qr-display" id="qrDisplay" style="display: none;">
+            <h3>Platform Payment QR Code</h3>
+            <img id="platformQRImage" src="" alt="Platform QR">
+            <p id="platformUPI" style="margin-top: 1rem; color: #6b7280;"></p>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="summary-cards">
+            <div class="summary-card">
+                <h3>Total Commission</h3>
+                <div class="amount" id="totalCommission">₹0</div>
+                <div class="subtext">Platform earnings (10%)</div>
+            </div>
+            <div class="summary-card">
+                <h3>Pending Payouts</h3>
+                <div class="amount" id="pendingPayouts">₹0</div>
+                <div class="subtext">To be paid to owners</div>
+            </div>
+            <div class="summary-card">
+                <h3>Completed Payouts</h3>
+                <div class="amount" id="completedPayouts">₹0</div>
+                <div class="subtext">Already paid</div>
+            </div>
+            <div class="summary-card">
+                <h3>Pending Verifications</h3>
+                <div class="amount" id="pendingVerifications">0</div>
+                <div class="subtext">Payment proofs to verify</div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs-container">
+            <div class="tab-buttons">
+                <button class="tab-button active" data-tab="verifications">Pending Verifications</button>
+                <button class="tab-button" data-tab="transactions">All Transactions</button>
+                <button class="tab-button" data-tab="payouts">Manage Payouts</button>
+            </div>
+
+            <!-- Pending Verifications Tab -->
+            <div class="tab-content active" id="verificationsTab">
+                <div class="loader" id="verificationsLoader">Loading...</div>
+                <div class="transactions-table" id="verificationsTable" style="display: none;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Booking ID</th>
+                                <th>User</th>
+                                <th>Turf</th>
+                                <th>Amount</th>
+                                <th>Date</th>
+                                <th>Proof</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="verificationsBody"></tbody>
+                    </table>
+                </div>
+                <div class="empty-state" id="verificationsEmpty" style="display: none;">
+                    No pending verifications
+                </div>
+            </div>
+
+            <!-- All Transactions Tab -->
+            <div class="tab-content" id="transactionsTab">
+                <div class="turf-selector">
+                    <label>Filter by Turf:</label>
+                    <select id="turfFilter" onchange="loadTransactionsByTurf()">
+                        <option value="">Select a turf</option>
+                    </select>
+                </div>
+                
+                <div class="filters-section" id="transactionFilters" style="display: none;">
+                    <div class="filters-grid">
+                        <div class="filter-group">
+                            <label>Payment Status</label>
+                            <select id="paymentStatusFilter">
+                                <option value="">All</option>
+                                <option value="verified">Verified</option>
+                                <option value="pending_verification">Pending</option>
+                                <option value="rejected">Rejected</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Payout Status</label>
+                            <select id="payoutStatusFilter">
+                                <option value="">All</option>
+                                <option value="pending">Pending</option>
+                                <option value="completed">Completed</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Start Date</label>
+                            <input type="date" id="startDateFilter">
+                        </div>
+                        <div class="filter-group">
+                            <label>End Date</label>
+                            <input type="date" id="endDateFilter">
+                        </div>
+                    </div>
+                    <button class="btn-view" style="margin-top: 1rem;" onclick="applyTransactionFilters()">Apply Filters</button>
+                </div>
+
+                <div class="loader" id="transactionsLoader">Select a turf to view transactions</div>
+                <div class="transactions-table" id="transactionsTable" style="display: none;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Transaction ID</th>
+                                <th>User</th>
+                                <th>Date</th>
+                                <th>Total</th>
+                                <th>Commission</th>
+                                <th>Owner Payout</th>
+                                <th>Payment Status</th>
+                                <th>Payout Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactionsBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Payouts Tab -->
+            <div class="tab-content" id="payoutsTab">
+                <div class="loader" id="payoutsLoader">Loading...</div>
+                <div id="payoutsContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transaction Detail Modal -->
+    <div class="modal" id="transactionModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Transaction Details</h2>
+                <button class="close-modal" onclick="closeTransactionModal()">&times;</button>
+            </div>
+            <div id="transactionDetails"></div>
+        </div>
+    </div>
+
+    <!-- Payment Verification Modal -->
+    <div class="modal" id="verificationModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Verify Payment</h2>
+                <button class="close-modal" onclick="closeVerificationModal()">&times;</button>
+            </div>
+            <div id="verificationDetails"></div>
+        </div>
+    </div>
+
+    <!-- Payout Modal -->
+    <div class="modal" id="payoutModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Complete Payout</h2>
+                <button class="close-modal" onclick="closePayoutModal()">&times;</button>
+            </div>
+            <div id="payoutForm"></div>
+        </div>
+    </div>
+
+    <!-- QR Upload Modal -->
+    <div class="modal" id="qrModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Manage Platform QR Code</h2>
+                <button class="close-modal" onclick="closeQRModal()">&times;</button>
+            </div>
+            <div>
+                <p style="color: #6b7280; margin-bottom: 1rem;">Upload the platform's UPI QR code that users will pay to:</p>
+                <div class="filter-group">
+                    <label>QR Code Image URL</label>
+                    <input type="text" id="qrImageUrl" placeholder="Enter image URL">
+                </div>
+                <div class="filter-group" style="margin-top: 1rem;">
+                    <label>UPI ID (Optional)</label>
+                    <input type="text" id="qrUpiId" placeholder="Enter UPI ID">
+                </div>
+                <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+                    <button class="btn-approve" onclick="uploadPlatformQR()">Save QR Code</button>
+                    <button class="btn-view" onclick="closeQRModal()">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/admin-transactions.js"></script>
+</body>
+</html>

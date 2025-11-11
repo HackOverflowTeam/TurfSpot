@@ -354,6 +354,90 @@ class APIService {
             body: JSON.stringify({ screenshotUrl })
         });
     }
+
+    // PLATFORM PAYMENT (TRANSACTION) ENDPOINTS
+    
+    // Get platform payment QR code
+    async getPlatformQR() {
+        return this.request('/transactions/platform-qr', { auth: false });
+    }
+    
+    // Submit payment proof for a booking
+    async submitPaymentProof(bookingId, paymentProofUrl, transactionReference, publicId = null) {
+        return this.request(`/transactions/submit-proof/${bookingId}`, {
+            method: 'POST',
+            body: JSON.stringify({ paymentProofUrl, transactionReference, publicId })
+        });
+    }
+    
+    // Admin: Get pending payment verifications
+    async getPendingVerifications() {
+        return this.request('/transactions/pending-verifications');
+    }
+    
+    // Admin: Verify payment proof
+    async verifyPaymentProof(bookingId, isApproved, rejectionReason = null) {
+        return this.request(`/transactions/verify/${bookingId}`, {
+            method: 'POST',
+            body: JSON.stringify({ isApproved, rejectionReason })
+        });
+    }
+    
+    // Admin: Get transactions by turf
+    async getTransactionsByTurf(turfId, filters = {}) {
+        const queryParams = new URLSearchParams(filters).toString();
+        return this.request(`/transactions/turf/${turfId}${queryParams ? '?' + queryParams : ''}`);
+    }
+    
+    // Admin: Get pending payouts
+    async getPendingPayouts() {
+        return this.request('/transactions/pending-payouts');
+    }
+    
+    // Admin: Complete payout for a transaction
+    async completePayout(transactionId, payoutReference, notes = null) {
+        return this.request(`/transactions/complete-payout/${transactionId}`, {
+            method: 'POST',
+            body: JSON.stringify({ payoutReference, notes })
+        });
+    }
+    
+    // Admin: Bulk complete payouts for an owner
+    async bulkCompletePayout(ownerId, payoutReference, notes = null, transactionIds = null) {
+        return this.request(`/transactions/bulk-payout/${ownerId}`, {
+            method: 'POST',
+            body: JSON.stringify({ payoutReference, notes, transactionIds })
+        });
+    }
+    
+    // Admin: Get platform commission summary
+    async getPlatformSummary(startDate = null, endDate = null) {
+        const params = new URLSearchParams();
+        if (startDate) params.append('startDate', startDate);
+        if (endDate) params.append('endDate', endDate);
+        return this.request(`/transactions/platform-summary${params.toString() ? '?' + params.toString() : ''}`);
+    }
+    
+    // Get owner earnings
+    async getOwnerEarnings(ownerId, startDate = null, endDate = null) {
+        const params = new URLSearchParams();
+        if (startDate) params.append('startDate', startDate);
+        if (endDate) params.append('endDate', endDate);
+        return this.request(`/transactions/owner-earnings/${ownerId}${params.toString() ? '?' + params.toString() : ''}`);
+    }
+    
+    // Get transaction details
+    async getTransactionDetails(transactionId) {
+        return this.request(`/transactions/${transactionId}`);
+    }
+    
+    // Admin: Update platform QR
+    async updatePlatformQR(url, publicId, upiId) {
+        return this.request('/transactions/platform-qr', {
+            method: 'POST',
+            body: JSON.stringify({ url, publicId, upiId })
+        });
+    }
 }
 
 // Create and export API instance

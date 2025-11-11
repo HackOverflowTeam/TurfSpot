@@ -23,6 +23,7 @@ const paymentRoutes = require('./routes/payment.routes');
 const adminRoutes = require('./routes/admin.routes');
 const analyticsRoutes = require('./routes/analytics.routes');
 const subscriptionRoutes = require('./routes/subscription.routes');
+const transactionRoutes = require('./routes/transaction.routes');
 
 // Import error handler
 const errorHandler = require('./middleware/error.middleware');
@@ -82,6 +83,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
+app.use('/api/transactions', transactionRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

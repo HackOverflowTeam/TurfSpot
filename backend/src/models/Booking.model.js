@@ -113,6 +113,31 @@ const bookingSchema = new mongoose.Schema({
     verifiedAt: Date,
     rejectionReason: String
   },
+  // Platform-managed payment: user uploads payment proof to TurfSpot QR
+  platformPayment: {
+    paymentProof: {
+      url: String,
+      publicId: String
+    },
+    uploadedAt: Date,
+    transactionReference: String, // UTR/Transaction ID from screenshot
+    verificationStatus: {
+      type: String,
+      enum: ['pending', 'verified', 'rejected'],
+      default: 'pending'
+    },
+    verifiedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    verifiedAt: Date,
+    rejectionReason: String,
+    // Link to transaction record (created after verification)
+    transaction: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Transaction'
+    }
+  },
   status: {
     type: String,
     enum: ['pending', 'confirmed', 'cancelled', 'completed', 'no_show', 'pending_refund', 'refund_completed', 'refund_denied'],
