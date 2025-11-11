@@ -350,8 +350,8 @@ class AuthManager {
         const mobileProfileLink = document.getElementById('mobileProfileLink');
         
         // Public navigation links (to be hidden for owners)
-        const navbarLinks = document.querySelectorAll('.navbar-link[href="discover.html"], .navbar-link[href="turfs.html"]');
-        const mobileNavLinks = document.querySelectorAll('.mobile-menu-link[href="discover.html"], .mobile-menu-link[href="turfs.html"]');
+        const navbarLinks = document.querySelectorAll('.navbar-link[href="discover.html"], .navbar-link[href="turfs.html"], .navbar-link[href="index.html"]');
+        const mobileNavLinks = document.querySelectorAll('.mobile-menu-link[href="discover.html"], .mobile-menu-link[href="turfs.html"], .mobile-menu-link[href="index.html"]');
 
         if (this.isAuthenticated()) {
             // Hide login/register buttons
@@ -379,9 +379,17 @@ class AuthManager {
 
             // Role-specific UI updates
             if (this.hasRole('owner')) {
-                // Hide public navigation for owners
+                // Hide public navigation for owners (including Home)
                 navbarLinks.forEach(link => link.style.display = 'none');
                 mobileNavLinks.forEach(link => link.style.display = 'none');
+                
+                // Update logo link to go to dashboard instead of home
+                const logoLinks = document.querySelectorAll('.navbar-logo, .logo-link, a[href="index.html"].logo');
+                logoLinks.forEach(link => {
+                    if (link.href && link.href.includes('index.html')) {
+                        link.href = 'owner-dashboard.html';
+                    }
+                });
                 
                 // Show owner dashboard link
                 if (ownerDashLink) {
@@ -412,10 +420,22 @@ class AuthManager {
                 navbarLinks.forEach(link => link.style.display = 'block');
                 mobileNavLinks.forEach(link => link.style.display = 'block');
                 
+                // Restore logo link to home
+                const logoLinks = document.querySelectorAll('.navbar-logo, .logo-link, a[href*="html"].logo');
+                logoLinks.forEach(link => {
+                    link.href = 'index.html';
+                });
+                
             } else if (this.hasRole('user')) {
                 // Show public navigation for regular users
                 navbarLinks.forEach(link => link.style.display = 'block');
                 mobileNavLinks.forEach(link => link.style.display = 'block');
+                
+                // Restore logo link to home
+                const logoLinks = document.querySelectorAll('.navbar-logo, .logo-link, a[href*="html"].logo');
+                logoLinks.forEach(link => {
+                    link.href = 'index.html';
+                });
                 
                 // Show my bookings link for users
                 if (myBookingsLink) {
@@ -453,6 +473,12 @@ class AuthManager {
             // Show public navigation for non-authenticated users
             navbarLinks.forEach(link => link.style.display = 'block');
             mobileNavLinks.forEach(link => link.style.display = 'block');
+            
+            // Restore logo link to home
+            const logoLinks = document.querySelectorAll('.navbar-logo, .logo-link, a[href*="html"].logo');
+            logoLinks.forEach(link => {
+                link.href = 'index.html';
+            });
         }
     }
 

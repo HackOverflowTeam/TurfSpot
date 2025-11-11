@@ -606,3 +606,88 @@
         justify-content: center;
     }
 }
+
+/* Payment Method Selection */
+.payment-methods {
+    display: grid;
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+.payment-method-option {
+    cursor: pointer;
+    display: block;
+}
+
+.payment-method-option input[type="radio"] {
+    display: none;
+}
+
+.payment-method-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border: 2px solid var(--border-color, #e5e7eb);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.payment-method-card i {
+    font-size: 1.5rem;
+    color: var(--text-muted, #6b7280);
+}
+
+.payment-method-title {
+    font-weight: 600;
+    color: var(--text-primary, #1f2937);
+}
+
+.payment-method-option input[type="radio"]:checked ~ .payment-method-card {
+    border-color: var(--primary-color, #10b981);
+    background: #f0fdf4;
+}
+
+.payment-method-option input[type="radio"]:checked ~ .payment-method-card i {
+    color: var(--primary-color, #10b981);
+}
+
+.payment-method-card:hover {
+    border-color: var(--primary-color, #10b981);
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1);
+}
+
+.cash-payment-note {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Mobile responsiveness for payment methods */
+@media (max-width: 768px) {
+    .payment-method-card {
+        padding: 0.875rem;
+    }
+    
+    .payment-method-card i {
+        font-size: 1.25rem;
+    }
+    
+    .payment-method-title {
+        font-size: 0.9rem;
+    }
+    
+    .payment-method-card small {
+        font-size: 0.75rem;
+    }
+}

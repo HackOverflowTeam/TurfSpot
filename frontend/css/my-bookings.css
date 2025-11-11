@@ -1012,3 +1012,15 @@
 .booking-card:nth-child(4) { animation-delay: 0.2s; }
 .booking-card:nth-child(5) { animation-delay: 0.25s; }
 .booking-card:nth-child(6) { animation-delay: 0.3s; }
+
+/* Cash Payment Status */
+.status-message.pending-cash {
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    border-left-color: #f59e0b;
+    color: #92400e;
+}
+
+.status-message.pending-cash::before {
+    content: "💵";
+    margin-right: 8px;
+}

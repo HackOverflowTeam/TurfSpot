@@ -315,6 +315,38 @@
                                 <textarea id="bookingNotes" class="form-input" rows="3" style="resize: vertical;" placeholder="Any special requests..."></textarea>
                             </div>
 
+                            <!-- Payment Method Selection -->
+                            <div class="form-group" id="paymentMethodGroup" style="display: none;">
+                                <label class="form-label">Payment Method</label>
+                                <div class="payment-methods">
+                                    <label class="payment-method-option">
+                                        <input type="radio" name="paymentMethod" value="online" checked>
+                                        <div class="payment-method-card">
+                                            <i class="fas fa-credit-card"></i>
+                                            <div>
+                                                <div class="payment-method-title">Pay Online</div>
+                                                <small class="text-muted">UPI, Cards, Net Banking</small>
+                                            </div>
+                                        </div>
+                                    </label>
+                                    <label class="payment-method-option">
+                                        <input type="radio" name="paymentMethod" value="cash_at_turf">
+                                        <div class="payment-method-card">
+                                            <i class="fas fa-money-bill-wave"></i>
+                                            <div>
+                                                <div class="payment-method-title">Cash at Turf</div>
+                                                <small class="text-muted">Pay when you arrive</small>
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div class="cash-payment-note" style="display: none; margin-top: 0.75rem; padding: 0.75rem; background: #fef3c7; border-left: 3px solid #f59e0b; border-radius: 4px;">
+                                    <small style="color: #92400e;">
+                                        💵 <strong>Note:</strong> You can pay directly at the turf before your session starts. Your booking will be marked as "Pending Payment".
+                                    </small>
+                                </div>
+                            </div>
+
                             <!-- Booking Summary -->
                             <div class="booking-summary" id="bookingSummary" style="display: none;">
                                 <div class="summary-row">

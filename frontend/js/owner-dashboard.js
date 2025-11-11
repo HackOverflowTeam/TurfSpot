@@ -869,12 +869,14 @@ function createOwnerBookingCard(booking) {
 function updateTurfFilters() {
     const turfFilter = document.getElementById('turfFilter');
     const analyticsTurf = document.getElementById('analyticsTurf');
+    const cashTurfFilter = document.getElementById('cashTurfFilter');
 
     const options = '<option value="">All Turfs</option>' + 
         myTurfs.map(turf => `<option value="${turf._id}">${turf.name}</option>`).join('');
 
     if (turfFilter) turfFilter.innerHTML = options;
     if (analyticsTurf) analyticsTurf.innerHTML = options;
+    if (cashTurfFilter) cashTurfFilter.innerHTML = options;
 }
 
 // Add/Edit turf functions
@@ -1520,6 +1522,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 loadAnalytics();
             } else if (tabName === 'verifications') {
                 loadPendingVerifications();
+            } else if (tabName === 'cash-payments') {
+                loadCashPayments();
             } else if (tabName === 'refunds') {
                 loadPendingRefunds();
             } else if (tabName === 'subscription') {
@@ -1634,6 +1638,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('statusFilter').addEventListener('change', loadOwnerBookings);
     document.getElementById('analyticsPeriod').addEventListener('change', loadAnalytics);
     document.getElementById('analyticsTurf').addEventListener('change', loadAnalytics);
+    
+    // Cash payment filters
+    document.getElementById('cashStatusFilter').addEventListener('change', loadCashPayments);
+    document.getElementById('cashTurfFilter').addEventListener('change', loadCashPayments);
     
     // Image Preview Modal
     const modal = document.getElementById('imagePreviewModal');
@@ -2048,4 +2056,171 @@ async function handleRefundAction(bookingId, approved) {
 // Make functions global
 window.openRefundDetail = openRefundDetail;
 window.closeRefundDetailModal = closeRefundDetailModal;
+
+
+// ==================== CASH PAYMENT FUNCTIONS ====================
+
+// Load cash payment bookings
+async function loadCashPayments() {
+    const loader = document.getElementById('cashPaymentsLoader');
+    const list = document.getElementById('cashPaymentsList');
+    const badge = document.getElementById('cashPendingCount');
+    const badge2 = document.getElementById('cashPendingCount2');
+    
+    try {
+        const statusFilter = document.getElementById('cashStatusFilter')?.value || 'all';
+        const turfFilter = document.getElementById('cashTurfFilter')?.value || '';
+        
+        const queryParams = {};
+        if (statusFilter !== 'all') {
+            queryParams.status = statusFilter;
+        }
+        if (turfFilter) {
+            queryParams.turfId = turfFilter;
+        }
+
+        loader.style.display = 'block';
+        const response = await api.getCashPaymentBookings(queryParams);
+        loader.style.display = 'none';
+        
+        const { bookings, stats } = response.data;
+        
+        // Update stats
+        if (badge) {
+            if (stats.pendingCollection > 0) {
+                badge.textContent = stats.pendingCollection;
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+        
+        if (badge2) badge2.textContent = stats.pendingCollection;
+        document.getElementById('cashCollectedToday').textContent = stats.collectedToday;
+        document.getElementById('totalCashBookings').textContent = stats.totalCashBookings;
+        
+        if (!bookings || bookings.length === 0) {
+            list.innerHTML = `
+                <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                    <i class="fas fa-money-bill-wave fa-3x" style="margin-bottom: 1rem; opacity: 0.3;"></i>
+                    <p>No cash payment bookings found</p>
+                </div>
+            `;
+            return;
+        }
+        
+        list.innerHTML = bookings.map(booking => {
+            const isPending = !booking.payment.cashCollected;
+            const statusBadge = isPending 
+                ? '<span class="status-badge status-pending-cash">⏳ Pending Cash</span>'
+                : '<span class="status-badge status-collected">✅ Cash Collected</span>';
+            
+            const actionButton = isPending
+                ? `<button onclick="markCashCollected('${booking._id}')" class="btn-action-collect">
+                        <i class="fas fa-check-circle"></i> Mark Cash Collected
+                   </button>`
+                : `<div class="collected-info">
+                        <small style="color: var(--text-secondary);">
+                            <i class="fas fa-check"></i> Collected on ${new Date(booking.payment.cashCollectedAt).toLocaleDateString()}
+                        </small>
+                   </div>`;
+            
+            return `
+                <div class="cash-payment-card ${isPending ? 'pending-highlight' : ''}">
+                    <div class="cash-card-header">
+                        <div class="turf-info-inline">
+                            <span class="icon-badge">🏟️</span>
+                            <div>
+                                <h3>${booking.turf.name}</h3>
+                                <p class="location-text">${booking.turf.address?.city || ''}</p>
+                            </div>
+                        </div>
+                        <div class="cash-amount">
+                            ${formatCurrency(booking.pricing.totalAmount)}
+                        </div>
+                    </div>
+                    
+                    <div class="cash-card-body">
+                        <div class="booking-info-grid">
+                            <div class="info-item">
+                                <i class="fas fa-user"></i>
+                                <div>
+                                    <span class="info-label">Customer</span>
+                                    <span class="info-value">${booking.user.name}</span>
+                                    <span class="info-value-small">${booking.user.phone}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <i class="fas fa-calendar"></i>
+                                <div>
+                                    <span class="info-label">Date & Time</span>
+                                    <span class="info-value">${new Date(booking.bookingDate).toLocaleDateString()}</span>
+                                    <span class="info-value-small">${booking.timeSlot.startTime} - ${booking.timeSlot.endTime}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <i class="fas fa-${getSportIcon(booking.sport)}"></i>
+                                <div>
+                                    <span class="info-label">Sport</span>
+                                    <span class="info-value">${booking.sport}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="cash-card-footer">
+                            ${statusBadge}
+                            ${actionButton}
+                        </div>
+                        
+                        ${booking.payment.cashCollectionNotes ? `
+                            <div class="collection-notes">
+                                <strong>Collection Notes:</strong> ${booking.payment.cashCollectionNotes}
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+    } catch (error) {
+        loader.style.display = 'none';
+        showToast('Failed to load cash payments', 'error');
+        console.error('Error loading cash payments:', error);
+    }
+}
+
+// Mark cash as collected
+async function markCashCollected(bookingId) {
+    const notes = prompt('Add collection notes (optional):');
+    
+    if (notes === null) return; // User cancelled
+    
+    try {
+        await api.markCashCollected(bookingId, notes);
+        showToast('Cash collection confirmed successfully!', 'success');
+        await loadCashPayments();
+    } catch (error) {
+        showToast(error.message || 'Failed to mark cash as collected', 'error');
+        console.error('Error marking cash collected:', error);
+    }
+}
+
+// Helper function for sport icons
+function getSportIcon(sport) {
+    const icons = {
+        football: 'futbol',
+        cricket: 'baseball-ball',
+        basketball: 'basketball-ball',
+        tennis: 'table-tennis',
+        badminton: 'volleyball-ball',
+        volleyball: 'volleyball-ball'
+    };
+    return icons[sport.toLowerCase()] || 'running';
+}
+
+// Make functions globally available
+window.loadCashPayments = loadCashPayments;
+window.markCashCollected = markCashCollected;
 

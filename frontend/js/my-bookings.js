@@ -131,6 +131,12 @@ function createBookingCard(booking) {
         const reason = booking.refundRequest.verificationNote || 'No reason provided';
         statusMessage = ` Refund request rejected by owner. Reason: ${reason}`;
         statusMessageClass = 'refund-denied';
+    } else if (booking.payment?.method === 'cash_at_turf' && !booking.payment?.cashCollected) {
+        statusMessage = '💵 Please pay cash at the turf before your session starts';
+        statusMessageClass = 'pending-cash';
+    } else if (booking.payment?.method === 'cash_at_turf' && booking.payment?.cashCollected) {
+        statusMessage = ' Cash payment collected by owner';
+        statusMessageClass = 'confirmed';
     } else if (booking.tierPayment && booking.tierPayment.verificationStatus === 'pending' && booking.turf?.paymentMethod === 'tier') {
         statusMessage = ' Waiting for owner to verify your payment';
         statusMessageClass = 'pending';

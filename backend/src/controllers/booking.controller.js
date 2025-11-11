@@ -43,7 +43,8 @@ exports.createBooking = async (req, res) => {
       timeSlots,
       sport,
       playerDetails,
-      notes
+      notes,
+      paymentMethod = 'online' // 'online' or 'cash_at_turf'
     } = req.body;
 
     // Support both single timeSlot and multiple timeSlots
@@ -106,6 +107,45 @@ exports.createBooking = async (req, res) => {
     const basePricePerSlot = isWeekend ? turf.pricing.weekendRate : turf.pricing.hourlyRate;
     const totalBasePrice = basePricePerSlot * slotsToBook.length;
     const pricing = calculatePricing(totalBasePrice, turf.paymentMethod);
+
+    // Handle Cash at Turf payment
+    if (paymentMethod === 'cash_at_turf') {
+      const booking = await Booking.create({
+        turf: turfId,
+        user: req.user._id,
+        bookingDate: bookingDateObj,
+        timeSlots: slotsToBook,
+        timeSlot: {
+          startTime: slotsToBook[0].startTime,
+          endTime: slotsToBook[slotsToBook.length - 1].endTime
+        },
+        sport,
+        pricing,
+        payment: {
+          method: 'cash_at_turf',
+          status: 'pending_cash',
+          cashCollected: false
+        },
+        playerDetails,
+        notes,
+        status: 'confirmed' // Confirmed but pending cash payment
+      });
+
+      await booking.populate([
+        { path: 'turf', select: 'name address images pricing contactInfo' },
+        { path: 'user', select: 'name email phone' }
+      ]);
+
+      return res.status(201).json({
+        success: true,
+        message: 'Booking confirmed! Please pay cash at the turf.',
+        data: {
+          booking,
+          paymentMethod: 'cash_at_turf',
+          note: 'Remember to carry exact cash amount when you visit the turf.'
+        }
+      });
+    }
 
     // For tier-based turfs, create booking without Razorpay
     if (turf.paymentMethod === 'tier') {
@@ -815,3 +855,140 @@ exports.processRefundDecision = async (req, res) => {
   }
 };
 
+
+// @desc    Mark cash as collected (Owner only)
+// @route   PATCH /api/bookings/:id/cash-collected
+// @access  Private (Owner)
+exports.markCashCollected = async (req, res) => {
+  try {
+    const { notes } = req.body;
+    
+    const booking = await Booking.findById(req.params.id)
+      .populate('turf', 'owner name')
+      .populate('user', 'name email phone');
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: 'Booking not found'
+      });
+    }
+
+    // Verify owner
+    if (booking.turf.owner.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to update this booking'
+      });
+    }
+
+    // Verify payment method is cash
+    if (booking.payment.method !== 'cash_at_turf') {
+      return res.status(400).json({
+        success: false,
+        message: 'This booking is not cash payment'
+      });
+    }
+
+    // Verify not already collected
+    if (booking.payment.cashCollected) {
+      return res.status(400).json({
+        success: false,
+        message: 'Cash already collected for this booking'
+      });
+    }
+
+    // Mark as collected
+    booking.payment.cashCollected = true;
+    booking.payment.cashCollectedAt = new Date();
+    booking.payment.cashCollectedBy = req.user._id;
+    booking.payment.cashCollectionNotes = notes;
+    booking.payment.status = 'completed';
+    booking.payment.paidAt = new Date();
+
+    await booking.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Cash collection confirmed successfully',
+      data: booking
+    });
+  } catch (error) {
+    console.error('Mark cash collected error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to mark cash as collected'
+    });
+  }
+};
+
+// @desc    Get cash payment bookings for owner
+// @route   GET /api/bookings/owner/cash-payments
+// @access  Private (Owner)
+exports.getCashPaymentBookings = async (req, res) => {
+  try {
+    const { status = 'all', turfId } = req.query;
+
+    // Get owner's turfs
+    const ownerTurfs = await Turf.find({ owner: req.user._id }).select('_id');
+    const turfIds = ownerTurfs.map(t => t._id);
+
+    // Build query
+    const query = {
+      turf: { $in: turfIds },
+      'payment.method': 'cash_at_turf'
+    };
+
+    if (turfId) {
+      query.turf = turfId;
+    }
+
+    if (status === 'pending') {
+      query['payment.cashCollected'] = false;
+    } else if (status === 'collected') {
+      query['payment.cashCollected'] = true;
+    }
+
+    const bookings = await Booking.find(query)
+      .populate('turf', 'name address images')
+      .populate('user', 'name email phone')
+      .populate('payment.cashCollectedBy', 'name')
+      .sort({ bookingDate: -1, 'timeSlot.startTime': 1 });
+
+    // Calculate stats
+    const stats = {
+      totalCashBookings: await Booking.countDocuments({
+        turf: { $in: turfIds },
+        'payment.method': 'cash_at_turf'
+      }),
+      pendingCollection: await Booking.countDocuments({
+        turf: { $in: turfIds },
+        'payment.method': 'cash_at_turf',
+        'payment.cashCollected': false
+      }),
+      collectedToday: await Booking.countDocuments({
+        turf: { $in: turfIds },
+        'payment.method': 'cash_at_turf',
+        'payment.cashCollected': true,
+        'payment.cashCollectedAt': {
+          $gte: new Date().setHours(0, 0, 0, 0)
+        }
+      })
+    };
+
+    res.status(200).json({
+      success: true,
+      data: {
+        bookings,
+        stats,
+        count: bookings.length
+      }
+    });
+  } catch (error) {
+    console.error('Get cash payments error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to fetch cash payment bookings'
+    });
+  }
+};

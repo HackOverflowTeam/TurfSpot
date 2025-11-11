@@ -202,6 +202,19 @@ class APIService {
         });
     }
 
+    // CASH PAYMENT ENDPOINTS
+    async getCashPaymentBookings(queryParams = {}) {
+        const query = new URLSearchParams(queryParams).toString();
+        return this.request(`/bookings/owner/cash-payments${query ? '?' + query : ''}`);
+    }
+
+    async markCashCollected(bookingId, notes = '') {
+        return this.request(`/bookings/${bookingId}/cash-collected`, {
+            method: 'PATCH',
+            body: JSON.stringify({ notes })
+        });
+    }
+
     // REFUND ENDPOINTS
     async getOwnerPendingRefunds() {
         return this.request('/bookings/owner/pending-refunds');

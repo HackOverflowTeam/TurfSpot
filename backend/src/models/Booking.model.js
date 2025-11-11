@@ -66,17 +66,33 @@ const bookingSchema = new mongoose.Schema({
     }
   },
   payment: {
+    method: {
+      type: String,
+      enum: ['online', 'cash_at_turf'],
+      default: 'online'
+    },
     razorpayOrderId: String,
     razorpayPaymentId: String,
     razorpaySignature: String,
     status: {
       type: String,
-      enum: ['pending', 'completed', 'failed', 'refunded'],
+      enum: ['pending', 'completed', 'failed', 'refunded', 'pending_cash'],
       default: 'pending'
     },
     paidAt: Date,
     refundId: String,
-    refundedAt: Date
+    refundedAt: Date,
+    // Cash payment specific fields
+    cashCollected: {
+      type: Boolean,
+      default: false
+    },
+    cashCollectedAt: Date,
+    cashCollectedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    cashCollectionNotes: String
   },
   // For tier-based turfs: user uploads payment screenshot
   tierPayment: {

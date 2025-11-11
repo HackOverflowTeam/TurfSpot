@@ -11,7 +11,9 @@ const {
   verifyTierPayment,
   getPendingTierVerifications,
   getPendingRefundRequests,
-  processRefundDecision
+  processRefundDecision,
+  markCashCollected,
+  getCashPaymentBookings
 } = require('../controllers/booking.controller');
 const { protect, authorize } = require('../middleware/auth.middleware');
 const validate = require('../middleware/validation.middleware');
@@ -91,5 +93,9 @@ router.get('/owner/bookings', authorize('owner', 'admin'), getOwnerBookings);
 router.get('/owner/pending-verifications', authorize('owner'), getPendingTierVerifications);
 router.get('/owner/pending-refunds', authorize('owner'), getPendingRefundRequests);
 router.put('/:bookingId/refund-decision', authorize('owner'), processRefundDecision);
+
+// Cash payment routes (Owner only)
+router.get('/owner/cash-payments', authorize('owner'), getCashPaymentBookings);
+router.patch('/:id/cash-collected', authorize('owner'), markCashCollected);
 
 module.exports = router;

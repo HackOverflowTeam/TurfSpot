@@ -404,11 +404,13 @@ window.toggleSlot = function(startTime, endTime, element) {
     if (selectedSlots.length > 0) {
         document.getElementById('playerDetailsGroup').style.display = 'block';
         document.getElementById('notesGroup').style.display = 'block';
+        document.getElementById('paymentMethodGroup').style.display = 'block';
         document.getElementById('bookingSummary').style.display = 'block';
         updateBookingSummary();
     } else {
         document.getElementById('playerDetailsGroup').style.display = 'none';
         document.getElementById('notesGroup').style.display = 'none';
+        document.getElementById('paymentMethodGroup').style.display = 'none';
         document.getElementById('bookingSummary').style.display = 'none';
     }
 };
@@ -456,6 +458,9 @@ async function handleBooking(e) {
         return;
     }
 
+    // Get selected payment method
+    const selectedPaymentMethod = document.querySelector('input[name="paymentMethod"]:checked')?.value || 'online';
+
     const bookingData = {
         turfId: currentTurf._id,
         bookingDate: document.getElementById('bookingDate').value,
@@ -466,7 +471,8 @@ async function handleBooking(e) {
             phone: authManager.user.phone,
             numberOfPlayers: parseInt(document.getElementById('numberOfPlayers').value) || 1
         },
-        notes: document.getElementById('bookingNotes').value
+        notes: document.getElementById('bookingNotes').value,
+        paymentMethod: selectedPaymentMethod
     };
 
     const bookNowBtn = document.getElementById('bookNowBtn');
@@ -475,7 +481,19 @@ async function handleBooking(e) {
 
     try {
         const response = await api.createBooking(bookingData);
+        console.log('Booking response:', response.data); // Debug log
         const { booking, paymentMethod, upiQrCode, razorpayOrder } = response.data;
+
+        // Handle cash at turf payment - check first before any other payment method
+        if (paymentMethod === 'cash_at_turf' || selectedPaymentMethod === 'cash_at_turf') {
+            console.log('Cash payment detected, redirecting...'); // Debug log
+            bookNowBtn.disabled = false;
+            bookNowBtn.innerHTML = '<i class="fas fa-calendar-check"></i> Book Now';
+            
+            showToast('Booking confirmed! Please pay cash at the turf.', 'success');
+            setTimeout(() => window.location.href = 'my-bookings.html', 2000);
+            return;
+        }
 
         // Handle tier-based payment
         if (paymentMethod === 'tier') {
@@ -487,45 +505,51 @@ async function handleBooking(e) {
             return;
         }
 
-        // Handle commission-based payment (Razorpay)
-        const options = {
-            key: razorpayOrder.keyId,
-            amount: razorpayOrder.amount,
-            currency: razorpayOrder.currency,
-            order_id: razorpayOrder.orderId,
-            name: 'TurfSpot',
-            description: `Booking for ${currentTurf.name}`,
-            handler: async function(paymentResponse) {
-                try {
-                    await api.verifyPayment(booking._id, {
-                        razorpayPaymentId: paymentResponse.razorpay_payment_id,
-                        razorpaySignature: paymentResponse.razorpay_signature
-                    });
-                    
-                    showToast('Booking confirmed successfully!', 'success');
-                    setTimeout(() => window.location.href = 'my-bookings.html', 2000);
-                } catch (error) {
-                    showToast('Payment verification failed', 'error');
-                    console.error('Payment verification error:', error);
+        // Handle commission-based payment (Razorpay) - only if razorpayOrder exists
+        if (razorpayOrder && razorpayOrder.orderId) {
+            const options = {
+                key: razorpayOrder.keyId,
+                amount: razorpayOrder.amount,
+                currency: razorpayOrder.currency,
+                order_id: razorpayOrder.orderId,
+                name: 'TurfSpot',
+                description: `Booking for ${currentTurf.name}`,
+                handler: async function(paymentResponse) {
+                    try {
+                        await api.verifyPayment(booking._id, {
+                            razorpayPaymentId: paymentResponse.razorpay_payment_id,
+                            razorpaySignature: paymentResponse.razorpay_signature
+                        });
+                        
+                        showToast('Booking confirmed successfully!', 'success');
+                        setTimeout(() => window.location.href = 'my-bookings.html', 2000);
+                    } catch (error) {
+                        showToast('Payment verification failed', 'error');
+                        console.error('Payment verification error:', error);
+                    }
+                },
+                prefill: {
+                    name: authManager.user.name,
+                    email: authManager.user.email,
+                    contact: authManager.user.phone
+                },
+                theme: {
+                    color: '#10b981'
                 }
-            },
-            prefill: {
-                name: authManager.user.name,
-                email: authManager.user.email,
-                contact: authManager.user.phone
-            },
-            theme: {
-                color: '#10b981'
-            }
-        };
+            };
 
-        const razorpay = new Razorpay(options);
-        razorpay.open();
+            const razorpay = new Razorpay(options);
+            razorpay.open();
 
-        razorpay.on('payment.failed', function(response) {
-            showToast('Payment failed. Please try again.', 'error');
-            console.error('Payment failed:', response);
-        });
+            razorpay.on('payment.failed', function(response) {
+                showToast('Payment failed. Please try again.', 'error');
+                console.error('Payment failed:', response);
+            });
+        } else {
+            // If no razorpayOrder and not cash/tier, something went wrong
+            showToast('Payment method not configured properly', 'error');
+            console.error('No payment order created');
+        }
 
     } catch (error) {
         console.error('Booking error:', error);
@@ -703,6 +727,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (bookingForm) {
         bookingForm.addEventListener('submit', handleBooking);
     }
+    
+    // Payment method selection
+    const paymentMethodRadios = document.querySelectorAll('input[name="paymentMethod"]');
+    const cashPaymentNote = document.querySelector('.cash-payment-note');
+    
+    paymentMethodRadios.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            if (cashPaymentNote) {
+                cashPaymentNote.style.display = e.target.value === 'cash_at_turf' ? 'block' : 'none';
+            }
+        });
+    });
     
     // Show/hide mobile CTA on scroll
     const mobileCTA = document.querySelector('.mobile-booking-cta');
