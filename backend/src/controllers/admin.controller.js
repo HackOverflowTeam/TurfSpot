@@ -413,32 +413,38 @@ exports.getAllBookings = async (req, res) => {
 // @access  Private (Admin only)
 exports.getPendingPayouts = async (req, res) => {
   try {
-    // Get all completed bookings that haven't been paid out yet
-    const bookings = await Booking.find({
-      'payment.status': 'completed',
-      status: { $in: ['confirmed', 'completed'] },
+    const Transaction = require('../models/Transaction.model');
+    
+    // Get all verified transactions with pending payout status
+    const transactions = await Transaction.find({
+      paymentStatus: 'verified',
       payoutStatus: 'pending'
     })
     .populate('turf', 'name')
+    .populate('owner', 'name email phone upiId')
     .populate('user', 'name email phone')
-    .sort({ 'payment.paidAt': -1 });
+    .populate('booking', 'bookingDate timeSlot')
+    .sort({ verifiedAt: -1 });
 
-    // Group by owner
+    // Group by owner and turf for better organization
     const groupedByOwner = {};
     
-    for (const booking of bookings) {
-      if (!booking.turf || !booking.turf.owner) continue;
+    for (const transaction of transactions) {
+      if (!transaction.owner) continue;
       
-      // Fetch turf with owner details
-      const turfWithOwner = await Turf.findById(booking.turf._id).populate('owner', 'name email phone');
-      if (!turfWithOwner) continue;
-
-      const ownerId = turfWithOwner.owner._id.toString();
+      const ownerId = transaction.owner._id.toString();
+      const turfId = transaction.turf?._id.toString();
       
       if (!groupedByOwner[ownerId]) {
         groupedByOwner[ownerId] = {
-          owner: turfWithOwner.owner,
-          bookings: [],
+          owner: {
+            _id: transaction.owner._id,
+            name: transaction.owner.name,
+            email: transaction.owner.email,
+            phone: transaction.owner.phone,
+            upiId: transaction.owner.upiId
+          },
+          turfs: {},
           totalRevenue: 0,
           platformFees: 0,
           ownerEarnings: 0,
@@ -446,18 +452,55 @@ exports.getPendingPayouts = async (req, res) => {
         };
       }
 
-      const ownerEarnings = booking.pricing.ownerEarnings || 
-        (booking.pricing.totalAmount - booking.pricing.platformFee);
+      // Group by turf within owner
+      if (turfId && !groupedByOwner[ownerId].turfs[turfId]) {
+        groupedByOwner[ownerId].turfs[turfId] = {
+          turfName: transaction.turf?.name || 'Unknown Turf',
+          transactions: [],
+          totalAmount: 0,
+          platformCommission: 0,
+          ownerPayout: 0,
+          count: 0
+        };
+      }
 
-      groupedByOwner[ownerId].bookings.push(booking);
-      groupedByOwner[ownerId].totalRevenue += booking.pricing.totalAmount;
-      groupedByOwner[ownerId].platformFees += booking.pricing.platformFee;
-      groupedByOwner[ownerId].ownerEarnings += ownerEarnings;
+      // Add to owner totals
+      groupedByOwner[ownerId].totalRevenue += transaction.totalAmount;
+      groupedByOwner[ownerId].platformFees += transaction.platformCommission;
+      groupedByOwner[ownerId].ownerEarnings += transaction.ownerPayout;
       groupedByOwner[ownerId].totalBookings += 1;
+
+      // Add to turf totals
+      if (turfId) {
+        const turfData = groupedByOwner[ownerId].turfs[turfId];
+        turfData.transactions.push({
+          _id: transaction._id,
+          transactionId: transaction.transactionId,
+          user: transaction.user,
+          booking: transaction.booking,
+          bookingDate: transaction.bookingSnapshot?.date || transaction.booking?.bookingDate,
+          timeSlot: transaction.bookingSnapshot?.timeSlot || transaction.booking?.timeSlot,
+          totalAmount: transaction.totalAmount,
+          platformCommission: transaction.platformCommission,
+          ownerPayout: transaction.ownerPayout,
+          verifiedAt: transaction.verifiedAt
+        });
+        turfData.totalAmount += transaction.totalAmount;
+        turfData.platformCommission += transaction.platformCommission;
+        turfData.ownerPayout += transaction.ownerPayout;
+        turfData.count += 1;
+      }
     }
 
-    // Convert to array
-    const payouts = Object.values(groupedByOwner);
+    // Convert to array and format
+    const payouts = Object.values(groupedByOwner).map(ownerData => ({
+      owner: ownerData.owner,
+      turfs: Object.values(ownerData.turfs),
+      totalRevenue: ownerData.totalRevenue,
+      platformFees: ownerData.platformFees,
+      ownerEarnings: ownerData.ownerEarnings,
+      totalBookings: ownerData.totalBookings
+    }));
 
     // Calculate totals
     const totals = payouts.reduce((acc, payout) => ({
@@ -482,6 +525,7 @@ exports.getPendingPayouts = async (req, res) => {
       }
     });
   } catch (error) {
+    console.error('Error in getPendingPayouts:', error);
     res.status(500).json({
       success: false,
       message: error.message
@@ -489,7 +533,57 @@ exports.getPendingPayouts = async (req, res) => {
   }
 };
 
-// @desc    Mark booking as paid
+// @desc    Mark transaction as paid
+// @route   PUT /api/admin/transactions/:id/mark-paid
+// @access  Private (Admin only)
+exports.markTransactionAsPaid = async (req, res) => {
+  try {
+    const Transaction = require('../models/Transaction.model');
+    const { paymentMethod, notes, transactionReference } = req.body;
+
+    const transaction = await Transaction.findById(req.params.id)
+      .populate('owner', 'name email')
+      .populate('turf', 'name');
+
+    if (!transaction) {
+      return res.status(404).json({
+        success: false,
+        message: 'Transaction not found'
+      });
+    }
+
+    if (transaction.payoutStatus === 'completed') {
+      return res.status(400).json({
+        success: false,
+        message: 'Transaction already paid out'
+      });
+    }
+
+    // Update transaction payout status
+    transaction.payoutStatus = 'completed';
+    transaction.payoutCompletedAt = new Date();
+    transaction.payoutCompletedBy = req.user._id;
+    transaction.payoutMethod = paymentMethod || 'upi';
+    transaction.payoutNotes = notes || '';
+    transaction.payoutReference = transactionReference || '';
+
+    await transaction.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Transaction marked as paid',
+      data: transaction
+    });
+  } catch (error) {
+    console.error('Error marking transaction as paid:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// @desc    Mark booking as paid (legacy support)
 // @route   PUT /api/admin/bookings/:id/payout
 // @access  Private (Admin only)
 exports.markBookingAsPaid = async (req, res) => {

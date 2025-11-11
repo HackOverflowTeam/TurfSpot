@@ -4,6 +4,8 @@ let currentTurfId = null;
 let currentBookingForVerification = null;
 let currentTransactionForPayout = null;
 let currentOwnerForBulkPayout = null;
+let turfSearchTimeout = null;
+let currentTransactionsData = []; // Store current transactions for CSV export
 
 // Initialize page
 document.addEventListener('DOMContentLoaded', () => {
@@ -21,7 +23,7 @@ async function init() {
     // Load initial data
     await loadPlatformQR();
     await loadPendingVerifications();
-    await loadTurfs();
+    await loadAllTransactions(); // Load all transactions by default
     await loadSummary();
 
     // Setup tab switching
@@ -144,35 +146,265 @@ async function loadPendingVerifications() {
     }
 }
 
-// Load turfs for dropdown
+// Handle turf search with debouncing
+window.handleTurfSearch = function(query) {
+    // Clear previous timeout
+    if (turfSearchTimeout) {
+        clearTimeout(turfSearchTimeout);
+    }
+    
+    const resultsDiv = document.getElementById('turfSearchResults');
+    const clearBtn = document.getElementById('clearTurfSearch');
+    
+    // Show/hide clear button
+    clearBtn.style.display = query.trim() ? 'block' : 'none';
+    
+    if (!query || query.trim().length < 2) {
+        resultsDiv.style.display = 'none';
+        resultsDiv.innerHTML = '';
+        return;
+    }
+    
+    // Show loading
+    resultsDiv.style.display = 'block';
+    resultsDiv.innerHTML = '<div style="padding: 1rem; text-align: center; color: #6b7280;">Searching...</div>';
+    
+    // Debounce the search
+    turfSearchTimeout = setTimeout(async () => {
+        try {
+            const response = await api.searchTurfs(query.trim());
+            
+            if (response.success && response.data.length > 0) {
+                resultsDiv.innerHTML = response.data.map(turf => `
+                    <div 
+                        class="turf-search-result-item" 
+                        onclick="selectTurf('${turf._id}', '${turf.displayName.replace(/'/g, "\\'")}', '${turf.name.replace(/'/g, "\\'")}')"
+                        style="padding: 0.875rem 1rem; cursor: pointer; border-bottom: 1px solid #e5e7eb; transition: background 0.15s;"
+                        onmouseover="this.style.background='#f3f4f6'"
+                        onmouseout="this.style.background='white'"
+                    >
+                        <div style="font-weight: 600; color: #1f2937;">
+                            <i class="fas fa-building" style="color: #10b981; margin-right: 0.5rem;"></i>
+                            ${turf.name}
+                        </div>
+                        <div style="font-size: 0.875rem; color: #6b7280; margin-top: 0.25rem;">
+                            ${turf.city}, ${turf.state}
+                        </div>
+                        ${turf.ownerName ? `<div style="font-size: 0.75rem; color: #9ca3af; margin-top: 0.125rem;">Owner: ${turf.ownerName}</div>` : ''}
+                    </div>
+                `).join('');
+            } else {
+                resultsDiv.innerHTML = '<div style="padding: 1rem; text-align: center; color: #6b7280;">No turfs found</div>';
+            }
+        } catch (error) {
+            console.error('Error searching turfs:', error);
+            resultsDiv.innerHTML = '<div style="padding: 1rem; text-align: center; color: #ef4444;">Error searching turfs</div>';
+        }
+    }, 300); // 300ms debounce
+};
+
+// Select a turf from search results
+window.selectTurf = async function(turfId, displayName, turfName) {
+    currentTurfId = turfId;
+    
+    // Update UI
+    document.getElementById('turfSearchInput').value = '';
+    document.getElementById('turfSearchResults').style.display = 'none';
+    document.getElementById('clearTurfSearch').style.display = 'none';
+    document.getElementById('selectedTurfDisplay').style.display = 'block';
+    document.getElementById('selectedTurfName').textContent = displayName;
+    
+    // Load transactions for this turf
+    await loadTransactionsByTurf();
+};
+
+// Clear turf search
+window.clearTurfSearch = function() {
+    currentTurfId = null;
+    document.getElementById('turfSearchInput').value = '';
+    document.getElementById('turfSearchResults').style.display = 'none';
+    document.getElementById('clearTurfSearch').style.display = 'none';
+    document.getElementById('selectedTurfDisplay').style.display = 'none';
+    document.getElementById('selectedTurfName').textContent = '';
+    
+    // Load all transactions
+    loadAllTransactions();
+};
+
+// Load turfs for dropdown (only approved turfs) - DEPRECATED, kept for compatibility
 async function loadTurfs() {
     try {
         const response = await api.getAllTurfs();
         if (response.success) {
+            // Filter only approved turfs
+            const approvedTurfs = response.data.filter(turf => turf.status === 'approved');
+            
             const select = document.getElementById('turfFilter');
-            select.innerHTML = '<option value="">Select a turf</option>' +
-                response.data.map(turf => `<option value="${turf._id}">${turf.name}</option>`).join('');
+            if (approvedTurfs.length > 0) {
+                select.innerHTML = '<option value="">All Turfs - Select to filter</option>' +
+                    approvedTurfs.map(turf => `<option value="${turf._id}">${turf.name} (${turf.address.city})</option>`).join('');
+            } else {
+                select.innerHTML = '<option value="">No approved turfs available</option>';
+            }
+            
+            // Load all transactions by default
+            await loadAllTransactions();
         }
     } catch (error) {
         console.error('Error loading turfs:', error);
+        showToast('Failed to load turfs', 'error');
+    }
+}
+
+// Load all transactions (without turf filter)
+async function loadAllTransactions() {
+    const loader = document.getElementById('transactionsLoader');
+    const table = document.getElementById('transactionsTable');
+    const tbody = document.getElementById('transactionsBody');
+
+    loader.style.display = 'block';
+    loader.textContent = 'Loading booking transactions...';
+    table.style.display = 'none';
+    document.getElementById('transactionFilters').style.display = 'block';
+
+    try {
+        const response = await api.getAllTransactions({ paymentStatus: 'verified' });
+        
+        if (response.success && response.data) {
+            // Store data for CSV export
+            currentTransactionsData = response.data;
+            
+            loader.style.display = 'none';
+            
+            if (response.data.length > 0) {
+                table.style.display = 'table';
+                tbody.innerHTML = response.data.map(txn => `
+                    <tr>
+                        <td>
+                            <code style="font-size: 0.75rem; background: var(--bg-light); padding: 0.25rem 0.5rem; border-radius: 0.25rem;">
+                                ${txn.transactionId || txn._id.slice(-8)}
+                            </code>
+                        </td>
+                        <td>
+                            <strong>${txn.turf?.name || 'N/A'}</strong><br>
+                            <small style="color: #6b7280;">${txn.turf?.address?.city || ''}</small>
+                        </td>
+                        <td>
+                            ${txn.user?.name || 'N/A'}<br>
+                            <small style="color: #6b7280;">${txn.user?.email || ''}</small>
+                        </td>
+                        <td>${formatDateTime(txn.verifiedAt || txn.createdAt)}</td>
+                        <td style="font-weight: 600;">${formatCurrency(txn.totalAmount)}</td>
+                        <td style="color: var(--success); font-weight: 600;">${formatCurrency(txn.platformCommission)}</td>
+                        <td style="color: var(--primary); font-weight: 600;">${formatCurrency(txn.ownerPayout)}</td>
+                        <td>
+                            <span class="status-badge status-${txn.paymentStatus}">
+                                ${txn.paymentStatus === 'verified' ? '✓ Verified' : txn.paymentStatus.replace('_', ' ')}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="status-badge status-${txn.payoutStatus}">
+                                ${txn.payoutStatus === 'pending' ? '⏳ Pending' : '✓ Completed'}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn-icon" onclick="viewPaymentProof('${txn.paymentProof?.url}')" title="View Payment Proof">
+                                <i class="fas fa-image"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            } else {
+                loader.style.display = 'block';
+                loader.textContent = 'No transactions found';
+            }
+        }
+    } catch (error) {
+        console.error('Error loading transactions:', error);
+        loader.style.display = 'block';
+        loader.textContent = 'Error loading transactions';
+        showToast('Failed to load transactions', 'error');
     }
 }
 
 // Load transactions by turf
 async function loadTransactionsByTurf() {
-    const turfId = document.getElementById('turfFilter').value;
-    
-    if (!turfId) {
-        document.getElementById('transactionsLoader').style.display = 'block';
-        document.getElementById('transactionsLoader').textContent = 'Select a turf to view transactions';
-        document.getElementById('transactionsTable').style.display = 'none';
-        document.getElementById('transactionFilters').style.display = 'none';
+    // Use the global currentTurfId instead of dropdown
+    if (!currentTurfId) {
+        // Load all transactions if no turf selected
+        await loadAllTransactions();
         return;
     }
 
-    currentTurfId = turfId;
+    const loader = document.getElementById('transactionsLoader');
+    const table = document.getElementById('transactionsTable');
+    const tbody = document.getElementById('transactionsBody');
+
+    loader.style.display = 'block';
+    loader.textContent = 'Loading turf transactions...';
+    table.style.display = 'none';
     document.getElementById('transactionFilters').style.display = 'block';
-    await applyTransactionFilters();
+
+    try {
+        const response = await api.getTransactionsByTurf(currentTurfId);
+        
+        if (response.success && response.data) {
+            const transactions = response.data.transactions || response.data;
+            
+            // Store data for CSV export
+            currentTransactionsData = transactions;
+            
+            loader.style.display = 'none';
+            
+            if (transactions.length > 0) {
+                table.style.display = 'table';
+                tbody.innerHTML = transactions.map(txn => `
+                    <tr>
+                        <td>
+                            <code style="font-size: 0.75rem; background: var(--bg-light); padding: 0.25rem 0.5rem; border-radius: 0.25rem;">
+                                ${txn.transactionId || txn._id.slice(-8)}
+                            </code>
+                        </td>
+                        <td>
+                            <strong>${txn.turf?.name || 'N/A'}</strong><br>
+                            <small style="color: #6b7280;">${txn.turf?.address?.city || ''}</small>
+                        </td>
+                        <td>
+                            ${txn.user?.name || 'N/A'}<br>
+                            <small style="color: #6b7280;">${txn.user?.email || ''}</small>
+                        </td>
+                        <td>${formatDateTime(txn.verifiedAt || txn.createdAt)}</td>
+                        <td style="font-weight: 600;">${formatCurrency(txn.totalAmount)}</td>
+                        <td style="color: var(--success); font-weight: 600;">${formatCurrency(txn.platformCommission)}</td>
+                        <td style="color: var(--primary); font-weight: 600;">${formatCurrency(txn.ownerPayout)}</td>
+                        <td>
+                            <span class="status-badge status-${txn.paymentStatus}">
+                                ${txn.paymentStatus === 'verified' ? '✓ Verified' : txn.paymentStatus.replace('_', ' ')}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="status-badge status-${txn.payoutStatus}">
+                                ${txn.payoutStatus === 'pending' ? '⏳ Pending' : '✓ Completed'}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn-icon" onclick="viewPaymentProof('${txn.paymentProof?.url}')" title="View Payment Proof">
+                                <i class="fas fa-image"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            } else {
+                loader.style.display = 'block';
+                loader.textContent = 'No transactions found for this turf';
+            }
+        }
+    } catch (error) {
+        console.error('Error loading turf transactions:', error);
+        loader.style.display = 'block';
+        loader.textContent = 'Error loading transactions';
+        showToast('Failed to load transactions', 'error');
+    }
 }
 
 // Apply transaction filters
@@ -336,6 +568,84 @@ window.viewPaymentProof = function(url) {
             modal.remove();
         }
     });
+};
+
+// Export transactions to CSV
+window.exportTransactionsToCSV = function() {
+    if (!currentTransactionsData || currentTransactionsData.length === 0) {
+        showToast('No transactions to export', 'info');
+        return;
+    }
+    
+    try {
+        // CSV Headers
+        const headers = [
+            'Transaction ID',
+            'Turf Name',
+            'City',
+            'Player Name',
+            'Player Email',
+            'Date & Time',
+            'Total Amount (₹)',
+            'Platform Commission (₹)',
+            'Owner Payout (₹)',
+            'Payment Status',
+            'Payout Status'
+        ];
+        
+        // Convert transaction data to CSV rows
+        const rows = currentTransactionsData.map(txn => {
+            return [
+                txn.transactionId || txn._id.slice(-8),
+                txn.turf?.name || 'N/A',
+                txn.turf?.address?.city || 'N/A',
+                txn.user?.name || 'N/A',
+                txn.user?.email || 'N/A',
+                formatDateTime(txn.verifiedAt || txn.createdAt),
+                txn.totalAmount.toFixed(2),
+                txn.platformCommission.toFixed(2),
+                txn.ownerPayout.toFixed(2),
+                txn.paymentStatus,
+                txn.payoutStatus
+            ];
+        });
+        
+        // Escape CSV values (handle commas and quotes)
+        const escapeCSV = (value) => {
+            const stringValue = String(value);
+            if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+                return `"${stringValue.replace(/"/g, '""')}"`;
+            }
+            return stringValue;
+        };
+        
+        // Build CSV content
+        const csvContent = [
+            headers.map(escapeCSV).join(','),
+            ...rows.map(row => row.map(escapeCSV).join(','))
+        ].join('\n');
+        
+        // Create download
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        
+        // Generate filename with current date
+        const date = new Date().toISOString().slice(0, 10);
+        const turfName = document.getElementById('selectedTurfName')?.textContent || 'all';
+        link.download = `transactions_${turfName}_${date}.csv`;
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        showToast(`Exported ${currentTransactionsData.length} transactions successfully`, 'success');
+    } catch (error) {
+        console.error('Error exporting CSV:', error);
+        showToast('Failed to export CSV', 'error');
+    }
 };
 
 // Open verification modal
@@ -614,6 +924,82 @@ window.uploadPlatformQR = async function() {
     }
 };
 
+// Auto-refresh functionality for real-time syncing
+let transactionsRefreshInterval = null;
+
+function startTransactionsAutoRefresh() {
+    // Clear existing interval if any
+    if (transactionsRefreshInterval) {
+        clearInterval(transactionsRefreshInterval);
+    }
+    
+    // Set up auto-refresh (15 seconds for transactions)
+    transactionsRefreshInterval = setInterval(() => {
+        // Only refresh if user is on the page
+        if (!document.hidden) {
+            console.log('Auto-refreshing transactions...');
+            
+            // Refresh based on active tab
+            const activeTab = document.querySelector('.tab-button.active');
+            if (activeTab) {
+                const tabName = activeTab.dataset.tab;
+                
+                if (tabName === 'verifications') {
+                    loadPendingVerifications();
+                } else if (tabName === 'transactions') {
+                    // Refresh transactions view
+                    if (currentTurfId) {
+                        loadTransactionsByTurf();
+                    } else {
+                        loadAllTransactions();
+                    }
+                } else if (tabName === 'payouts') {
+                    loadPendingPayouts();
+                }
+            }
+            
+            // Always refresh summary
+            loadSummary();
+        }
+    }, 15000); // 15 seconds
+}
+
+// Stop auto-refresh when page is hidden
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        if (transactionsRefreshInterval) {
+            clearInterval(transactionsRefreshInterval);
+            transactionsRefreshInterval = null;
+        }
+    } else {
+        // Resume auto-refresh when page becomes visible
+        startTransactionsAutoRefresh();
+        
+        // Immediate refresh
+        const activeTab = document.querySelector('.tab-button.active');
+        if (activeTab) {
+            const tabName = activeTab.dataset.tab;
+            
+            if (tabName === 'verifications') {
+                loadPendingVerifications();
+            } else if (tabName === 'transactions') {
+                if (currentTurfId) {
+                    loadTransactionsByTurf();
+                } else {
+                    loadAllTransactions();
+                }
+            } else if (tabName === 'payouts') {
+                loadPendingPayouts();
+            }
+        }
+        loadSummary();
+    }
+});
+
+// Start auto-refresh when page loads
+startTransactionsAutoRefresh();
+
 // Make functions globally available
 window.loadTransactionsByTurf = loadTransactionsByTurf;
 window.applyTransactionFilters = applyTransactionFilters;
+

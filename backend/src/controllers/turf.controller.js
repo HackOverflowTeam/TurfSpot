@@ -463,3 +463,50 @@ exports.getAvailableSlots = async (req, res) => {
     });
   }
 };
+
+// @desc    Search turfs by name (for autocomplete)
+// @route   GET /api/turfs/search?q=query
+// @access  Private (Admin)
+exports.searchTurfs = async (req, res) => {
+  try {
+    const { q } = req.query;
+    
+    if (!q || q.trim().length < 2) {
+      return res.status(200).json({
+        success: true,
+        data: []
+      });
+    }
+    
+    // Search approved turfs by name (case-insensitive, partial match)
+    const turfs = await Turf.find({
+      status: 'approved',
+      name: { $regex: q.trim(), $options: 'i' }
+    })
+    .select('name address.city address.state _id')
+    .populate('owner', 'name')
+    .limit(10)
+    .sort({ name: 1 });
+    
+    // Format response for autocomplete
+    const results = turfs.map(turf => ({
+      _id: turf._id,
+      name: turf.name,
+      city: turf.address?.city || '',
+      state: turf.address?.state || '',
+      displayName: `${turf.name} (${turf.address?.city || 'Unknown'})`,
+      ownerName: turf.owner?.name || ''
+    }));
+    
+    res.status(200).json({
+      success: true,
+      data: results
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+

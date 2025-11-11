@@ -11,6 +11,7 @@ const {
   getAllBookings,
   getPendingPayouts,
   markBookingAsPaid,
+  markTransactionAsPaid,
   getPayoutHistory
 } = require('../controllers/admin.controller');
 const { protect, authorize } = require('../middleware/auth.middleware');
@@ -48,6 +49,9 @@ router.put(
 // Booking management
 router.get('/bookings', getAllBookings);
 router.put('/bookings/:id/payout', markBookingAsPaid);
+
+// Transaction management
+router.put('/transactions/:id/mark-paid', markTransactionAsPaid);
 
 // Payout management
 router.get('/payouts/pending', getPendingPayouts);

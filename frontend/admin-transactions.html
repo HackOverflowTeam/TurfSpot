@@ -434,27 +434,60 @@
 
             <!-- All Transactions Tab -->
             <div class="tab-content" id="transactionsTab">
-                <div class="turf-selector">
-                    <label>Filter by Turf:</label>
-                    <select id="turfFilter" onchange="loadTransactionsByTurf()">
-                        <option value="">Select a turf</option>
-                    </select>
+                <div class="turf-search-container" style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #374151;">
+                        Search Turf:
+                    </label>
+                    <div style="position: relative; max-width: 500px;">
+                        <input 
+                            type="text" 
+                            id="turfSearchInput" 
+                            placeholder="Type turf name to search..." 
+                            autocomplete="off"
+                            style="width: 100%; padding: 0.75rem 2.5rem 0.75rem 1rem; border: 2px solid #e5e7eb; border-radius: 0.5rem; font-size: 1rem; transition: all 0.2s;"
+                            oninput="handleTurfSearch(this.value)"
+                            onfocus="this.style.borderColor='#10b981'"
+                            onblur="setTimeout(() => this.style.borderColor='#e5e7eb', 200)"
+                        >
+                        <button 
+                            id="clearTurfSearch" 
+                            onclick="clearTurfSearch()" 
+                            style="position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%); background: #ef4444; color: white; border: none; border-radius: 0.25rem; padding: 0.375rem 0.625rem; cursor: pointer; display: none; font-size: 0.875rem;"
+                            title="Clear search"
+                        >
+                            <i class="fas fa-times"></i>
+                        </button>
+                        
+                        <!-- Autocomplete dropdown -->
+                        <div 
+                            id="turfSearchResults" 
+                            style="position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #e5e7eb; border-radius: 0.5rem; margin-top: 0.25rem; max-height: 300px; overflow-y: auto; display: none; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); z-index: 1000;"
+                        >
+                            <!-- Results will be populated here -->
+                        </div>
+                    </div>
+                    <div id="selectedTurfDisplay" style="margin-top: 0.75rem; display: none;">
+                        <span style="background: #10b981; color: white; padding: 0.5rem 1rem; border-radius: 0.5rem; display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+                            <i class="fas fa-building"></i>
+                            <span id="selectedTurfName"></span>
+                        </span>
+                    </div>
                 </div>
                 
-                <div class="filters-section" id="transactionFilters" style="display: none;">
+                <div class="filters-section" id="transactionFilters" style="display: block;">
                     <div class="filters-grid">
                         <div class="filter-group">
                             <label>Payment Status</label>
-                            <select id="paymentStatusFilter">
+                            <select id="paymentStatusFilter" onchange="applyTransactionFilters()">
                                 <option value="">All</option>
-                                <option value="verified">Verified</option>
+                                <option value="verified" selected>Verified</option>
                                 <option value="pending_verification">Pending</option>
                                 <option value="rejected">Rejected</option>
                             </select>
                         </div>
                         <div class="filter-group">
                             <label>Payout Status</label>
-                            <select id="payoutStatusFilter">
+                            <select id="payoutStatusFilter" onchange="applyTransactionFilters()">
                                 <option value="">All</option>
                                 <option value="pending">Pending</option>
                                 <option value="completed">Completed</option>
@@ -462,14 +495,21 @@
                         </div>
                         <div class="filter-group">
                             <label>Start Date</label>
-                            <input type="date" id="startDateFilter">
+                            <input type="date" id="startDateFilter" onchange="applyTransactionFilters()">
                         </div>
                         <div class="filter-group">
                             <label>End Date</label>
-                            <input type="date" id="endDateFilter">
+                            <input type="date" id="endDateFilter" onchange="applyTransactionFilters()">
                         </div>
                     </div>
-                    <button class="btn-view" style="margin-top: 1rem;" onclick="applyTransactionFilters()">Apply Filters</button>
+                    <div style="display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap;">
+                        <button class="btn-view" onclick="applyTransactionFilters()">
+                            <i class="fas fa-filter"></i> Apply Filters
+                        </button>
+                        <button class="btn-view" onclick="exportTransactionsToCSV()" style="background: #059669;">
+                            <i class="fas fa-file-csv"></i> Export to CSV
+                        </button>
+                    </div>
                 </div>
 
                 <div class="loader" id="transactionsLoader">Select a turf to view transactions</div>

@@ -7,7 +7,8 @@ const {
   updateTurf,
   deleteTurf,
   getMyTurfs,
-  getAvailableSlots
+  getAvailableSlots,
+  searchTurfs
 } = require('../controllers/turf.controller');
 const { protect, authorize, optionalAuth } = require('../middleware/auth.middleware');
 const validate = require('../middleware/validation.middleware');
@@ -29,8 +30,13 @@ const createTurfValidation = [
 
 // Public routes (with optional auth for getTurf to allow owners/admins to see pending turfs)
 router.get('/', getTurfs);
-router.get('/:id', optionalAuth, getTurf);
 router.get('/:id/available-slots', getAvailableSlots);
+
+// Admin search route (for autocomplete) - must be before /:id route to avoid conflicts
+router.get('/admin/search', protect, authorize('admin'), searchTurfs);
+
+// Continue with other routes
+router.get('/:id', optionalAuth, getTurf);
 
 // Protected routes
 router.use(protect);

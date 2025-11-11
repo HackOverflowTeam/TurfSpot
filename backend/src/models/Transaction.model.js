@@ -36,14 +36,17 @@ const transactionSchema = new mongoose.Schema({
         type: Number,
         required: true,
         default: function() {
-            return this.totalAmount * 0.10; // 10% commission
+            // Exact 10% commission with proper rounding
+            return Math.round(this.totalAmount * 0.10 * 100) / 100;
         }
     },
     ownerPayout: {
         type: Number,
         required: true,
         default: function() {
-            return this.totalAmount * 0.90; // 90% to owner
+            // Exact 90% to owner (total - commission for precision)
+            const commission = Math.round(this.totalAmount * 0.10 * 100) / 100;
+            return Math.round((this.totalAmount - commission) * 100) / 100;
         }
     },
     

@@ -468,71 +468,125 @@ async function loadPendingPayouts() {
 
         if (payouts && payouts.length > 0) {
             payoutsList.innerHTML = payouts.map(ownerGroup => `
-                <div class="booking-card-item" style="margin-bottom: 2rem;">
-                    <div class="booking-header" style="background: var(--light-bg); padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
-                        <div>
-                            <h3>${ownerGroup.owner.name}</h3>
-                            <p class="text-muted">${ownerGroup.owner.email} | ${ownerGroup.owner.phone || 'N/A'}</p>
-                        </div>
-                        <div style="text-align: right;">
-                            <strong style="color: var(--danger); font-size: 1.5rem;">${formatCurrency(ownerGroup.ownerEarnings)}</strong>
-                            <p class="text-muted">${ownerGroup.totalBookings} bookings</p>
+                <div class="payout-owner-card" style="margin-bottom: 2rem; border: 1px solid var(--border-color); border-radius: 0.75rem; overflow: hidden;">
+                    <!-- Owner Header -->
+                    <div class="payout-owner-header" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 1.25rem; color: white;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h3 style="color: white; margin-bottom: 0.25rem; font-size: 1.25rem;">
+                                    <i class="fas fa-user-circle"></i> ${ownerGroup.owner.name}
+                                </h3>
+                                <p style="color: rgba(255,255,255,0.9); margin: 0; font-size: 0.875rem;">
+                                    <i class="fas fa-envelope"></i> ${ownerGroup.owner.email} | 
+                                    <i class="fas fa-phone"></i> ${ownerGroup.owner.phone || 'N/A'}
+                                    ${ownerGroup.owner.upiId ? `| <i class="fas fa-wallet"></i> ${ownerGroup.owner.upiId}` : ''}
+                                </p>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 1.75rem; font-weight: 700; color: white;">
+                                    ${formatCurrency(ownerGroup.ownerEarnings)}
+                                </div>
+                                <div style="font-size: 0.875rem; color: rgba(255,255,255,0.9);">
+                                    ${ownerGroup.totalBookings} transaction${ownerGroup.totalBookings !== 1 ? 's' : ''}
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
-                    <div style="overflow-x: auto;">
-                        <table style="width: 100%; border-collapse: collapse; background: white;">
-                            <thead style="background: var(--dark-bg); color: white;">
-                                <tr>
-                                    <th style="padding: 0.75rem; text-align: left;">Booking ID</th>
-                                    <th style="padding: 0.75rem; text-align: left;">Turf</th>
-                                    <th style="padding: 0.75rem; text-align: left;">Customer</th>
-                                    <th style="padding: 0.75rem; text-align: left;">Date</th>
-                                    <th style="padding: 0.75rem; text-align: right;">Revenue</th>
-                                    <th style="padding: 0.75rem; text-align: right;">Platform Fee</th>
-                                    <th style="padding: 0.75rem; text-align: right;">Owner Amount</th>
-                                    <th style="padding: 0.75rem; text-align: center;">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${ownerGroup.bookings.map(booking => {
-                                    const ownerAmount = booking.pricing.ownerEarnings || 
-                                        (booking.pricing.totalAmount - booking.pricing.platformFee);
-                                    return `
-                                        <tr style="border-bottom: 1px solid var(--border-color);">
-                                            <td style="padding: 0.75rem;">
-                                                <code style="font-size: 0.75rem;">${booking._id.toString().slice(-8)}</code>
-                                            </td>
-                                            <td style="padding: 0.75rem;">${booking.turf?.name || 'N/A'}</td>
-                                            <td style="padding: 0.75rem;">
-                                                ${booking.user?.name || 'N/A'}<br>
-                                                <small class="text-muted">${booking.user?.email || ''}</small>
-                                            </td>
-                                            <td style="padding: 0.75rem;">${formatDateTime(booking.bookingDate)}</td>
-                                            <td style="padding: 0.75rem; text-align: right;">${formatCurrency(booking.pricing.totalAmount)}</td>
-                                            <td style="padding: 0.75rem; text-align: right; color: var(--success);">${formatCurrency(booking.pricing.platformFee)}</td>
-                                            <td style="padding: 0.75rem; text-align: right;">
-                                                <strong style="color: var(--danger);">${formatCurrency(ownerAmount)}</strong>
-                                            </td>
-                                            <td style="padding: 0.75rem; text-align: center;">
-                                                <button class="btn btn-primary btn-sm" onclick='markAsPaid("${booking._id}")'>
-                                                    <i class="fas fa-check"></i> Mark Paid
-                                                </button>
-                                            </td>
+                    <!-- Turfs List -->
+                    ${ownerGroup.turfs.map(turf => `
+                        <div class="payout-turf-section" style="padding: 1.25rem; background: #f9fafb; border-top: 1px solid var(--border-color);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                <h4 style="color: var(--text-primary); margin: 0;">
+                                    <i class="fas fa-building" style="color: var(--primary);"></i> ${turf.turfName}
+                                </h4>
+                                <div style="text-align: right;">
+                                    <div style="font-weight: 700; color: var(--primary); font-size: 1.1rem;">
+                                        ${formatCurrency(turf.ownerPayout)}
+                                    </div>
+                                    <div style="font-size: 0.75rem; color: var(--text-secondary);">
+                                        ${turf.count} booking${turf.count !== 1 ? 's' : ''}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Transactions Table -->
+                            <div style="overflow-x: auto; background: white; border-radius: 0.5rem; border: 1px solid var(--border-color);">
+                                <table style="width: 100%; border-collapse: collapse;">
+                                    <thead style="background: var(--bg-light);">
+                                        <tr>
+                                            <th style="padding: 0.75rem; text-align: left; font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary);">Transaction</th>
+                                            <th style="padding: 0.75rem; text-align: left; font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary);">Player</th>
+                                            <th style="padding: 0.75rem; text-align: left; font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary);">Date & Time</th>
+                                            <th style="padding: 0.75rem; text-align: right; font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary);">Total</th>
+                                            <th style="padding: 0.75rem; text-align: right; font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary);">Commission (10%)</th>
+                                            <th style="padding: 0.75rem; text-align: right; font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary);">Owner (90%)</th>
+                                            <th style="padding: 0.75rem; text-align: center; font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary);">Action</th>
                                         </tr>
-                                    `;
-                                }).join('')}
-                            </tbody>
-                            <tfoot style="background: var(--light-bg); font-weight: bold;">
-                                <tr>
-                                    <td colspan="4" style="padding: 1rem;">Total for ${ownerGroup.owner.name}</td>
-                                    <td style="padding: 1rem; text-align: right;">${formatCurrency(ownerGroup.totalRevenue)}</td>
-                                    <td style="padding: 1rem; text-align: right; color: var(--success);">${formatCurrency(ownerGroup.platformFees)}</td>
-                                    <td style="padding: 1rem; text-align: right; color: var(--danger); font-size: 1.1rem;">${formatCurrency(ownerGroup.ownerEarnings)}</td>
-                                    <td style="padding: 1rem;"></td>
-                                </tr>
-                            </tfoot>
-                        </table>
+                                    </thead>
+                                    <tbody>
+                                        ${turf.transactions.map(transaction => `
+                                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                                <td style="padding: 0.75rem;">
+                                                    <code style="font-size: 0.75rem; background: var(--bg-light); padding: 0.25rem 0.5rem; border-radius: 0.25rem;">
+                                                        ${transaction.transactionId || transaction._id.toString().slice(-8)}
+                                                    </code>
+                                                </td>
+                                                <td style="padding: 0.75rem;">
+                                                    <div style="font-weight: 600;">${transaction.user?.name || 'N/A'}</div>
+                                                    <div style="font-size: 0.75rem; color: var(--text-secondary);">${transaction.user?.phone || ''}</div>
+                                                </td>
+                                                <td style="padding: 0.75rem;">
+                                                    <div style="font-weight: 600;">${formatDateTime(transaction.bookingDate)}</div>
+                                                    <div style="font-size: 0.75rem; color: var(--text-secondary);">${formatTimeSlot(transaction.timeSlot)}</div>
+                                                </td>
+                                                <td style="padding: 0.75rem; text-align: right; font-weight: 600;">
+                                                    ${formatCurrency(transaction.totalAmount)}
+                                                </td>
+                                                <td style="padding: 0.75rem; text-align: right; color: var(--success); font-weight: 600;">
+                                                    ${formatCurrency(transaction.platformCommission)}
+                                                </td>
+                                                <td style="padding: 0.75rem; text-align: right; color: var(--primary); font-weight: 700;">
+                                                    ${formatCurrency(transaction.ownerPayout)}
+                                                </td>
+                                                <td style="padding: 0.75rem; text-align: center;">
+                                                    <button class="btn btn-sm btn-primary" onclick='markTransactionPaid("${transaction._id}")' style="font-size: 0.75rem; padding: 0.375rem 0.75rem;">
+                                                        <i class="fas fa-check"></i> Mark Paid
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                    <tfoot style="background: var(--bg-light); font-weight: 700;">
+                                        <tr>
+                                            <td colspan="3" style="padding: 0.75rem;">Turf Total</td>
+                                            <td style="padding: 0.75rem; text-align: right;">${formatCurrency(turf.totalAmount)}</td>
+                                            <td style="padding: 0.75rem; text-align: right; color: var(--success);">${formatCurrency(turf.platformCommission)}</td>
+                                            <td style="padding: 0.75rem; text-align: right; color: var(--primary);">${formatCurrency(turf.ownerPayout)}</td>
+                                            <td style="padding: 0.75rem;"></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    `).join('')}
+                    
+                    <!-- Owner Total Footer -->
+                    <div style="padding: 1rem 1.25rem; background: var(--bg-light); border-top: 2px solid var(--border-color);">
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; font-weight: 700;">
+                            <div style="text-align: center;">
+                                <div style="color: var(--text-secondary); font-size: 0.75rem; margin-bottom: 0.25rem;">TOTAL REVENUE</div>
+                                <div style="color: var(--text-primary); font-size: 1.1rem;">${formatCurrency(ownerGroup.totalRevenue)}</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="color: var(--text-secondary); font-size: 0.75rem; margin-bottom: 0.25rem;">PLATFORM FEES</div>
+                                <div style="color: var(--success); font-size: 1.1rem;">${formatCurrency(ownerGroup.platformFees)}</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="color: var(--text-secondary); font-size: 0.75rem; margin-bottom: 0.25rem;">OWNER PAYOUT</div>
+                                <div style="color: var(--primary); font-size: 1.25rem;">${formatCurrency(ownerGroup.ownerEarnings)}</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             `).join('');
@@ -643,6 +697,31 @@ function closeTurfDetailsModal() {
 
 // Payout modal functions
 let selectedBookingId = null;
+
+// Mark transaction as paid
+window.markTransactionPaid = async function(transactionId) {
+    if (!confirm('Mark this transaction as paid? This action will mark the payout as completed.')) {
+        return;
+    }
+
+    const paymentMethod = prompt('Enter payment method (e.g., UPI, Bank Transfer):') || 'UPI';
+    const transactionReference = prompt('Enter transaction reference/UTR number (optional):') || '';
+
+    try {
+        await api.markTransactionAsPaid(transactionId, {
+            paymentMethod,
+            transactionReference,
+            notes: `Marked as paid on ${new Date().toLocaleString()}`
+        });
+        
+        showToast('Transaction marked as paid successfully!', 'success');
+        loadPendingPayouts();
+        loadDashboardStats();
+    } catch (error) {
+        console.error('Error marking transaction as paid:', error);
+        showToast(error.message || 'Failed to mark transaction as paid', 'error');
+    }
+};
 
 window.markAsPaid = function(bookingId) {
     selectedBookingId = bookingId;
@@ -1036,3 +1115,45 @@ window.rejectSubscription = async function(subscriptionId) {
         showToast(error.message || 'Failed to reject subscription', 'error');
     }
 };
+
+// Auto-refresh functionality for pending payouts
+let payoutsRefreshInterval = null;
+
+function startPayoutsAutoRefresh() {
+    // Clear existing interval if any
+    if (payoutsRefreshInterval) {
+        clearInterval(payoutsRefreshInterval);
+    }
+    
+    // Set up auto-refresh (30 seconds for admin dashboard)
+    payoutsRefreshInterval = setInterval(() => {
+        // Only refresh if user is on the page and payouts tab is active
+        if (!document.hidden && currentTab === 'payouts') {
+            console.log('Auto-refreshing pending payouts...');
+            loadPendingPayouts();
+        }
+    }, 30000); // 30 seconds
+}
+
+// Stop auto-refresh when page is hidden
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        if (payoutsRefreshInterval) {
+            clearInterval(payoutsRefreshInterval);
+            payoutsRefreshInterval = null;
+        }
+    } else {
+        // Resume auto-refresh when page becomes visible
+        if (currentTab === 'payouts') {
+            startPayoutsAutoRefresh();
+            loadPendingPayouts(); // Refresh immediately
+        }
+    }
+});
+
+// Start auto-refresh when admin dashboard loads
+if (authManager.isAuthenticated() && authManager.getUser()?.role === 'admin') {
+    // Start auto-refresh for payouts tab
+    startPayoutsAutoRefresh();
+}
+

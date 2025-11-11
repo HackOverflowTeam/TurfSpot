@@ -18,6 +18,7 @@ router.post('/verify/:bookingId', protect, authorize('admin'), transactionContro
 router.get('/pending-verifications', protect, authorize('admin'), transactionController.getPendingVerifications);
 
 // Admin routes - transaction viewing
+router.get('/all', protect, authorize('admin'), transactionController.getAllTransactions);
 router.get('/turf/:turfId', protect, authorize('admin'), transactionController.getTransactionsByTurf);
 router.get('/platform-summary', protect, authorize('admin'), transactionController.getPlatformSummary);
 

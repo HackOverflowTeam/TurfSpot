@@ -77,8 +77,10 @@ exports.verifyPaymentProof = asyncHandler(async (req, res) => {
         const ownerPercentage = settings.commission.ownerPercentage;
         
         const totalAmount = booking.pricing.totalAmount;
-        const platformCommission = (totalAmount * platformPercentage) / 100;
-        const ownerPayout = (totalAmount * ownerPercentage) / 100;
+        
+        // Exact commission calculation with proper rounding to 2 decimal places
+        const platformCommission = Math.round(totalAmount * (platformPercentage / 100) * 100) / 100;
+        const ownerPayout = Math.round((totalAmount - platformCommission) * 100) / 100;
         
         // Create transaction record
         const transaction = await Transaction.create({
@@ -133,6 +135,59 @@ exports.verifyPaymentProof = asyncHandler(async (req, res) => {
             new ApiResponse(200, booking, 'Payment proof rejected')
         );
     }
+});
+
+// @desc    Get all transactions (Admin view)
+// @route   GET /api/transactions
+// @access  Private (Admin)
+exports.getAllTransactions = asyncHandler(async (req, res) => {
+    const { paymentStatus, payoutStatus, startDate, endDate, limit = 100 } = req.query;
+    
+    const query = {};
+    
+    // Build query filters
+    if (paymentStatus) query.paymentStatus = paymentStatus;
+    if (payoutStatus) query.payoutStatus = payoutStatus;
+    
+    if (startDate || endDate) {
+        query.verifiedAt = {};
+        if (startDate) query.verifiedAt.$gte = new Date(startDate);
+        if (endDate) query.verifiedAt.$lte = new Date(endDate);
+    }
+    
+    const transactions = await Transaction.find(query)
+        .populate('turf', 'name address')
+        .populate('user', 'name email phone')
+        .populate('owner', 'name email phone upiId')
+        .populate('booking', 'bookingDate timeSlot')
+        .sort({ verifiedAt: -1 })
+        .limit(parseInt(limit));
+    
+    // Calculate summary
+    const summary = {
+        totalTransactions: transactions.length,
+        totalRevenue: 0,
+        totalCommission: 0,
+        totalOwnerPayout: 0,
+        pendingPayouts: 0,
+        completedPayouts: 0
+    };
+    
+    transactions.forEach(txn => {
+        summary.totalRevenue += txn.totalAmount;
+        summary.totalCommission += txn.platformCommission;
+        summary.totalOwnerPayout += txn.ownerPayout;
+        
+        if (txn.payoutStatus === 'completed') {
+            summary.completedPayouts += txn.ownerPayout;
+        } else {
+            summary.pendingPayouts += txn.ownerPayout;
+        }
+    });
+    
+    res.status(200).json(
+        new ApiResponse(200, transactions, 'All transactions retrieved successfully')
+    );
 });
 
 // @desc    Get all transactions by turf (Admin view)

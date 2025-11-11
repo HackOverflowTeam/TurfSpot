@@ -155,6 +155,10 @@ class APIService {
         return this.request('/turfs/owner/my-turfs');
     }
 
+    async searchTurfs(query) {
+        return this.request(`/turfs/admin/search?q=${encodeURIComponent(query)}`);
+    }
+
     // BOOKING ENDPOINTS
     async createBooking(bookingData) {
         return this.request('/bookings', {
@@ -285,6 +289,13 @@ class APIService {
         });
     }
 
+    async markTransactionAsPaid(transactionId, payoutData) {
+        return this.request(`/admin/transactions/${transactionId}/mark-paid`, {
+            method: 'PUT',
+            body: JSON.stringify(payoutData)
+        });
+    }
+
     async getPayoutHistory(queryParams = {}) {
         const query = new URLSearchParams(queryParams).toString();
         return this.request(`/admin/payouts/history${query ? '?' + query : ''}`);
@@ -381,6 +392,12 @@ class APIService {
             method: 'POST',
             body: JSON.stringify({ isApproved, rejectionReason })
         });
+    }
+    
+    // Admin: Get all transactions
+    async getAllTransactions(filters = {}) {
+        const queryParams = new URLSearchParams(filters).toString();
+        return this.request(`/transactions/all${queryParams ? '?' + queryParams : ''}`);
     }
     
     // Admin: Get transactions by turf
