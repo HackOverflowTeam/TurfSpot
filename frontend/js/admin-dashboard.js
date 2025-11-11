@@ -1063,6 +1063,18 @@ function createSubscriptionCard(subscription) {
                                 Uploaded: ${formatDateTime(subscription.paymentProof.uploadedAt)}
                             </p>
                         </div>
+
+                        <!-- Expected Payment Details Reference -->
+                        <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); padding: 1rem; border-radius: 8px; border-left: 4px solid #10b981; margin-bottom: 1rem;">
+                            <p style="font-weight: 600; margin-bottom: 0.5rem; color: #059669; font-size: 0.9rem;">
+                                <i class="fas fa-info-circle"></i> Expected Payment To:
+                            </p>
+                            <div style="font-size: 0.85rem; color: #065f46; line-height: 1.6;">
+                                <div><strong>UPI:</strong> singhvinayak110@okaxis</div>
+                                <div><strong>Account:</strong> 8549096904</div>
+                                <div><strong>IFSC:</strong> KKBK0001417</div>
+                            </div>
+                        </div>
                     ` : '<p style="color: #9ca3af;"><i class="fas fa-exclamation-circle"></i> No payment proof uploaded</p>'}
 
                     ${subscription.status === 'pending' && subscription.paymentProof ? `
