@@ -187,20 +187,7 @@ exports.createBooking = async (req, res) => {
       });
     }
 
-    // For commission-based: Create Razorpay order
-    const razorpayOrder = await razorpay.orders.create({
-      amount: Math.round(pricing.totalAmount * 100), // Amount in paise
-      currency: 'INR',
-      receipt: `booking_${Date.now()}`,
-      notes: {
-        turfId: turf._id.toString(),
-        userId: req.user._id.toString(),
-        bookingDate,
-        slots: slotsToBook.length.toString()
-      }
-    });
-
-    // Create booking
+    // For commission-based turfs: Create booking with platform payment (QR-based)
     const booking = await Booking.create({
       turf: turfId,
       user: req.user._id,
@@ -213,8 +200,11 @@ exports.createBooking = async (req, res) => {
       sport,
       pricing,
       payment: {
-        razorpayOrderId: razorpayOrder.id,
+        method: 'platform_qr',
         status: 'pending'
+      },
+      platformPayment: {
+        verificationStatus: 'pending'
       },
       playerDetails,
       notes,
@@ -223,22 +213,16 @@ exports.createBooking = async (req, res) => {
 
     // Populate booking data
     await booking.populate([
-      { path: 'turf', select: 'name address images pricing' },
+      { path: 'turf', select: 'name address images pricing owner' },
       { path: 'user', select: 'name email phone' }
     ]);
 
     res.status(201).json({
       success: true,
-      message: 'Booking created. Please complete payment.',
+      message: 'Booking created. Please complete payment via platform QR.',
       data: {
         booking,
-        paymentMethod: 'commission',
-        razorpayOrder: {
-          orderId: razorpayOrder.id,
-          amount: razorpayOrder.amount,
-          currency: razorpayOrder.currency,
-          keyId: process.env.RAZORPAY_KEY_ID
-        }
+        paymentMethod: 'platform_qr'
       }
     });
   } catch (error) {

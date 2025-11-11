@@ -426,4 +426,212 @@ exports.getTransactionDetails = asyncHandler(async (req, res) => {
     );
 });
 
+// @desc    Get daily payouts grouped by turf and owner
+// @route   GET /api/transactions/daily-payouts
+// @access  Private (Admin)
+exports.getDailyPayouts = asyncHandler(async (req, res) => {
+    const { date } = req.query;
+    
+    // Default to today if no date provided
+    const targetDate = date ? new Date(date) : new Date();
+    const startOfDay = new Date(targetDate.setHours(0, 0, 0, 0));
+    const endOfDay = new Date(targetDate.setHours(23, 59, 59, 999));
+    
+    // Get all verified transactions for the date
+    const transactions = await Transaction.find({
+        paymentStatus: 'verified',
+        verifiedAt: {
+            $gte: startOfDay,
+            $lte: endOfDay
+        }
+    })
+    .populate('turf', 'name')
+    .populate('owner', 'name email phone upiId')
+    .populate('booking', 'bookingDate timeSlot sport')
+    .sort({ verifiedAt: -1 });
+    
+    // Group by owner and turf
+    const payoutsByOwner = {};
+    
+    transactions.forEach(txn => {
+        const ownerId = txn.owner._id.toString();
+        
+        if (!payoutsByOwner[ownerId]) {
+            payoutsByOwner[ownerId] = {
+                owner: {
+                    id: txn.owner._id,
+                    name: txn.owner.name,
+                    email: txn.owner.email,
+                    phone: txn.owner.phone,
+                    upiId: txn.owner.upiId
+                },
+                turfs: {},
+                totalAmount: 0,
+                totalCommission: 0,
+                totalOwnerPayout: 0,
+                transactionCount: 0,
+                pendingPayoutCount: 0
+            };
+        }
+        
+        const turfId = txn.turf._id.toString();
+        
+        if (!payoutsByOwner[ownerId].turfs[turfId]) {
+            payoutsByOwner[ownerId].turfs[turfId] = {
+                turfId: txn.turf._id,
+                turfName: txn.turf.name,
+                transactions: [],
+                totalAmount: 0,
+                totalCommission: 0,
+                totalOwnerPayout: 0,
+                transactionCount: 0,
+                pendingPayoutCount: 0
+            };
+        }
+        
+        // Add transaction to turf
+        payoutsByOwner[ownerId].turfs[turfId].transactions.push({
+            transactionId: txn._id,
+            bookingDate: txn.booking?.bookingDate,
+            timeSlot: txn.booking?.timeSlot,
+            sport: txn.booking?.sport,
+            amount: txn.totalAmount,
+            commission: txn.platformCommission,
+            ownerPayout: txn.ownerPayout,
+            payoutStatus: txn.payoutStatus,
+            verifiedAt: txn.verifiedAt
+        });
+        
+        // Update turf totals
+        payoutsByOwner[ownerId].turfs[turfId].totalAmount += txn.totalAmount;
+        payoutsByOwner[ownerId].turfs[turfId].totalCommission += txn.platformCommission;
+        payoutsByOwner[ownerId].turfs[turfId].totalOwnerPayout += txn.ownerPayout;
+        payoutsByOwner[ownerId].turfs[turfId].transactionCount += 1;
+        
+        if (txn.payoutStatus === 'pending') {
+            payoutsByOwner[ownerId].turfs[turfId].pendingPayoutCount += 1;
+        }
+        
+        // Update owner totals
+        payoutsByOwner[ownerId].totalAmount += txn.totalAmount;
+        payoutsByOwner[ownerId].totalCommission += txn.platformCommission;
+        payoutsByOwner[ownerId].totalOwnerPayout += txn.ownerPayout;
+        payoutsByOwner[ownerId].transactionCount += 1;
+        
+        if (txn.payoutStatus === 'pending') {
+            payoutsByOwner[ownerId].pendingPayoutCount += 1;
+        }
+    });
+    
+    // Convert turfs object to array
+    Object.keys(payoutsByOwner).forEach(ownerId => {
+        payoutsByOwner[ownerId].turfs = Object.values(payoutsByOwner[ownerId].turfs);
+    });
+    
+    const payoutsArray = Object.values(payoutsByOwner);
+    
+    res.status(200).json(
+        new ApiResponse(200, {
+            date: targetDate,
+            payouts: payoutsArray,
+            summary: {
+                totalOwners: payoutsArray.length,
+                totalTransactions: transactions.length,
+                totalRevenue: payoutsArray.reduce((sum, p) => sum + p.totalAmount, 0),
+                totalCommission: payoutsArray.reduce((sum, p) => sum + p.totalCommission, 0),
+                totalOwnerPayouts: payoutsArray.reduce((sum, p) => sum + p.totalOwnerPayout, 0),
+                pendingPayouts: payoutsArray.reduce((sum, p) => sum + p.pendingPayoutCount, 0)
+            }
+        }, 'Daily payouts retrieved successfully')
+    );
+});
+
+// @desc    Get owner's today's earnings
+// @route   GET /api/transactions/owner-daily-earnings
+// @access  Private (Owner)
+exports.getOwnerDailyEarnings = asyncHandler(async (req, res) => {
+    const ownerId = req.user._id;
+    
+    // Get today's date range
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
+    
+    // Get all verified transactions for owner today
+    const transactions = await Transaction.find({
+        owner: ownerId,
+        paymentStatus: 'verified',
+        verifiedAt: {
+            $gte: startOfDay,
+            $lte: endOfDay
+        }
+    })
+    .populate('turf', 'name')
+    .populate('booking', 'bookingDate timeSlot sport user')
+    .populate('user', 'name')
+    .sort({ verifiedAt: -1 });
+    
+    // Calculate totals
+    const totalBookings = transactions.length;
+    const totalRevenue = transactions.reduce((sum, txn) => sum + txn.totalAmount, 0);
+    const platformCommission = transactions.reduce((sum, txn) => sum + txn.platformCommission, 0);
+    const ownerEarnings = transactions.reduce((sum, txn) => sum + txn.ownerPayout, 0);
+    const pendingPayout = transactions
+        .filter(txn => txn.payoutStatus === 'pending')
+        .reduce((sum, txn) => sum + txn.ownerPayout, 0);
+    const completedPayout = transactions
+        .filter(txn => txn.payoutStatus === 'completed')
+        .reduce((sum, txn) => sum + txn.ownerPayout, 0);
+    
+    // Group by turf
+    const turfBreakdown = {};
+    transactions.forEach(txn => {
+        const turfId = txn.turf._id.toString();
+        if (!turfBreakdown[turfId]) {
+            turfBreakdown[turfId] = {
+                turfId: txn.turf._id,
+                turfName: txn.turf.name,
+                bookings: 0,
+                revenue: 0,
+                earnings: 0,
+                commission: 0
+            };
+        }
+        turfBreakdown[turfId].bookings += 1;
+        turfBreakdown[turfId].revenue += txn.totalAmount;
+        turfBreakdown[turfId].earnings += txn.ownerPayout;
+        turfBreakdown[turfId].commission += txn.platformCommission;
+    });
+    
+    res.status(200).json(
+        new ApiResponse(200, {
+            date: new Date(),
+            summary: {
+                totalBookings,
+                totalRevenue,
+                platformCommission,
+                ownerEarnings,
+                commissionPercentage: 10,
+                earningsPercentage: 90,
+                pendingPayout,
+                completedPayout
+            },
+            turfBreakdown: Object.values(turfBreakdown),
+            recentTransactions: transactions.slice(0, 10).map(txn => ({
+                transactionId: txn._id,
+                turfName: txn.turf.name,
+                customerName: txn.user?.name,
+                amount: txn.totalAmount,
+                earnings: txn.ownerPayout,
+                commission: txn.platformCommission,
+                payoutStatus: txn.payoutStatus,
+                verifiedAt: txn.verifiedAt,
+                bookingDate: txn.booking?.bookingDate,
+                timeSlot: txn.booking?.timeSlot
+            }))
+        }, 'Today\'s earnings retrieved successfully')
+    );
+});
+
 module.exports = exports;

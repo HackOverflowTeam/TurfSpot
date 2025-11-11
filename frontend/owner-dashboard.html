@@ -97,6 +97,67 @@
                 </div>
             </div>
 
+            <!-- Today's Earnings Section -->
+            <div id="todaysEarningsSection" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 2rem; border-radius: 16px; margin: 2rem 0; box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                    <div>
+                        <h2 style="color: white; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-calendar-day"></i> Today's Earnings
+                        </h2>
+                        <p style="color: rgba(255,255,255,0.9); margin: 0.25rem 0 0 0; font-size: 0.95rem;">
+                            Real-time updates • Last updated: <span id="todayLastUpdate">--</span>
+                        </p>
+                    </div>
+                    <button onclick="refreshTodaysEarnings()" style="background: rgba(255,255,255,0.2); color: white; border: 2px solid rgba(255,255,255,0.3); padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
+                    <div style="background: rgba(255,255,255,0.15); padding: 1.5rem; border-radius: 12px; backdrop-filter: blur(10px);">
+                        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                            <i class="fas fa-calendar-check" style="font-size: 1.5rem; color: white;"></i>
+                            <p style="color: rgba(255,255,255,0.9); margin: 0; font-size: 0.875rem;">Today's Bookings</p>
+                        </div>
+                        <h3 id="todayBookings" style="color: white; margin: 0; font-size: 2rem;">0</h3>
+                    </div>
+                    
+                    <div style="background: rgba(255,255,255,0.15); padding: 1.5rem; border-radius: 12px; backdrop-filter: blur(10px);">
+                        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                            <i class="fas fa-rupee-sign" style="font-size: 1.5rem; color: white;"></i>
+                            <p style="color: rgba(255,255,255,0.9); margin: 0; font-size: 0.875rem;">Total Revenue</p>
+                        </div>
+                        <h3 id="todayRevenue" style="color: white; margin: 0; font-size: 2rem;">₹0</h3>
+                    </div>
+                    
+                    <div style="background: rgba(255,255,255,0.2); padding: 1.5rem; border-radius: 12px; backdrop-filter: blur(10px); border: 2px solid rgba(255,255,255,0.3);">
+                        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                            <i class="fas fa-hand-holding-usd" style="font-size: 1.5rem; color: white;"></i>
+                            <p style="color: rgba(255,255,255,0.9); margin: 0; font-size: 0.875rem; font-weight: 600;">Your Earnings (90%)</p>
+                        </div>
+                        <h3 id="todayEarnings" style="color: white; margin: 0; font-size: 2.25rem; font-weight: 700;">₹0</h3>
+                        <p style="color: rgba(255,255,255,0.8); margin: 0.5rem 0 0 0; font-size: 0.75rem;">
+                            Pending: <span id="todayPendingPayout">₹0</span> • Paid: <span id="todayCompletedPayout">₹0</span>
+                        </p>
+                    </div>
+                    
+                    <div style="background: rgba(255,255,255,0.15); padding: 1.5rem; border-radius: 12px; backdrop-filter: blur(10px);">
+                        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                            <i class="fas fa-percentage" style="font-size: 1.5rem; color: white;"></i>
+                            <p style="color: rgba(255,255,255,0.9); margin: 0; font-size: 0.875rem;">Platform Commission (10%)</p>
+                        </div>
+                        <h3 id="todayCommission" style="color: white; margin: 0; font-size: 2rem;">₹0</h3>
+                    </div>
+                </div>
+                
+                <div id="todayTurfBreakdown" style="margin-top: 1.5rem; display: none;">
+                    <h3 style="color: white; margin-bottom: 1rem; font-size: 1.1rem;">
+                        <i class="fas fa-chart-bar"></i> Breakdown by Turf
+                    </h3>
+                    <div id="todayTurfBreakdownList" style="display: grid; gap: 0.75rem;"></div>
+                </div>
+            </div>
+
             <!-- Tabs -->
             <div class="tabs">
                 <button class="tab-btn active" data-tab="turfs">

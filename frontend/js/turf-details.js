@@ -505,51 +505,13 @@ async function handleBooking(e) {
             return;
         }
 
-        // Handle commission-based payment (Razorpay) - only if razorpayOrder exists
-        if (razorpayOrder && razorpayOrder.orderId) {
-            const options = {
-                key: razorpayOrder.keyId,
-                amount: razorpayOrder.amount,
-                currency: razorpayOrder.currency,
-                order_id: razorpayOrder.orderId,
-                name: 'TurfSpot',
-                description: `Booking for ${currentTurf.name}`,
-                handler: async function(paymentResponse) {
-                    try {
-                        await api.verifyPayment(booking._id, {
-                            razorpayPaymentId: paymentResponse.razorpay_payment_id,
-                            razorpaySignature: paymentResponse.razorpay_signature
-                        });
-                        
-                        showToast('Booking confirmed successfully!', 'success');
-                        setTimeout(() => window.location.href = 'my-bookings.html', 2000);
-                    } catch (error) {
-                        showToast('Payment verification failed', 'error');
-                        console.error('Payment verification error:', error);
-                    }
-                },
-                prefill: {
-                    name: authManager.user.name,
-                    email: authManager.user.email,
-                    contact: authManager.user.phone
-                },
-                theme: {
-                    color: '#10b981'
-                }
-            };
-
-            const razorpay = new Razorpay(options);
-            razorpay.open();
-
-            razorpay.on('payment.failed', function(response) {
-                showToast('Payment failed. Please try again.', 'error');
-                console.error('Payment failed:', response);
-            });
-        } else {
-            // If no razorpayOrder and not cash/tier, something went wrong
-            showToast('Payment method not configured properly', 'error');
-            console.error('No payment order created');
-        }
+        // Handle platform QR-based payment (replacing Razorpay)
+        bookNowBtn.disabled = false;
+        bookNowBtn.innerHTML = '<i class="fas fa-calendar-check"></i> Book Now';
+        
+        // Show platform QR payment modal
+        showPlatformQRPaymentModal(booking);
+        return;
 
     } catch (error) {
         console.error('Booking error:', error);
@@ -557,6 +519,233 @@ async function handleBooking(e) {
     } finally {
         bookNowBtn.disabled = false;
         bookNowBtn.innerHTML = '<i class="fas fa-calendar-check"></i> Book Now';
+    }
+}
+
+// Show platform QR payment modal (replacing Razorpay)
+let currentBookingForPlatformPayment = null;
+let platformQRCode = null;
+
+async function showPlatformQRPaymentModal(booking) {
+    currentBookingForPlatformPayment = booking;
+    
+    // Use local platform QR code
+    platformQRCode = {
+        url: 'assets/adminqr.png',
+        upiId: 'TurfSpot Platform'
+    };
+    
+    // Create modal if doesn't exist
+    let modal = document.getElementById('platformQRPaymentModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'platformQRPaymentModal';
+        modal.className = 'modal';
+        modal.style.cssText = 'display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10000; align-items: center; justify-content: center; padding: 1rem;';
+        
+        modal.innerHTML = `
+            <div class="modal-content" style="background: white; padding: 2rem; border-radius: 16px; max-width: 500px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h2 style="margin: 0; color: var(--primary, #10b981); font-size: 1.5rem;">
+                        <i class="fas fa-qrcode"></i> Complete Payment
+                    </h2>
+                    <button onclick="closePlatformQRPaymentModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #6b7280;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <div style="background: #f9fafb; padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem;">
+                    <h3 style="margin: 0 0 0.5rem 0; font-size: 1rem; color: #374151;">Booking Details</h3>
+                    <div style="display: grid; gap: 0.5rem; font-size: 0.875rem;">
+                        <div><strong>Turf:</strong> ${booking.turf?.name || 'N/A'}</div>
+                        <div><strong>Player:</strong> ${authManager.user?.name || 'N/A'}</div>
+                        <div><strong>Date:</strong> ${new Date(booking.bookingDate).toLocaleDateString()}</div>
+                        <div><strong>Time:</strong> ${booking.timeSlot?.startTime} - ${booking.timeSlot?.endTime}</div>
+                        <div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 2px solid #e5e7eb;">
+                            <strong style="font-size: 1.25rem; color: var(--primary, #10b981);">Amount: ₹${booking.pricing?.totalAmount || 0}</strong>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-bottom: 1.5rem;">
+                    <p style="margin-bottom: 1rem; color: #6b7280; font-size: 0.875rem;">
+                        <i class="fas fa-info-circle"></i> Scan the QR code below with any UPI app
+                    </p>
+                    <div style="background: white; padding: 1rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: inline-block;">
+                        <img id="platformQRImage" src="${platformQRCode?.url || ''}" alt="TurfSpot Payment QR" style="width: 250px; height: 250px; border-radius: 8px;">
+                    </div>
+                    ${platformQRCode?.upiId ? `<p style="margin-top: 0.5rem; font-size: 0.875rem; color: #6b7280;">UPI ID: <strong>${platformQRCode.upiId}</strong></p>` : ''}
+                </div>
+                
+                <div style="background: #fef3c7; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border-left: 4px solid #f59e0b;">
+                    <p style="margin: 0; font-size: 0.875rem; color: #92400e;">
+                        <i class="fas fa-exclamation-triangle"></i> <strong>Important:</strong> After payment, upload the screenshot below for verification
+                    </p>
+                </div>
+                
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #374151;">
+                        <i class="fas fa-camera"></i> Upload Payment Screenshot *
+                    </label>
+                    <div id="platformUploadArea" style="border: 2px dashed #d1d5db; border-radius: 12px; padding: 2rem; text-align: center; cursor: pointer; transition: all 0.3s; background: #f9fafb;">
+                        <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; color: var(--primary, #10b981); margin-bottom: 0.5rem;"></i>
+                        <p style="margin: 0; color: #6b7280;">Click or drag to upload screenshot</p>
+                        <p style="margin: 0.25rem 0 0 0; font-size: 0.75rem; color: #9ca3af;">Supported: JPG, PNG (Max 5MB)</p>
+                        <input type="file" id="platformPaymentScreenshotInput" accept="image/*" style="display: none;">
+                    </div>
+                    <img id="platformScreenshotPreview" style="display: none; max-width: 100%; max-height: 200px; margin-top: 1rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                </div>
+                
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #374151;">
+                        <i class="fas fa-receipt"></i> Transaction Reference (Optional)
+                    </label>
+                    <input type="text" id="platformTransactionRef" placeholder="Enter UTR or Transaction ID" style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.875rem;">
+                </div>
+                
+                <div style="display: flex; gap: 1rem;">
+                    <button onclick="closePlatformQRPaymentModal()" class="btn btn-outline" style="flex: 1; padding: 0.75rem; border: 2px solid #d1d5db; background: white; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button onclick="submitPlatformPayment()" class="btn btn-primary" style="flex: 1; padding: 0.75rem; background: var(--primary, #10b981); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                        <i class="fas fa-check"></i> Submit Payment
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Setup file upload
+        const uploadArea = modal.querySelector('#platformUploadArea');
+        const fileInput = modal.querySelector('#platformPaymentScreenshotInput');
+        const preview = modal.querySelector('#platformScreenshotPreview');
+        
+        uploadArea.onclick = () => fileInput.click();
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = 'var(--primary, #10b981)';
+            uploadArea.style.background = '#f0fdf4';
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.style.borderColor = '#d1d5db';
+            uploadArea.style.background = '#f9fafb';
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#d1d5db';
+            uploadArea.style.background = '#f9fafb';
+            
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                handlePlatformScreenshotSelect(file, preview, uploadArea);
+            } else {
+                showToast('Please upload a valid image file', 'error');
+            }
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                handlePlatformScreenshotSelect(file, preview, uploadArea);
+            }
+        });
+    } else {
+        modal.style.display = 'flex';
+        // Update QR image if modal already exists
+        const qrImage = modal.querySelector('#platformQRImage');
+        if (qrImage) qrImage.src = platformQRCode?.url || '';
+    }
+}
+
+let uploadedPlatformScreenshotFile = null;
+
+function handlePlatformScreenshotSelect(file, preview, uploadArea) {
+    // Check file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+        showToast('File size should be less than 5MB', 'error');
+        return;
+    }
+    
+    uploadedPlatformScreenshotFile = file;
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        preview.src = e.target.result;
+        preview.style.display = 'block';
+        uploadArea.innerHTML = `
+            <i class="fas fa-check-circle" style="font-size: 2rem; color: var(--primary, #10b981);"></i>
+            <p style="margin: 0.5rem 0 0 0; color: var(--primary, #10b981); font-weight: 600;">Screenshot uploaded successfully!</p>
+            <p style="margin: 0.25rem 0 0 0; font-size: 0.75rem; color: #6b7280;">Click to change</p>
+        `;
+    };
+    reader.readAsDataURL(uploadedPlatformScreenshotFile);
+}
+
+window.closePlatformQRPaymentModal = function closePlatformQRPaymentModal() {
+    const modal = document.getElementById('platformQRPaymentModal');
+    if (modal) {
+        modal.style.display = 'none';
+        uploadedPlatformScreenshotFile = null;
+        currentBookingForPlatformPayment = null;
+    }
+}
+
+window.submitPlatformPayment = async function submitPlatformPayment() {
+    if (!uploadedPlatformScreenshotFile) {
+        showToast('Please upload payment screenshot', 'error');
+        return;
+    }
+    
+    if (!currentBookingForPlatformPayment) {
+        showToast('Booking information not found', 'error');
+        return;
+    }
+    
+    const transactionRef = document.getElementById('platformTransactionRef')?.value || '';
+    
+    const submitBtn = document.querySelector('#platformQRPaymentModal .btn-primary');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+    
+    try {
+        // Convert to base64
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const base64Image = e.target.result;
+                
+                // Submit payment proof to backend (backend will handle upload to Cloudinary)
+                await api.submitPaymentProof(
+                    currentBookingForPlatformPayment._id,
+                    base64Image,
+                    transactionRef
+                );
+                
+                showToast('Payment proof submitted! Awaiting admin verification.', 'success');
+                closePlatformQRPaymentModal();
+                setTimeout(() => window.location.href = 'my-bookings.html', 2000);
+            } catch (error) {
+                showToast(error.message || 'Failed to submit payment', 'error');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-check"></i> Submit Payment';
+            }
+        };
+        
+        reader.onerror = () => {
+            showToast('Failed to read file', 'error');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-check"></i> Submit Payment';
+        };
+        
+        reader.readAsDataURL(uploadedPlatformScreenshotFile);
+    } catch (error) {
+        showToast(error.message || 'Failed to submit payment', 'error');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-check"></i> Submit Payment';
     }
 }
 

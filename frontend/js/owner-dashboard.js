@@ -200,9 +200,110 @@ async function loadOwnerData() {
 
     await Promise.all([
         loadMyTurfs(),
-        loadOwnerStats()
+        loadOwnerStats(),
+        loadTodaysEarnings()
     ]);
 }
+
+// Load today's earnings data
+async function loadTodaysEarnings() {
+    try {
+        const response = await api.getOwnerDailyEarnings();
+        const data = response.data;
+        
+        if (!data || !data.summary) {
+            console.error('Invalid earnings data:', data);
+            return;
+        }
+        
+        const summary = data.summary;
+        
+        // Update main stats
+        document.getElementById('todayBookings').textContent = summary.totalBookings || 0;
+        document.getElementById('todayRevenue').textContent = formatCurrency(summary.totalRevenue || 0);
+        document.getElementById('todayEarnings').textContent = formatCurrency(summary.ownerEarnings || 0);
+        document.getElementById('todayCommission').textContent = formatCurrency(summary.platformCommission || 0);
+        
+        // Update payout breakdown
+        const pendingElem = document.getElementById('todayPendingPayout');
+        const completedElem = document.getElementById('todayCompletedPayout');
+        if (pendingElem) pendingElem.textContent = formatCurrency(summary.pendingPayout || 0);
+        if (completedElem) completedElem.textContent = formatCurrency(summary.completedPayout || 0);
+        
+        // Update last update timestamp
+        const now = new Date();
+        document.getElementById('todayLastUpdate').textContent = 
+            now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+        
+        // Update turf breakdown if available
+        if (data.turfBreakdown && data.turfBreakdown.length > 0) {
+            const breakdownList = document.getElementById('todayTurfBreakdownList');
+            if (breakdownList) {
+                breakdownList.innerHTML = data.turfBreakdown.map(turf => `
+                    <div class="turf-breakdown-item">
+                        <div class="turf-breakdown-name">
+                            <i class="fas fa-building"></i>
+                            ${turf.turfName}
+                        </div>
+                        <div class="turf-breakdown-stats">
+                            <span>${turf.bookings} booking${turf.bookings !== 1 ? 's' : ''}</span>
+                            <span class="turf-breakdown-amount">${formatCurrency(turf.earnings)}</span>
+                        </div>
+                    </div>
+                `).join('');
+                
+                // Show breakdown section if multiple turfs
+                if (data.turfBreakdown.length > 1) {
+                    document.getElementById('todayTurfBreakdown').style.display = 'block';
+                }
+            }
+        }
+        
+    } catch (error) {
+        console.error('Error loading today\'s earnings:', error);
+        // Set default values on error
+        const defaultValue = '₹0';
+        document.getElementById('todayBookings').textContent = '0';
+        document.getElementById('todayRevenue').textContent = defaultValue;
+        document.getElementById('todayEarnings').textContent = defaultValue;
+        document.getElementById('todayCommission').textContent = defaultValue;
+    }
+}
+
+// Refresh today's earnings (attached to window for HTML onclick)
+window.refreshTodaysEarnings = async function() {
+    const refreshBtn = document.querySelector('.refresh-earnings-btn');
+    if (refreshBtn) {
+        refreshBtn.disabled = true;
+        refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    }
+    
+    try {
+        await loadTodaysEarnings();
+        showToast('Earnings updated', 'success');
+    } catch (error) {
+        showToast('Failed to refresh earnings', 'error');
+    } finally {
+        if (refreshBtn) {
+            refreshBtn.disabled = false;
+            refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i>';
+        }
+    }
+};
+
+// Toggle turf breakdown visibility
+window.toggleTurfBreakdown = function() {
+    const list = document.getElementById('todayTurfBreakdownList');
+    const icon = document.querySelector('.toggle-breakdown-icon');
+    
+    if (list.style.display === 'none' || !list.style.display) {
+        list.style.display = 'block';
+        if (icon) icon.style.transform = 'rotate(180deg)';
+    } else {
+        list.style.display = 'none';
+        if (icon) icon.style.transform = 'rotate(0deg)';
+    }
+};
 
 // Load and update top stats cards
 async function loadOwnerStats() {
@@ -795,6 +896,22 @@ async function loadOwnerBookings() {
 function createOwnerBookingCard(booking) {
     const statusClass = `status-${booking.status}`;
     
+    // Determine payment status display
+    let paymentStatusHtml = '';
+    if (booking.platformPayment?.verificationStatus === 'verified') {
+        paymentStatusHtml = '<span class="payment-badge verified"><i class="fas fa-check-circle"></i> Verified - Paid</span>';
+    } else if (booking.platformPayment?.verificationStatus === 'pending') {
+        paymentStatusHtml = '<span class="payment-badge pending"><i class="fas fa-clock"></i> Pending Verification</span>';
+    } else if (booking.platformPayment?.verificationStatus === 'rejected') {
+        paymentStatusHtml = '<span class="payment-badge rejected"><i class="fas fa-times-circle"></i> Payment Rejected</span>';
+    } else if (booking.payment?.status === 'completed') {
+        paymentStatusHtml = '<span class="payment-badge verified"><i class="fas fa-check-circle"></i> Paid</span>';
+    } else if (booking.payment?.status === 'pending_cash') {
+        paymentStatusHtml = '<span class="payment-badge pending"><i class="fas fa-money-bill-wave"></i> Cash Pending</span>';
+    } else {
+        paymentStatusHtml = '<span class="payment-badge pending"><i class="fas fa-clock"></i> Payment Pending</span>';
+    }
+    
     // Format time slots - support both single and multiple
     let timeDisplay;
     if (booking.timeSlots && booking.timeSlots.length > 1) {
@@ -811,42 +928,52 @@ function createOwnerBookingCard(booking) {
         timeDisplay = 'N/A';
     }
 
+    const bookingDate = new Date(booking.bookingDate);
+    const createdDate = new Date(booking.createdAt || booking.bookingDate);
+
     return `
         <div class="booking-card-item">
             <div class="booking-header">
                 <div>
                     <h3>${booking.user?.name || 'Unknown User'}</h3>
-                    <p class="text-muted">${booking.user?.email}</p>
+                    <p class="text-muted">${booking.user?.email || ''} ${booking.user?.phone ? '• ' + booking.user.phone : ''}</p>
                 </div>
-                <span class="status-badge ${statusClass}">${booking.status.toUpperCase()}</span>
+                <div style="text-align: right;">
+                    <span class="status-badge ${statusClass}">${booking.status.toUpperCase()}</span>
+                    ${paymentStatusHtml}
+                </div>
             </div>
-            <div class="booking-details">
+            <div class="booking-details" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin: 1rem 0;">
                 <div>
-                    <strong>Turf:</strong>
+                    <strong><i class="fas fa-building"></i> Turf:</strong>
                     <p>${booking.turf?.name}</p>
                 </div>
                 <div>
-                    <strong>Date:</strong>
-                    <p>${new Date(booking.bookingDate).toLocaleDateString('en-IN')}</p>
+                    <strong><i class="fas fa-calendar"></i> Date:</strong>
+                    <p>${bookingDate.toLocaleDateString('en-IN')}</p>
                 </div>
                 <div>
-                    <strong>Time:</strong>
+                    <strong><i class="fas fa-clock"></i> Time:</strong>
                     <p>${timeDisplay}</p>
                 </div>
                 <div>
-                    <strong>Sport:</strong>
+                    <strong><i class="fas fa-futbol"></i> Sport:</strong>
                     <p>${booking.sport}</p>
                 </div>
                 <div>
-                    <strong>Players:</strong>
+                    <strong><i class="fas fa-users"></i> Players:</strong>
                     <p>${booking.playerDetails?.numberOfPlayers || 'N/A'}</p>
                 </div>
                 <div>
-                    <strong>Amount:</strong>
-                    <p>${formatCurrency(booking.pricing?.totalAmount || 0)}</p>
+                    <strong><i class="fas fa-rupee-sign"></i> Amount:</strong>
+                    <p style="font-size: 1.1em; color: var(--primary); font-weight: 600;">${formatCurrency(booking.pricing?.totalAmount || 0)}</p>
+                </div>
+                <div>
+                    <strong><i class="fas fa-clock"></i> Booked At:</strong>
+                    <p>${createdDate.toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}</p>
                 </div>
             </div>
-            ${booking.notes ? `<p><strong>Notes:</strong> ${booking.notes}</p>` : ''}
+            ${booking.notes ? `<p style="margin-top: 0.5rem; padding: 0.75rem; background: #f3f4f6; border-radius: 8px;"><strong><i class="fas fa-sticky-note"></i> Notes:</strong> ${booking.notes}</p>` : ''}
         </div>
     `;
 }
@@ -2214,4 +2341,41 @@ function getSportIcon(sport) {
 // Make functions globally available
 window.loadCashPayments = loadCashPayments;
 window.markCashCollected = markCashCollected;
+
+// Auto-refresh today's earnings every 60 seconds
+let earningsRefreshInterval = null;
+
+function startEarningsAutoRefresh() {
+    // Clear existing interval if any
+    if (earningsRefreshInterval) {
+        clearInterval(earningsRefreshInterval);
+    }
+    
+    // Set up auto-refresh (60 seconds)
+    earningsRefreshInterval = setInterval(() => {
+        // Only refresh if user is on the page and not in background
+        if (!document.hidden) {
+            loadTodaysEarnings();
+        }
+    }, 60000); // 60 seconds
+}
+
+// Stop auto-refresh when page is hidden
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        if (earningsRefreshInterval) {
+            clearInterval(earningsRefreshInterval);
+            earningsRefreshInterval = null;
+        }
+    } else {
+        // Resume auto-refresh when page becomes visible
+        startEarningsAutoRefresh();
+        loadTodaysEarnings(); // Refresh immediately when page becomes visible
+    }
+});
+
+// Start auto-refresh when page loads
+if (authManager.isAuthenticated() && authManager.getUser()?.role === 'owner') {
+    startEarningsAutoRefresh();
+}
 

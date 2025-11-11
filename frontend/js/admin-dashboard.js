@@ -413,9 +413,24 @@ async function loadPendingPayouts() {
 
     try {
         const response = await api.getPendingPayouts();
-        const { payouts, summary } = response.data;
-
+        
         if (loader) loader.style.display = 'none';
+        
+        // Check if response has valid data
+        if (!response || !response.data) {
+            console.error('Invalid response:', response);
+            throw new Error('Invalid response from server');
+        }
+        
+        const { payouts = [], summary = {} } = response.data;
+        
+        // Provide default values for summary
+        const safeSummary = {
+            totalOwners: summary.totalOwners || 0,
+            totalBookings: summary.totalBookings || 0,
+            totalRevenue: summary.totalRevenue || 0,
+            totalOwnerEarnings: summary.totalOwnerEarnings || 0
+        };
 
         // Display summary
         summaryDiv.innerHTML = `
@@ -423,28 +438,28 @@ async function loadPendingPayouts() {
                 <div class="stat-card">
                     <div class="stat-icon"><i class="fas fa-users"></i></div>
                     <div class="stat-info">
-                        <h3>${summary.totalOwners}</h3>
+                        <h3>${safeSummary.totalOwners}</h3>
                         <p>Total Owners</p>
                     </div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
                     <div class="stat-info">
-                        <h3>${summary.totalBookings}</h3>
+                        <h3>${safeSummary.totalBookings}</h3>
                         <p>Total Bookings</p>
                     </div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon"><i class="fas fa-rupee-sign"></i></div>
                     <div class="stat-info">
-                        <h3>${formatCurrency(summary.totalRevenue)}</h3>
+                        <h3>${formatCurrency(safeSummary.totalRevenue)}</h3>
                         <p>Total Revenue</p>
                     </div>
                 </div>
                 <div class="stat-card" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
                     <div class="stat-icon" style="background: rgba(255,255,255,0.2);"><i class="fas fa-money-bill-wave"></i></div>
                     <div class="stat-info" style="color: white;">
-                        <h3 style="color: white;">${formatCurrency(summary.totalOwnerEarnings)}</h3>
+                        <h3 style="color: white;">${formatCurrency(safeSummary.totalOwnerEarnings)}</h3>
                         <p style="color: rgba(255,255,255,0.9);">Pending Payouts</p>
                     </div>
                 </div>
@@ -533,6 +548,22 @@ async function loadPendingPayouts() {
     } catch (error) {
         console.error('Error loading payouts:', error);
         if (loader) loader.style.display = 'none';
+        
+        // Display error message to user
+        if (summaryDiv) {
+            summaryDiv.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-triangle" style="color: var(--danger);"></i>
+                    <h3>Failed to Load Payouts</h3>
+                    <p>${error.message || 'Unable to fetch payout data. Please try again.'}</p>
+                </div>
+            `;
+        }
+        
+        if (payoutsList) {
+            payoutsList.innerHTML = '';
+        }
+        
         showToast('Failed to load pending payouts', 'error');
     }
 }

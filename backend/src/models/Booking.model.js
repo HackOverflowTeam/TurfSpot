@@ -68,7 +68,7 @@ const bookingSchema = new mongoose.Schema({
   payment: {
     method: {
       type: String,
-      enum: ['online', 'cash_at_turf'],
+      enum: ['online', 'cash_at_turf', 'platform_qr'],
       default: 'online'
     },
     razorpayOrderId: String,

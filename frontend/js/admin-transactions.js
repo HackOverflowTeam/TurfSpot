@@ -54,14 +54,12 @@ function setupTabs() {
 // Load platform QR
 async function loadPlatformQR() {
     try {
-        const response = await api.getPlatformQR();
-        if (response.success && response.data) {
-            document.getElementById('platformQRImage').src = response.data.url;
-            document.getElementById('platformUPI').textContent = response.data.upiId ? `UPI: ${response.data.upiId}` : '';
-            document.getElementById('qrDisplay').style.display = 'block';
-        }
+        // Use local platform QR code
+        document.getElementById('platformQRImage').src = 'assets/adminqr.png';
+        document.getElementById('platformUPI').textContent = 'TurfSpot Platform Payment';
+        document.getElementById('qrDisplay').style.display = 'block';
     } catch (error) {
-        console.log('No platform QR configured yet');
+        console.log('Error loading platform QR:', error);
     }
 }
 
@@ -306,7 +304,38 @@ async function loadPendingPayouts() {
 
 // View payment proof
 window.viewPaymentProof = function(url) {
-    window.open(url, '_blank');
+    if (!url) {
+        showToast('Payment proof URL not found', 'error');
+        return;
+    }
+    
+    console.log('Opening payment proof:', url);
+    
+    // Create a modal to show the image instead of opening new window
+    const modal = document.createElement('div');
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 2rem;';
+    
+    modal.innerHTML = `
+        <div style="position: relative; max-width: 90%; max-height: 90%; background: white; padding: 1rem; border-radius: 12px;">
+            <button onclick="this.closest('div').parentElement.remove()" style="position: absolute; top: 1rem; right: 1rem; background: #ef4444; color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 1.25rem; z-index: 1;">
+                ✕
+            </button>
+            <img src="${url}" alt="Payment Proof" style="max-width: 100%; max-height: 80vh; border-radius: 8px;">
+            <div style="margin-top: 1rem; text-align: center;">
+                <a href="${url}" target="_blank" style="color: #10b981; text-decoration: none; font-weight: 600;">
+                    <i class="fas fa-external-link-alt"></i> Open in New Tab
+                </a>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
 };
 
 // Open verification modal

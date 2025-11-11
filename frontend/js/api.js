@@ -426,6 +426,18 @@ class APIService {
         return this.request(`/transactions/owner-earnings/${ownerId}${params.toString() ? '?' + params.toString() : ''}`);
     }
     
+    // Get owner's daily earnings (today)
+    async getOwnerDailyEarnings() {
+        return this.request('/transactions/owner-daily-earnings');
+    }
+    
+    // Admin: Get daily payouts
+    async getDailyPayouts(date = null) {
+        const params = new URLSearchParams();
+        if (date) params.append('date', date);
+        return this.request(`/transactions/daily-payouts${params.toString() ? '?' + params.toString() : ''}`);
+    }
+    
     // Get transaction details
     async getTransactionDetails(transactionId) {
         return this.request(`/transactions/${transactionId}`);

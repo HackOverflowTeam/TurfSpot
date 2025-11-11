@@ -308,6 +308,10 @@ class TurfSpotNavbar {
         const mobileMyBookingsLink = document.getElementById('mobileMyBookingsLink');
         const mobileOwnerDashLink = document.getElementById('mobileOwnerDashLink');
         const mobileAdminDashLink = document.getElementById('mobileAdminDashLink');
+        
+        // Additional links to hide for owners: Home, Browse Turfs
+        const homeLinks = document.querySelectorAll('a[href="index.html"], a[href="./"], a[href="/"]');
+        const browseTurfsLinks = document.querySelectorAll('a[href="turfs.html"], a[href="discover.html"]');
 
         // Hide all by default - remove show class
         [myBookingsLink, ownerDashLink, adminDashLink, dropdownMyBookings, 
@@ -345,6 +349,9 @@ class TurfSpotNavbar {
                 mobileMyBookingsLink.classList.add('show');
                 mobileMyBookingsLink.style.display = 'block';
             }
+            // Show all links for admin
+            homeLinks.forEach(link => link.style.display = '');
+            browseTurfsLinks.forEach(link => link.style.display = '');
         } else if (role === 'owner') {
             if (ownerDashLink) {
                 ownerDashLink.classList.add('show');
@@ -358,18 +365,18 @@ class TurfSpotNavbar {
                 mobileOwnerDashLink.classList.add('show');
                 mobileOwnerDashLink.style.display = 'block';
             }
-            if (myBookingsLink) {
-                myBookingsLink.classList.add('show');
-                myBookingsLink.style.display = 'inline-block';
-            }
-            if (dropdownMyBookings) {
-                dropdownMyBookings.classList.add('show');
-                dropdownMyBookings.style.display = 'block';
-            }
-            if (mobileMyBookingsLink) {
-                mobileMyBookingsLink.classList.add('show');
-                mobileMyBookingsLink.style.display = 'block';
-            }
+            // Hide Home, Browse Turfs, and My Bookings for owners
+            homeLinks.forEach(link => {
+                if (link.classList.contains('navbar-link') || link.classList.contains('mobile-menu-link')) {
+                    link.style.display = 'none';
+                }
+            });
+            browseTurfsLinks.forEach(link => {
+                if (link.classList.contains('navbar-link') || link.classList.contains('mobile-menu-link')) {
+                    link.style.display = 'none';
+                }
+            });
+            // Don't show My Bookings for owners
         } else if (role === 'user') {
             // Only show My Bookings for regular logged-in users
             if (myBookingsLink) {
@@ -384,6 +391,13 @@ class TurfSpotNavbar {
                 mobileMyBookingsLink.classList.add('show');
                 mobileMyBookingsLink.style.display = 'block';
             }
+            // Show all links for regular users
+            homeLinks.forEach(link => link.style.display = '');
+            browseTurfsLinks.forEach(link => link.style.display = '');
+        } else {
+            // Not logged in - show all links
+            homeLinks.forEach(link => link.style.display = '');
+            browseTurfsLinks.forEach(link => link.style.display = '');
         }
         // If no role or not logged in, all links stay hidden
     }
