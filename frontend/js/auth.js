@@ -587,37 +587,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Register form
-    const registerForm = document.getElementById('registerForm');
-    if (registerForm) {
-        registerForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const userData = {
-                name: document.getElementById('registerName').value,
-                email: document.getElementById('registerEmail').value,
-                phone: document.getElementById('registerPhone').value,
-                password: document.getElementById('registerPassword').value,
-                role: document.getElementById('registerRole').value
-            };
-
-            const result = await authManager.register(userData);
-            if (result.success) {
-                closeRegisterModal();
-                
-                if (result.requiresVerification) {
-                    // Show OTP modal
-                    openOtpModal(result.email);
-                } else {
-                    // Redirect based on role
-                    if (authManager.hasRole('owner')) {
-                        window.location.href = 'owner-dashboard.html';
-                    } else {
-                        window.location.href = 'turfs.html';
-                    }
-                }
-            }
-        });
-    }
+    // Register form removed - handled in main.js to avoid duplicate listeners
 
     // OTP form
     const otpForm = document.getElementById('otpForm');

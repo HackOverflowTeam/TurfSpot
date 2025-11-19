@@ -260,6 +260,14 @@ document.addEventListener('click', (e) => {
     }
 });
 
+// Local closeModal helper
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
+
 // Global logout function
 window.handleLogout = function() {
     authManager.logout();
@@ -293,11 +301,13 @@ if (signupForm) {
     signupForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        // Prevent double submission
-        if (isSubmitting) {
+        // Prevent double submission at form level
+        if (isSubmitting || signupForm.dataset.submitting === 'true') {
             console.log('Registration already in progress, ignoring duplicate submission');
             return;
         }
+        
+        signupForm.dataset.submitting = 'true';
         
         const formData = {
             name: document.getElementById('registerName').value,
@@ -320,6 +330,7 @@ if (signupForm) {
             submitBtn.disabled = false;
             submitBtn.textContent = 'Register';
             isSubmitting = false;
+            signupForm.dataset.submitting = 'false';
             
             // Check if email verification is required
             if (result.success && result.requiresVerification) {
@@ -357,6 +368,7 @@ if (signupForm) {
             }
         } catch (error) {
             isSubmitting = false;
+            signupForm.dataset.submitting = 'false';
             const submitBtn = document.getElementById('registerSubmitBtn');
             submitBtn.disabled = false;
             submitBtn.textContent = 'Register';
