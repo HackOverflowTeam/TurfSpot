@@ -14,6 +14,8 @@ The `.env` file is already configured with your credentials. Verify the settings
 - ✅ Firebase Admin SDK
 - ✅ Razorpay credentials
 - ✅ JWT secret
+- ✅ Resend API key (`RESEND_API_KEY`) for OTP delivery
+- ✅ Optional Resend sender (`RESEND_FROM`) if you want a custom from address
 
 ### 3. Create Admin User
 ```bash

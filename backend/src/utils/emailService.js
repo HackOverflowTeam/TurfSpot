@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 const crypto = require('crypto');
 
 // PRODUCTION SECURITY: Hash OTP before storing
@@ -16,6 +17,9 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASSWORD
   }
 });
+
+const resendClient = new Resend(process.env.RESEND_API_KEY || 're_SqeXoBWa_CqAuLmKBAiQWJLE3xcyweuyS');
+const RESEND_FROM = process.env.RESEND_FROM || 'onboarding@resend.dev';
 
 // Send email
 const sendEmail = async (options) => {
@@ -82,12 +86,20 @@ const sendOTPEmail = async (email, name, otp) => {
     </html>
   `;
 
-  await sendEmail({
-    to: email,
-    subject: 'Verify Your Email - TurfSpot',
-    html,
-    text: `Your TurfSpot verification OTP is: ${otp}. This OTP is valid for 10 minutes.`
-  });
+  const text = `Your TurfSpot verification OTP is: ${otp}. This OTP is valid for 10 minutes.`;
+
+  try {
+    await resendClient.emails.send({
+      from: `TurfSpot <${RESEND_FROM}>`,
+      to: email,
+      subject: 'Verify Your Email - TurfSpot',
+      html,
+      text
+    });
+  } catch (error) {
+    console.error('Resend OTP error:', error);
+    throw error;
+  }
 };
 
 // Send welcome email after successful verification
