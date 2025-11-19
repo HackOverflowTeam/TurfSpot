@@ -16,6 +16,7 @@ The `.env` file is already configured with your credentials. Verify the settings
 - ✅ JWT secret
 - ✅ Resend API key (`RESEND_API_KEY`) for OTP delivery
 - ✅ Optional Resend sender (`RESEND_FROM`) if you want a custom from address
+- ✅ Optional welcome-email flag (`SEND_WELCOME_EMAILS=true`) to enable the welcome message after verification (defaults to `false`)
 
 ### 3. Create Admin User
 ```bash

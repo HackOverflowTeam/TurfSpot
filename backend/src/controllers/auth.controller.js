@@ -513,13 +513,15 @@ exports.verifyOTP = async (req, res) => {
     // Delete pending user
     await PendingUser.findByIdAndDelete(pendingUser._id);
 
-    // Send welcome email
-    try {
-      await sendWelcomeEmail(user.email, user.name, user.role);
-      console.log(`[INFO] Welcome email sent to ${user.email}`);
-    } catch (emailError) {
-      console.error('[ERROR] Failed to send welcome email:', emailError);
-      // Don't fail registration if welcome email fails
+    if (process.env.SEND_WELCOME_EMAILS === 'true') {
+      try {
+        await sendWelcomeEmail(user.email, user.name, user.role);
+        console.log(`[INFO] Welcome email sent to ${user.email}`);
+      } catch (emailError) {
+        console.error('[ERROR] Failed to send welcome email:', emailError);
+      }
+    } else {
+      console.log('[INFO] Welcome email skipped (SEND_WELCOME_EMAILS != true)');
     }
 
     // Generate token
