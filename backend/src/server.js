@@ -59,7 +59,7 @@ app.use(cors({
     'https://turfspot-1.onrender.com', 
     'https://sourabhyadav.live',
     'https://turfspot.sourabhyadav.live',
-    'https://emerald-concerts-pas-startup.trycloudflare.com'
+    'https://turfspot.in'
   ],
   credentials: true
 }));
