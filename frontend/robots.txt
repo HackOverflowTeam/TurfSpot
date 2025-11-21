@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /admin-dashboard.html
+Disallow: /owner-dashboard.html
+Disallow: /user-dashboard.html
+Disallow: /my-bookings.html
+Disallow: /profile.html
+
+Sitemap: https://turfspot.com/sitemap.xml
