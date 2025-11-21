@@ -1,0 +1,32 @@
+# TurfSpot
+
+> The easiest way to find and book sports turfs in your city.
+
+## Website Overview
+
+TurfSpot is a comprehensive platform connecting sports enthusiasts with turf owners. It simplifies the process of finding, booking, and managing sports venues.
+URL: https://turfspot.com
+
+## Main Navigation
+
+- **Home**: [https://turfspot.com/](https://turfspot.com/) - Landing page with search and featured turfs.
+- **Browse Turfs**: [https://turfspot.com/turfs.html](https://turfspot.com/turfs.html) - Full catalog of sports venues with filters.
+- **Discover**: [https://turfspot.com/discover.html](https://turfspot.com/discover.html) - Advanced search and discovery interface.
+- **Login/Register**: Accessible via the main navigation bar.
+
+## Core Features
+
+### For Players
+- **Search**: Find turfs by city, sport (Cricket, Football, Badminton, etc.), and amenities.
+- **Booking**: Real-time slot availability and instant booking.
+- **Payments**: Secure online payments via Razorpay or "Pay at Venue" options.
+- **User Dashboard**: Manage bookings and view history.
+
+### For Turf Owners
+- **Owner Dashboard**: Manage turf listings, pricing, and slots.
+- **Analytics**: View booking trends and revenue.
+
+## Technical Context
+- **Frontend**: HTML5, CSS3, Vanilla JavaScript
+- **Backend**: Node.js, Express.js
+- **Database**: MongoDB
