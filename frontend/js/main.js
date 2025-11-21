@@ -323,15 +323,60 @@ if (signupForm) {
             submitBtn.disabled = true;
             submitBtn.textContent = 'Registering...';
             
-            await authManager.register(formData);
+            const result = await authManager.register(formData);
             
             submitBtn.disabled = false;
             submitBtn.textContent = 'Register';
             isSubmitting = false;
             signupForm.dataset.submitting = 'false';
             
-            // Registration successful - close modal and redirect handled by authManager
-            closeModal('registerModal');
+            // Check if email verification is required
+            if (result && result.success && result.requiresVerification) {
+                // Store email for OTP verification
+                sessionStorage.setItem('pendingVerificationEmail', formData.email);
+                
+                // Show OTP input field inline
+                const otpGroup = document.getElementById('otpInputGroup');
+                const otpInput = document.getElementById('registerOtpInput');
+                
+                if (otpGroup) {
+                    otpGroup.style.display = 'block';
+                }
+                
+                if (otpInput) {
+                    setTimeout(() => otpInput.focus(), 100);
+                }
+                
+                // Disable form fields except OTP
+                document.getElementById('registerName').disabled = true;
+                document.getElementById('registerEmail').disabled = true;
+                document.getElementById('registerPhone').disabled = true;
+                document.getElementById('registerPassword').disabled = true;
+                document.getElementById('registerRole').disabled = true;
+                submitBtn.style.display = 'none';
+                
+                // Enable resend OTP after 30 seconds
+                const resendBtn = document.getElementById('resendOtpInline');
+                if (resendBtn) {
+                    resendBtn.style.pointerEvents = 'none';
+                    resendBtn.style.opacity = '0.5';
+                    let countdown = 30;
+                    resendBtn.textContent = `Resend OTP (${countdown}s)`;
+                    
+                    const timer = setInterval(() => {
+                        countdown--;
+                        resendBtn.textContent = `Resend OTP (${countdown}s)`;
+                        if (countdown <= 0) {
+                            clearInterval(timer);
+                            resendBtn.textContent = 'Resend OTP';
+                            resendBtn.style.pointerEvents = 'auto';
+                            resendBtn.style.opacity = '1';
+                        }
+                    }, 1000);
+                }
+            } else if (result && result.success && !result.requiresVerification) {
+                closeModal('registerModal');
+            }
         } catch (error) {
             isSubmitting = false;
             signupForm.dataset.submitting = 'false';

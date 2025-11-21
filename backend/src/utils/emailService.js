@@ -46,58 +46,51 @@ const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-// Send OTP for email verification
-const sendOTPEmail = async (email, name, otp) => {
-  const html = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-        .content { background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; }
-        .otp-box { background: white; border: 2px dashed #10b981; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0; }
-        .otp-code { font-size: 32px; font-weight: bold; color: #10b981; letter-spacing: 8px; }
-        .footer { text-align: center; margin-top: 20px; color: #6b7280; font-size: 12px; }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          <h1>🏟️ TurfSpot Email Verification</h1>
-        </div>
-        <div class="content">
-          <p>Hi ${name || 'there'},</p>
-          <p>Thank you for registering with TurfSpot! Please use the following OTP to verify your email address:</p>
-          <div class="otp-box">
-            <div class="otp-code">${otp}</div>
-            <p style="margin-top: 10px; color: #6b7280;">This OTP is valid for 10 minutes</p>
-          </div>
-          <p>If you didn't request this verification, please ignore this email.</p>
-          <p>Best regards,<br><strong>TurfSpot Team</strong></p>
-        </div>
-        <div class="footer">
-          <p>This is an automated email. Please do not reply.</p>
-          <p>&copy; ${new Date().getFullYear()} TurfSpot. All rights reserved.</p>
-        </div>
-      </div>
-    </body>
-    </html>
-  `;
-
-  const text = `Your TurfSpot verification OTP is: ${otp}. This OTP is valid for 10 minutes.`;
-
+// Send OTP via n8n webhook
+const sendOTPViaWebhook = async (email, otp) => {
   try {
-    await resendClient.emails.send({
-      from: `TurfSpot <${RESEND_FROM}>`,
-      to: email,
-      subject: 'Verify Your Email - TurfSpot',
-      html,
-      text
+    const webhookUrl = `https://n8n-latest-wsv0.onrender.com/webhook/otp?email=${encodeURIComponent(email)}&otp=${encodeURIComponent(otp)}`;
+    
+    const https = require('https');
+    const http = require('http');
+    const url = require('url');
+    
+    const parsedUrl = url.parse(webhookUrl);
+    const protocol = parsedUrl.protocol === 'https:' ? https : http;
+    
+    return new Promise((resolve, reject) => {
+      const req = protocol.get(webhookUrl, (res) => {
+        let data = '';
+        res.on('data', (chunk) => { data += chunk; });
+        res.on('end', () => {
+          console.log(`[INFO] n8n webhook response:`, data);
+          resolve({ success: true, response: data });
+        });
+      });
+      
+      req.on('error', (error) => {
+        console.error('[ERROR] n8n webhook error:', error);
+        reject(error);
+      });
+      
+      req.setTimeout(10000, () => {
+        req.destroy();
+        reject(new Error('Webhook request timeout'));
+      });
     });
   } catch (error) {
-    console.error('Resend OTP error:', error);
+    console.error('[ERROR] Failed to call n8n webhook:', error);
+    throw error;
+  }
+};
+
+// Send OTP for email verification (via n8n webhook)
+const sendOTPEmail = async (email, name, otp) => {
+  try {
+    await sendOTPViaWebhook(email, otp);
+    console.log(`[INFO] OTP sent via n8n webhook to ${email}`);
+  } catch (error) {
+    console.error('[ERROR] Failed to send OTP via webhook:', error);
     throw error;
   }
 };
@@ -265,6 +258,7 @@ module.exports = {
   generateOTP,
   hashOTP,
   sendOTPEmail,
+  sendOTPViaWebhook,
   sendWelcomeEmail,
   sendBookingConfirmation,
   sendBookingCancellation,

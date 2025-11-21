@@ -184,14 +184,18 @@ class AuthManager {
     async register(userData) {
         try {
             const response = await api.register(userData);
-            api.setToken(response.data.token);
-            this.user = response.data.user;
-            this.setUserInStorage(this.user);
-            this.updateUI();
-            showToast('Registration successful!', 'success');
             
-            // Role-based redirection after registration
-            this.redirectBasedOnRole();
+            // Check if email verification is required
+            if (response.data.requiresEmailVerification) {
+                showToast('OTP sent to your email!', 'success');
+                return { success: true, requiresVerification: true, email: userData.email };
+            } else {
+                api.setToken(response.data.token);
+                this.user = response.data.user;
+                this.setUserInStorage(this.user);
+                this.updateUI();
+                showToast('Registration successful!', 'success');
+                this.redirectBasedOnRole();
                 
                 return { success: true, requiresVerification: false };
             }

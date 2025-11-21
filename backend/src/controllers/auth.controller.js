@@ -27,32 +27,47 @@ exports.register = async (req, res) => {
       });
     }
 
-    // Create user directly without OTP verification
-    const user = await User.create({
+    // Generate OTP
+    const otp = generateOTP();
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+    const hashedOTP = hashOTP(otp);
+
+    // Delete any existing pending user
+    await PendingUser.deleteMany({ email });
+
+    // Create pending user
+    const pendingUser = await PendingUser.create({
       email,
       password,
       name,
       phone,
       role: role || 'user',
-      authProvider: 'email',
-      isEmailVerified: true,
-      isActive: true
+      emailOTP: hashedOTP,
+      otpExpiry: otpExpiry,
+      otpAttempts: 0,
+      otpRequestCount: 1,
+      lastOtpRequest: new Date()
     });
 
-    // Generate token
-    const token = generateToken(user._id);
+    // Send OTP via n8n webhook
+    try {
+      await sendOTPEmail(email, name, otp);
+      console.log(`[INFO] OTP sent to ${email} for registration`);
+    } catch (emailError) {
+      console.error('[ERROR] Failed to send OTP:', emailError);
+      await PendingUser.findByIdAndDelete(pendingUser._id);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to send verification email. Please try again.'
+      });
+    }
 
-    // Remove password from response
-    user.password = undefined;
-
-    console.log(`[SUCCESS] User registered: ${user.email} (ID: ${user._id})`);
-
-    res.status(201).json({
+    res.status(200).json({
       success: true,
-      message: 'Registration successful!',
+      message: 'OTP sent to your email. Please verify to complete registration.',
       data: {
-        user,
-        token
+        email: email,
+        requiresEmailVerification: true
       }
     });
   } catch (error) {
