@@ -18,7 +18,7 @@ exports.register = async (req, res) => {
   try {
     const { email, password, name, phone, role } = req.body;
 
-    // Check if user already exists in main User collection
+    // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({
@@ -27,81 +27,32 @@ exports.register = async (req, res) => {
       });
     }
 
-    // Generate OTP
-    const otp = generateOTP();
-    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
+    // Create user directly without OTP verification
+    const user = await User.create({
+      email,
+      password,
+      name,
+      phone,
+      role: role || 'user',
+      authProvider: 'email',
+      isEmailVerified: true,
+      isActive: true
+    });
 
-    // PRODUCTION SECURITY: Hash OTP before storing
-    const hashedOTP = hashOTP(otp);
+    // Generate token
+    const token = generateToken(user._id);
 
-    // Check if pending user exists and delete it (with retry logic)
-    try {
-      await PendingUser.deleteMany({ email });
-      console.log(`[INFO] Deleted any existing pending users for ${email}`);
-    } catch (deleteError) {
-      console.log(`[WARN] Error deleting pending user:`, deleteError);
-    }
+    // Remove password from response
+    user.password = undefined;
 
-    // Create pending user (NOT in main User collection yet)
-    let pendingUser;
-    try {
-      pendingUser = await PendingUser.create({
-        email,
-        password, // Will be hashed by User model pre-save hook when moved to User collection
-        name,
-        phone,
-        role: role || 'user',
-        emailOTP: hashedOTP,
-        otpExpiry: otpExpiry,
-        otpAttempts: 0,
-        otpRequestCount: 1,
-        lastOtpRequest: new Date()
-      });
-    } catch (createError) {
-      // If duplicate key error, try to update existing instead
-      if (createError.code === 11000) {
-        console.log(`[INFO] Updating existing pending user for ${email}`);
-        pendingUser = await PendingUser.findOneAndUpdate(
-          { email },
-          {
-            password,
-            name,
-            phone,
-            role: role || 'user',
-            emailOTP: hashedOTP,
-            otpExpiry: otpExpiry,
-            otpAttempts: 0,
-            otpRequestCount: 1,
-            lastOtpRequest: new Date()
-          },
-          { new: true, upsert: true }
-        );
-      } else {
-        throw createError;
-      }
-    }
+    console.log(`[SUCCESS] User registered: ${user.email} (ID: ${user._id})`);
 
-    // Send OTP email
-    try {
-      await sendOTPEmail(email, name, otp);
-      console.log(`[INFO] OTP sent to ${email} for registration`);
-    } catch (emailError) {
-      console.error('[ERROR] Failed to send OTP email:', emailError);
-      // Delete pending user if email fails
-      await PendingUser.findByIdAndDelete(pendingUser._id);
-      
-      return res.status(500).json({
-        success: false,
-        message: 'Failed to send verification email. Please try again.'
-      });
-    }
-
-    res.status(200).json({
+    res.status(201).json({
       success: true,
-      message: 'OTP sent to your email. Please verify to complete registration.',
+      message: 'Registration successful!',
       data: {
-        email: email,
-        requiresEmailVerification: true
+        user,
+        token
       }
     });
   } catch (error) {

@@ -323,49 +323,15 @@ if (signupForm) {
             submitBtn.disabled = true;
             submitBtn.textContent = 'Registering...';
             
-            const result = await authManager.register(formData);
-            
-            console.log('Registration result:', result);
+            await authManager.register(formData);
             
             submitBtn.disabled = false;
             submitBtn.textContent = 'Register';
             isSubmitting = false;
             signupForm.dataset.submitting = 'false';
             
-            // Check if email verification is required
-            if (result.success && result.requiresVerification) {
-                console.log('OTP verification required, showing OTP field');
-                
-                // Store email for OTP verification
-                sessionStorage.setItem('pendingVerificationEmail', formData.email);
-                
-                // Show OTP input field inline
-                const otpGroup = document.getElementById('otpInputGroup');
-                const otpInput = document.getElementById('registerOtpInput');
-                
-                console.log('OTP Group element:', otpGroup);
-                console.log('OTP Input element:', otpInput);
-                
-                if (otpGroup) {
-                    otpGroup.style.display = 'block';
-                    console.log('OTP group display set to block');
-                }
-                
-                if (otpInput) {
-                    setTimeout(() => otpInput.focus(), 100);
-                }
-                
-                // Disable form fields except OTP
-                document.getElementById('registerName').disabled = true;
-                document.getElementById('registerEmail').disabled = true;
-                document.getElementById('registerPhone').disabled = true;
-                document.getElementById('registerPassword').disabled = true;
-                document.getElementById('registerRole').disabled = true;
-                submitBtn.style.display = 'none';
-            } else if (result.success && !result.requiresVerification) {
-                // Registration successful without OTP - modal closed and redirect handled by authManager
-                closeModal('registerModal');
-            }
+            // Registration successful - close modal and redirect handled by authManager
+            closeModal('registerModal');
         } catch (error) {
             isSubmitting = false;
             signupForm.dataset.submitting = 'false';

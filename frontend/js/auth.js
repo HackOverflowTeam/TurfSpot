@@ -187,18 +187,11 @@ class AuthManager {
             api.setToken(response.data.token);
             this.user = response.data.user;
             this.setUserInStorage(this.user);
+            this.updateUI();
+            showToast('Registration successful!', 'success');
             
-            // Check if email verification is required
-            if (response.data.requiresEmailVerification) {
-                showToast('Registration successful! Please verify your email.', 'success');
-                // Show OTP modal instead of redirecting
-                return { success: true, requiresVerification: true, email: userData.email };
-            } else {
-                this.updateUI();
-                showToast('Registration successful!', 'success');
-                
-                // Role-based redirection after registration
-                this.redirectBasedOnRole();
+            // Role-based redirection after registration
+            this.redirectBasedOnRole();
                 
                 return { success: true, requiresVerification: false };
             }
