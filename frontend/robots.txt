@@ -6,4 +6,4 @@ Disallow: /user-dashboard.html
 Disallow: /my-bookings.html
 Disallow: /profile.html
 
-Sitemap: https://turfspot.com/sitemap.xml
+Sitemap: https://turfspot.in/sitemap.xml

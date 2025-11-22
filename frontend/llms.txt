@@ -5,13 +5,13 @@
 ## Website Overview
 
 TurfSpot is a comprehensive platform connecting sports enthusiasts with turf owners. It simplifies the process of finding, booking, and managing sports venues.
-URL: https://turfspot.com
+URL: https://turfspot.in
 
 ## Main Navigation
 
-- **Home**: [https://turfspot.com/](https://turfspot.com/) - Landing page with search and featured turfs.
-- **Browse Turfs**: [https://turfspot.com/turfs.html](https://turfspot.com/turfs.html) - Full catalog of sports venues with filters.
-- **Discover**: [https://turfspot.com/discover.html](https://turfspot.com/discover.html) - Advanced search and discovery interface.
+- **Home**: [https://turfspot.in/](https://turfspot.in/) - Landing page with search and featured turfs.
+- **Browse Turfs**: [https://turfspot.in/turfs.html](https://turfspot.in/turfs.html) - Full catalog of sports venues with filters.
+- **Discover**: [https://turfspot.in/discover.html](https://turfspot.in/discover.html) - Advanced search and discovery interface.
 - **Login/Register**: Accessible via the main navigation bar.
 
 ## Core Features
